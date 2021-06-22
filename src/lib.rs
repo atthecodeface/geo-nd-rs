@@ -65,8 +65,7 @@ as `identity2::<f32>()`.
 ## Basic operation
 
 ```
-extern crate geometry;
-use geometry::vector;
+use geo_nd::vector;
 let y = [0., 1.];
 let x = [1., 0.];
 assert_eq!( vector::dot(&x, &y), 0., "Dot product of X and Y axis vectors is zero");

@@ -83,12 +83,14 @@ impl Float for f64 {}
 pub trait Vector<F:Float, const D:usize> : Clone
     + Copy
     + std::fmt::Debug
+    + std::fmt::Display
     + std::default::Default
     + std::convert::AsRef<[F;D]>
     + std::convert::AsMut<[F;D]>
     + std::convert::AsRef<[F]>
     + std::convert::AsMut<[F]>
     + std::ops::Index<usize, Output = F>
+    + std::ops::IndexMut<usize>
     + std::ops::Neg<Output = Self>
     + std::ops::Add<Self, Output = Self>
     + std::ops::Add<F, Output = Self>
@@ -154,7 +156,27 @@ pub trait Vector<F:Float, const D:usize> : Clone
         /// Normalize the vector; if its length is close to zero, then set it to be zero
         fn normalize(&mut self) { let l = self.length(); if l < F::epsilon() {self.set_zero()} else {*self /= l} }
         // clamp
-        // rotate_around
+
+        //cp rotate_around
+        /// Rotate a vector within a plane around a
+        /// *pivot* point by the specified angle
+        ///
+        /// The plane of rotation is specified by providing two vector indices for the elements to adjust. For a 2D rotation then the values of c0 and c1 should be 0 and 1.
+        ///
+        /// For a 3D rotation about the Z axis, they should be 0 and 1; for
+        /// rotation about the Y axis they should be 2 and 0; and for rotation
+        /// about the X axis they should be 1 and 2.
+        ///
+        fn rotate_around(mut self, pivot:&Self, angle:F, c0:usize, c1:usize) -> Self {
+            let (s,c) = angle.sin_cos();
+            let dx = self[c0] - pivot[c0];
+            let dy = self[c1] - pivot[c1];
+            let x1 = c*dx - s*dy;
+            let y1 = c*dy + s*dx;
+            self[c0] = x1 + pivot[c0];
+            self[c1] = y1 + pivot[c1];
+            self
+        }
     }
 
 //tt SqMatrix

@@ -27,7 +27,7 @@ use super::matrix_op as matrix;
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let a = vector::zero::<f32, 4>();
 /// assert_eq!( a, [0., 0., 0., 0.]);
 /// ```
@@ -40,7 +40,7 @@ pub fn zero<V:Num,const D:usize> () -> [V; D] { [V::zero();D] }
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let mut a = [1., 2., 3.];
 /// vector::set_zero(&mut a);
 /// assert_eq!( a, [0., 0., 0.]);
@@ -56,7 +56,7 @@ pub fn set_zero<V:Num> (v:&mut [V]) {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let mut a = [1., 2., 3.];
 /// vector::set_zero(&mut a);
 /// assert!( vector::is_zero(&a) );
@@ -75,7 +75,7 @@ pub fn is_zero<V:Num> (v:&[V]) -> bool {
 /// # Examples
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let a = [3., 4., 5.];
 /// let b = [2., 17., 1.];
 /// let x = vector::cross_product3(&a, &b);
@@ -100,7 +100,7 @@ pub fn cross_product3<V:Num> (x:&[V;3], y:&[V;3]) -> [V;3] {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let a = [3., 1.];
 /// let b = [2., 3.];
 /// assert_eq!( vector::mix( &a, &b, 0.),  [3., 1.]);
@@ -233,7 +233,7 @@ pub fn axis_of_rotation3<V:Float>(rotation:&[V;9]) -> [V;3] {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let a = vector::scale([1., 2., 3.], 2.);
 /// assert_eq!( a, [2., 4., 6.]);
 /// ```
@@ -250,7 +250,7 @@ pub fn scale<V:Num,const D:usize> (mut v:[V;D], s:V) -> [V;D] {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let a = vector::comp_mult([2., 4., 6.], &[1., 0., 2.]);
 /// assert_eq!( a, [2., 0., 12.]);
 /// ```
@@ -266,7 +266,7 @@ pub fn comp_mult<V:Num,const D:usize> (mut v:[V;D], s:&[V;D]) -> [V;D] {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let a = vector::reduce([2., 4., 6.], 2.);
 /// assert_eq!( a, [1., 2., 3.]);
 /// ```
@@ -282,7 +282,7 @@ pub fn reduce<V:Num,const D:usize> (mut v:[V;D], s:V) -> [V;D] {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let a = [3., 1.];
 /// let b = [2., 3.];
 /// assert_eq!( vector::add( a, &b, 3.), [9., 10.]);
@@ -311,7 +311,7 @@ pub fn sub<V:Num,const D:usize> (mut v:[V;D], other:&[V;D], scale:V) -> [V;D] {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let a = [-1., 3.];
 /// assert_eq!( vector::clamp( a, 0., 1.), [0., 1.]);
 /// assert_eq!( vector::clamp( a, -1., 1.), [-1., 1.]);
@@ -333,7 +333,7 @@ pub fn clamp<V:Float,const D:usize> (mut a:[V;D], min:V, max:V) -> [V;D] {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// assert_eq!( vector::normalize([1.,-1.]), [1./(2.0f64).sqrt(),-1./(2.0f64).sqrt()] );
 /// assert_eq!( vector::normalize([0.,0.]), [0.,0.] );
 /// ```
@@ -361,7 +361,7 @@ pub fn normalize<V:Float,const D:usize> (mut v:[V;D]) -> [V;D] {
 /// # Examples
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// let a = [3., 4., 5.];
 /// let pivot = [3., 3., 0.];
 /// // Rotate by 90 degress anticlockwise about the Z-axis pivoting on (3,3,0)
@@ -388,7 +388,7 @@ pub fn rotate_around<V:Float,const D:usize> (mut v:[V;D], pivot:&[V;D], angle:V,
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// assert_eq!( vector::length_sq(&[3., 4.]), 25. );
 /// ```
 ///
@@ -404,7 +404,7 @@ pub fn length_sq<V:Num> (v:&[V]) -> V {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// assert_eq!( vector::length(&[3., 4.]), 5. );
 /// ```
 ///
@@ -418,7 +418,7 @@ pub fn length<V:Float> (v:&[V]) -> V {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// assert_eq!( vector::distance_sq(&[1.,-1.], &[4., 3.]), 25. );
 /// ```
 ///
@@ -437,7 +437,7 @@ pub fn distance_sq<V:Num,const D:usize> (v:&[V;D], other:&[V;D]) -> V {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// assert_eq!( vector::distance(&[1.,-1.], &[4., 3.]), 5. );
 /// ```
 ///
@@ -451,7 +451,7 @@ pub fn distance<V:Float,const D:usize> (v:&[V;D], other:&[V;D]) -> V {
 /// # Example
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// assert_eq!( vector::dot(&[1.,-1.], &[4., 1.]), 3. );
 /// ```
 ///
@@ -470,7 +470,7 @@ pub fn dot<V:Num,const D:usize> (v:&[V;D], other:&[V;D]) -> V {
 /// # Examples
 ///
 /// ```
-/// use geometry::vector;
+/// use geo_nd::vector;
 /// struct Pt { c : [f32;2] };
 /// impl std::fmt::Display for Pt {
 ///   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result { vector::fmt(f, &self.c) }

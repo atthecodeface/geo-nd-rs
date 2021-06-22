@@ -60,8 +60,8 @@ pub fn determinant2<V:Num> (m:&[V;4]) -> V {
 /// # Example
 ///
 /// ```
-/// use geometry::vector::{length, sub};
-/// use geometry::matrix::{identity2, inverse2, multiply2, MatrixType};
+/// use geo_nd::vector::{length, sub};
+/// use geo_nd::matrix::{identity2, inverse2, multiply2, MatrixType};
 /// let i = identity2();
 /// assert!( length(&sub(inverse2(&i), &i, 1.)) < 1E-8 );
 /// for a in &[ [1.,0., 0.,1.],
@@ -99,8 +99,8 @@ pub fn determinant3<V:Num> (m:&[V;9]) -> V {
 /// # Example
 ///
 /// ```
-/// use geometry::vector::{length, sub};
-/// use geometry::matrix::{identity3, inverse3, multiply3, MatrixType};
+/// use geo_nd::vector::{length, sub};
+/// use geo_nd::matrix::{identity3, inverse3, multiply3, MatrixType};
 /// let i = identity3();
 /// assert!( length(&sub(inverse3(&i), &i, 1.)) < 1E-8 );
 /// for a in &[ [1.0,0.,0., 0.,1.,0.,  0.,0.,1.],
@@ -183,8 +183,8 @@ pub fn determinant4<V:Num> (m:&[V;16]) -> V {
 /// # Example
 ///
 /// ```
-/// use geometry::vector::{length, sub};
-/// use geometry::matrix::{identity4, inverse4, multiply4, MatrixType};
+/// use geo_nd::vector::{length, sub};
+/// use geo_nd::matrix::{identity4, inverse4, multiply4, MatrixType};
 /// let i = identity4();
 /// assert!( length(&sub(inverse4(&i), &i, 1.)) < 1E-8 );
 /// for a in &[ [1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,0.,1., 0.,0.,1.,0.],

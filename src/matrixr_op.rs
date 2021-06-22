@@ -138,7 +138,7 @@ pub fn transform_vec<V:Float,const RD:usize,const R:usize,const D:usize> (m:&[V;
 /// # Examples
 ///
 /// ```
-/// use geometry::matrix;
+/// use geo_nd::matrix;
 /// struct Mat { c : [f32;6] };
 /// impl std::fmt::Display for Mat {
 ///   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result { matrix::fmt::<f32,2>(f, &self.c) }
@@ -169,7 +169,7 @@ pub fn fmt<V:Num,const C:usize>(f: &mut std::fmt::Formatter, v : &[V]) -> std::f
 /// # Example
 ///
 /// ```
-/// use geometry::matrix::{identity2, MatrixType};
+/// use geo_nd::matrix::{identity2, MatrixType};
 /// assert_eq!( format!("{}", MatrixType::<f32,4,2>::new(&identity2())), "[1,0 0,1]" );
 /// ```
 ///

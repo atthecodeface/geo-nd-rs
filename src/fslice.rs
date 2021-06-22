@@ -100,6 +100,12 @@ impl <F:Float, const D:usize> std::default::Default for FArray<F, D> {
     fn default() -> Self { Self { data:vector::zero() } }
 }
 
+impl <F:Float, const D:usize> std::fmt::Display for FArray<F, D> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        vector::fmt(f, &self.data)
+    }
+}
+
 //ip Vector<F,D> for FArray
 impl <F:Float, const D:usize> Vector<F, D> for FArray<F, D> {
     fn from_array(data:[F;D]) -> Self { Self { data  } }

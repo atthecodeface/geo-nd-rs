@@ -1,7 +1,5 @@
 //a Imports
-extern crate geometry;
-
-use geometry::{Vector, Vector3D};
+use geo_nd::{Vector, Vector3D};
 use std::marker::PhantomData;
 
 //a Test type
