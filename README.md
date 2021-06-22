@@ -31,6 +31,8 @@ geo-nd = "0.1"
 
 ## Features
 
+*NOTE* Until *core_simd* is part of std or on crates.io the following does not work - the dependency in the geo-nd/Cargo.toml for core_simd must be commented out on crates.io; so a locally modified clone of this crate is required until that point.
+
 This crate can be used with the upcoming [core_simd](https://rust-lang.github.io/stdsimd/core_simd/) crate by enabling
 the default `simd` feature. Use this in `Cargo.toml`:
 

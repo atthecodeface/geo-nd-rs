@@ -15,8 +15,9 @@ repository = "https://github.com/atthecodeface/geo-nd-rs"
 [dependencies.num-traits]
 version = "0.2.1"
 
-[dependencies]
-core_simd = { git = "https://github.com/rust-lang/stdsimd", optional = true }
+# [dependencies.core_simd]
+# git = "https://github.com/rust-lang/stdsimd"
+# optional = true
 
-[features]
-simd = ["core_simd"]
+# [features]
+# simd = ["core_simd"]

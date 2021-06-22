@@ -18,18 +18,38 @@ limitations under the License.
 
 //a Num and Float traits
 //tp Num
-/// Trait required for matrix or vector elements
+/// The [Num] trait is required for matrix or vector elements; it is
+/// not a float, and so some of the matrix and vector operations can
+/// operate on integer types such as i32, i64 and isize
+///
+/// The trait requires basic numeric operations, plus specifically [std::fmt::Display].
 pub trait Num : std::ops::Neg<Output=Self> +
     num_traits::Num + num_traits::NumAssignOps +
     Clone + Copy + PartialEq + std::fmt::Display + std::fmt::Debug {
     }
 
 //tp Float
-/// Trait required for matrix or vector elements such that also need operations such as sqrt, sin/cos, etc
-/// Annoyingly this includes NumCast
+/// The [Float] trait is required for matrix or vector elements which have a float aspect, such as `sqrt`.
+///
+/// The trait is essentially `num_traits::Float`, but it supplies
+/// implicit methods for construction of a [Float] from an `isize`
+/// value, or as a rational from a pair of `isize` values.
+///
+/// As num_traits::Float includes num_traits::NumCast it is not
+/// possible to require, as would perhaps be desired, a From<f32>
+/// trait, without conflicts occurring.
+///
 pub trait Float : Num + num_traits::Float {
+    //fp int
+    /// Create a [Float] from an `isize` value; this should support
+    /// constant implementations with no run-time overhead.
     #[inline]
     fn int(n:isize) -> Self { Self::from(n).unwrap() }
+
+    //fp frac
+    /// Create a [Float] as a fraction described by a numerator and
+    /// denomiator pair of `isize` values; this should support
+    /// constant implementations with no run-time overhead.
     #[inline]
     fn frac(n:isize, d:usize) -> Self { Self::from((n as f32)/(d as f32)).unwrap() }
 }
@@ -47,6 +67,19 @@ impl Float for f64 {}
 
 //a Vector and SqMatrix
 //tt Vector
+/// The [Vector] trait describes an N-dimensional vector of [Float] type.
+///
+/// Such [Vector]s support basic vector arithmetic using addition and
+/// subtraction, and they provide component-wise multiplication and
+/// division, using the standard operators on two [Vector]s.
+///
+/// They also support basic arithmetic to all components of the
+/// [Vector] for addition, subtraction, multiplication and division by
+/// a scalar [Float] value type that they are comprised of. Hence a
+/// `v:Vector<F>` may be scaled by a `s:F` using `v * s`.
+///
+/// The [Vector] can be indexed only by a `usize`; that is individual
+/// components of the vector can be accessed, but ranges may not.
 pub trait Vector<F:Float, const D:usize> : Clone
     + Copy
     + std::fmt::Debug
@@ -73,23 +106,70 @@ pub trait Vector<F:Float, const D:usize> : Clone
     + std::ops::Div<F, Output = Self>
     + std::ops::DivAssign<Self>
     + std::ops::DivAssign<F> {
+        //fp from_array
+        /// Create a vector from an array of [Float]
         fn from_array(data:[F;D]) -> Self;
+
+        //fp zero
+        /// Create a vector whose elements are all zero
         fn zero() -> Self;
+
+        //mp is_zero
+        /// Return true if the vector is all zeros
         fn is_zero(&self) -> bool;
+
+        //mp set_zero
+        /// Set the vector to be all zeros
         fn set_zero(&mut self);
+
+        //mp reduce_sum
+        /// Sum all of the components of the vector
         fn reduce_sum(&self) -> F;
+
+        //mp mix
+        /// Create a linear combination of this [Vector] and another using parameter `t` from zero to one
         fn mix(&self, other:&Self, t:F) -> Self;
+
+        //mp dot
+        /// Return the dot product of two vectors
         fn dot(&self, other:&Self) -> F;
+
+        //mp length_sq
+        /// Return the square of the length of the vector
         fn length_sq(&self) -> F { self.dot(self) }
+
+        //mp length
+        /// Return the length of the vector
         fn length(&self)    -> F { self.length_sq().sqrt() }
+
+        //mp distance_sq
+        /// Return the square of the distance between this vector and another
         fn distance_sq(&self, other:&Self) -> F { (*self - *other).length_sq() }
+
+        //mp distance
+        /// Return the distance between this vector and another
         fn distance(&self, other:&Self) -> F { self.distance_sq(other).sqrt() }
+
+        //mp normalize
+        /// Normalize the vector; if its length is close to zero, then set it to be zero
         fn normalize(&mut self) { let l = self.length(); if l < F::epsilon() {self.set_zero()} else {*self /= l} }
         // clamp
         // rotate_around
     }
 
 //tt SqMatrix
+/// The [SqMatrix] trait describes an N-dimensional square matrix of [Float] type that operates on a [Vector].
+///
+/// This trait is not stable.
+///
+/// Such [SqMatrix] support basic arithmetic using addition and
+/// subtraction, and they provide component-wise multiplication and
+/// division, using the standard operators on two [SqMatrix]s.
+///
+/// They also support basic arithmetic to all components of the
+/// [SqMatrix] for addition, subtraction, multiplication and division by
+/// a scalar [Float] value type that they are comprised of. Hence a
+/// `m:SqMatrix<F>` may be scaled by a `s:F` using `m * s`.
 pub trait SqMatrix<V:Vector<F,D>, F:Float, const D:usize, const D2:usize> : Clone
     + Copy
     + std::fmt::Debug
@@ -108,31 +188,74 @@ pub trait SqMatrix<V:Vector<F,D>, F:Float, const D:usize, const D2:usize> : Clon
     + std::ops::MulAssign<F>
     + std::ops::Div<F, Output = Self>
     + std::ops::DivAssign<F> {
+        //fp from_array
+        /// Create a [SqMatrix] from an array of [Float]s
         fn from_array(data:[F;D2]) -> Self;
+
+        //fp identity
+        /// Create an identity [SqMatrix]
         fn identity() -> Self;
+
+        //fp zero
+        /// Create a zero [SqMatrix]
         fn zero() -> Self;
+
+        //fp is_zero
+        /// Return true if the matrix is zer
         fn is_zero(&self) -> bool;
+
+        //fp set_zero
+        /// Set the matrix to zero
         fn set_zero(&mut self);
+
         // absmax
+
+        //mp transpose
+        /// Return a transpose matrix
         fn transpose(&self) -> Self;
+
+        //mp determinant
+        /// Calculate the determinant of the matrix
         fn determinant(&self) -> F;
+
+        //mp inverse
+        /// Create an inverse matrix
         fn inverse(&self) -> Self;
+
+        //mp transform
+        /// Apply the matrix to a vector to transform it
         fn transform(&self, v:V) -> V;
     }
 
 //a Vector3D, Geometry3D
 //tt Vector3D
+/// This is probably a temporary trait used until SIMD supports Geometry3D and Geometry2D
+///
+/// The [Vector3D] trait describes vectors that may be used for
+/// 3D geometry
 pub trait Vector3D<Scalar:Float> {
+    /// The type of a 2D vector
     type Vec2 : Vector<Scalar, 2>;
+    /// The type of a 3D vector
     type Vec3 : Vector<Scalar, 3>;
+    /// The type of a 3D vector with an additional '1' expected in its extra element
     type Vec4 : Vector<Scalar, 4>;
 }
 
 //tt Geometry3D
+/// The [Geometry3D] trait supplies a framework for implementing 3D
+/// vector and matrix operations, and should also include the
+/// quaternion type.
+///
+/// An implementation of [Geometry3D] can be used for OpenGL and Vulkan graphics, for example.
 pub trait Geometry3D<Scalar:Float> {
+    /// The type of a 3D vector
     type Vec3 : Vector<Scalar, 3>;
+    /// The type of a 3D vector with an additional '1' expected in its extra element
     type Vec4 : Vector<Scalar, 4>;
+    /// The type of a 3D matrix that can transform Vec3
     type Mat3 : SqMatrix<Self::Vec3, Scalar, 3, 9>;
+    /// The type of a 3D matrix which allows for translations, that can transform Vec4
     type Mat4 : SqMatrix<Self::Vec4, Scalar, 4, 16>;
     // fn perspective4
     // fn translate4
@@ -145,8 +268,14 @@ pub trait Geometry3D<Scalar:Float> {
 }
 
 //tt Geometry2D
+/// This is an experimental trait - it bundles together a Vec2 and a Mat2.
+///
+/// The [Geometry2D] trait supplies a framework for implementing 2D
+/// vector and matrix operations.
 pub trait Geometry2D<Scalar:Float> {
+    /// The type of a 2D vector
     type Vec2 : Vector<Scalar, 2>;
+    /// The type of a 2D matrix that can transform a Vec2
     type Mat2 : SqMatrix<Self::Vec2, Scalar, 2, 4>;
 }
 

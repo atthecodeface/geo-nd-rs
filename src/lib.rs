@@ -93,8 +93,8 @@ mod fslice2;
 
 //a Exports
 pub use traits::*;
-pub use fslice::FSlice;
-pub use fslice2::FSlice2;
+pub use fslice::FArray;
+pub use fslice2::FArray2;
 
 /// Vector functions module
 ///
@@ -140,47 +140,47 @@ pub mod simd {
 }
 
 //a Implementations
-//a Vector3D and Geometry3D for f32/f64 using FSlice/FSlice2
+//a Vector3D and Geometry3D for f32/f64 using FArray/FArray2
 //ip Vector3D for f32
 impl Vector3D<f32> for f32 {
-    type Vec2 = FSlice<f32,2>;
-    type Vec3 = FSlice<f32,3>;
-    type Vec4 = FSlice<f32,4>;
+    type Vec2 = FArray<f32,2>;
+    type Vec3 = FArray<f32,3>;
+    type Vec4 = FArray<f32,4>;
 }
 
 //ip Geometry3D for f32
 impl Geometry3D<f32> for f32 {
-    type Vec3 = FSlice<f32,3>;
-    type Vec4 = FSlice<f32,4>;
-    type Mat3 = FSlice2<f32,3,9>;
-    type Mat4 = FSlice2<f32,4,16>;
+    type Vec3 = FArray<f32,3>;
+    type Vec4 = FArray<f32,4>;
+    type Mat3 = FArray2<f32,3,9>;
+    type Mat4 = FArray2<f32,4,16>;
 }
 
 //ip Geometry2D for f32
 impl Geometry2D<f32> for f32 {
-    type Vec2 = FSlice<f32,2>;
-    type Mat2 = FSlice2<f32,2,4>;
+    type Vec2 = FArray<f32,2>;
+    type Mat2 = FArray2<f32,2,4>;
 }
 
 //ip Vector3D for f64
 impl Vector3D<f64> for f64 {
-    type Vec2 = FSlice<f64,2>;
-    type Vec3 = FSlice<f64,3>;
-    type Vec4 = FSlice<f64,4>;
+    type Vec2 = FArray<f64,2>;
+    type Vec3 = FArray<f64,3>;
+    type Vec4 = FArray<f64,4>;
 }
 
 //ip Geometry3D for f64
 impl Geometry3D<f64> for f64 {
-    type Vec3 = FSlice<f64,3>;
-    type Vec4 = FSlice<f64,4>;
-    type Mat3 = FSlice2<f64,3,9>;
-    type Mat4 = FSlice2<f64,4,16>;
+    type Vec3 = FArray<f64,3>;
+    type Vec4 = FArray<f64,4>;
+    type Mat3 = FArray2<f64,3,9>;
+    type Mat4 = FArray2<f64,4,16>;
 }
 
 //ip Geometry2D for f64
 impl Geometry2D<f64> for f64 {
-    type Vec2 = FSlice<f64,2>;
-    type Mat2 = FSlice2<f64,2,4>;
+    type Vec2 = FArray<f64,2>;
+    type Mat2 = FArray2<f64,2,4>;
 }
 
 /*a Stuff
