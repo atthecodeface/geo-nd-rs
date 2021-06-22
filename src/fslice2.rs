@@ -1,6 +1,6 @@
 //a Imports
-use super::{Float, Vector, SqMatrix, Vector3D, Geometry3D};
-use super::{FSlice, vector, matrix};
+use super::{Float, Vector, SqMatrix};
+use super::{FArray, vector, matrix};
 
 //a Macros
 //mi index_ops!
@@ -70,26 +70,30 @@ macro_rules! binary_op {
     }
 }
 
-//a FSlice2
-//tp FSlice2
+//a FArray2
+//tp FArray2
+/// The [FArray2] is a wrapper around a `D2 = D`^2` sized array of [Float]s.
+///
+/// It provides implementations of the traits required for a [SqMatrix]
+/// trait operating on an [FArray] of dimesion D.
 #[derive(Clone, Copy, Debug)]
-pub struct FSlice2 <F:Float, const D:usize, const D2:usize> { data: [F;D2] }
+pub struct FArray2 <F:Float, const D:usize, const D2:usize> { data: [F;D2] }
 
-//ip FSlice2
-index_ops! { FSlice2 }
-ref_op! { FSlice2, [F;D2] }
-ref_op! { FSlice2, [F] }
-binary_op! { FSlice2, Add, add, +, AddAssign, add_assign, += }
-binary_op! { FSlice2, Sub, sub, -, SubAssign, sub_assign, -= }
-binary_op! { FSlice2, Mul, mul, *, MulAssign, mul_assign, *= }
-binary_op! { FSlice2, Div, div, /, DivAssign, div_assign, /= }
+//ip FArray2
+index_ops! { FArray2 }
+ref_op! { FArray2, [F;D2] }
+ref_op! { FArray2, [F] }
+binary_op! { FArray2, Add, add, +, AddAssign, add_assign, += }
+binary_op! { FArray2, Sub, sub, -, SubAssign, sub_assign, -= }
+binary_op! { FArray2, Mul, mul, *, MulAssign, mul_assign, *= }
+binary_op! { FArray2, Div, div, /, DivAssign, div_assign, /= }
 
-impl <F:Float, const D:usize, const D2:usize>   std::default::Default for FSlice2<F, D, D2> {
+impl <F:Float, const D:usize, const D2:usize>   std::default::Default for FArray2<F, D, D2> {
     fn default() -> Self { Self { data:vector::zero() } }
 }
 
-//ip SqMatrix<F,D,D2> for FSlice2
-impl <F:Float> SqMatrix<FSlice<F,2>, F, 2, 4> for FSlice2<F, 2, 4> {
+//ip SqMatrix<F,D,D2> for FArray2
+impl <F:Float> SqMatrix<FArray<F,2>, F, 2, 4> for FArray2<F, 2, 4> {
     fn from_array(data:[F;4]) -> Self { Self { data  } }
     fn zero() -> Self { Self { data:vector::zero() }    }
     fn identity() -> Self { Self { data:vector::zero() }   }
@@ -102,12 +106,12 @@ impl <F:Float> SqMatrix<FSlice<F,2>, F, 2, 4> for FSlice2<F, 2, 4> {
     fn inverse(&self) -> Self {
         Self::from_array(matrix::inverse2(&self.data))
     }
-    fn transform(&self, v:FSlice<F,2>) -> FSlice<F,2> {
-        FSlice::from_array(matrix::multiply::<F,4,2,2,2,2,1> (&self.data, v.as_ref()))
+    fn transform(&self, v:FArray<F,2>) -> FArray<F,2> {
+        FArray::from_array(matrix::multiply::<F,4,2,2,2,2,1> (&self.data, v.as_ref()))
     }
 }
 
-impl <F:Float> SqMatrix<FSlice<F,3>, F, 3, 9> for FSlice2<F, 3, 9> {
+impl <F:Float> SqMatrix<FArray<F,3>, F, 3, 9> for FArray2<F, 3, 9> {
     fn from_array(data:[F;9]) -> Self { Self { data  } }
     fn zero() -> Self { Self { data:vector::zero() }    }
     fn identity() -> Self { Self { data:vector::zero() }   }
@@ -120,12 +124,12 @@ impl <F:Float> SqMatrix<FSlice<F,3>, F, 3, 9> for FSlice2<F, 3, 9> {
     fn inverse(&self) -> Self {
         Self::from_array(matrix::inverse3(&self.data))
     }
-    fn transform(&self, v:FSlice<F,3>) -> FSlice<F,3> {
-        FSlice::from_array(matrix::multiply::<F,9,3,3,3,3,1> (&self.data, v.as_ref()))
+    fn transform(&self, v:FArray<F,3>) -> FArray<F,3> {
+        FArray::from_array(matrix::multiply::<F,9,3,3,3,3,1> (&self.data, v.as_ref()))
     }
 }
 
-impl <F:Float> SqMatrix<FSlice<F,4>, F, 4, 16> for FSlice2<F, 4, 16> {
+impl <F:Float> SqMatrix<FArray<F,4>, F, 4, 16> for FArray2<F, 4, 16> {
     fn from_array(data:[F;16]) -> Self { Self { data  } }
     fn zero() -> Self { Self { data:vector::zero() }    }
     fn identity() -> Self { Self { data:vector::zero() }   }
@@ -138,8 +142,8 @@ impl <F:Float> SqMatrix<FSlice<F,4>, F, 4, 16> for FSlice2<F, 4, 16> {
     fn inverse(&self) -> Self {
         Self::from_array(matrix::inverse4(&self.data))
     }
-    fn transform(&self, v:FSlice<F,4>) -> FSlice<F,4> {
-        FSlice::from_array(matrix::multiply::<F,16,4,4,4,4,1> (&self.data, v.as_ref()))
+    fn transform(&self, v:FArray<F,4>) -> FArray<F,4> {
+        FArray::from_array(matrix::multiply::<F,16,4,4,4,4,1> (&self.data, v.as_ref()))
     }
 }
 

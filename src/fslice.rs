@@ -1,6 +1,6 @@
 //a Imports
-use super::{Float, Vector, SqMatrix, Vector3D, Geometry3D};
-use super::{vector, matrix};
+use super::{Float, Vector};
+use super::{vector};
 
 //a Macros
 //mi index_ops!
@@ -70,21 +70,25 @@ macro_rules! binary_op {
     }
 }
 
-//a FSlice
-//tp FSlice
+//a FArray
+//tp FArray
+/// The [FArray] is a wrapper around a `D` sized array of [Float]s.
+///
+/// It provides implementations of the traits required for a [Vector]
+/// trait, hence it can be used for a [Vector] of any size `D`.
 #[derive(Clone, Copy, Debug)]
-pub struct FSlice<F:Float, const D:usize> { data: [F;D] }
+pub struct FArray<F:Float, const D:usize> { data: [F;D] }
 
-//ip FSlice
-index_ops! { FSlice }
-ref_op! { FSlice, [F;D] }
-ref_op! { FSlice, [F] }
-binary_op! { FSlice, Add, add, +, AddAssign, add_assign, += }
-binary_op! { FSlice, Sub, sub, -, SubAssign, sub_assign, -= }
-binary_op! { FSlice, Mul, mul, *, MulAssign, mul_assign, *= }
-binary_op! { FSlice, Div, div, /, DivAssign, div_assign, /= }
+//ip FArray
+index_ops! { FArray }
+ref_op! { FArray, [F;D] }
+ref_op! { FArray, [F] }
+binary_op! { FArray, Add, add, +, AddAssign, add_assign, += }
+binary_op! { FArray, Sub, sub, -, SubAssign, sub_assign, -= }
+binary_op! { FArray, Mul, mul, *, MulAssign, mul_assign, *= }
+binary_op! { FArray, Div, div, /, DivAssign, div_assign, /= }
 
-impl <F:Float, const D:usize> std::ops::Neg for FSlice<F, D> {
+impl <F:Float, const D:usize> std::ops::Neg for FArray<F, D> {
     type Output = Self;
     fn neg(self) -> Self::Output {
         let mut data = [F::zero();D];
@@ -92,12 +96,12 @@ impl <F:Float, const D:usize> std::ops::Neg for FSlice<F, D> {
         Self { data }
     }
 }
-impl <F:Float, const D:usize> std::default::Default for FSlice<F, D> {
+impl <F:Float, const D:usize> std::default::Default for FArray<F, D> {
     fn default() -> Self { Self { data:vector::zero() } }
 }
 
-//ip Vector<F,D> for FSlice
-impl <F:Float, const D:usize> Vector<F, D> for FSlice<F, D> {
+//ip Vector<F,D> for FArray
+impl <F:Float, const D:usize> Vector<F, D> for FArray<F, D> {
     fn from_array(data:[F;D]) -> Self { Self { data  } }
     fn zero() -> Self {
         Self { data:vector::zero() }

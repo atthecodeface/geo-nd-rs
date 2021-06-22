@@ -7,7 +7,7 @@ authors = ["Gavin J Stark"]
 description = "Traits and types particularly for 2D and 3D geometry with implementations for [float] and optionally SIMD\n"
 homepage = "https://github.com/atthecodeface/geo-nd-rs"
 documentation = "https://docs.rs/geo-nd"
-keywords = ["mathematics", "geometry", "gamedev", "math", "matrix", "vector", "quaternion", "simd"]
+keywords = ["geometry", "gamedev", "vector", "quaternion", "simd"]
 categories = ["graphics", "rendering"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/atthecodeface/geo-nd-rs"
@@ -15,8 +15,9 @@ repository = "https://github.com/atthecodeface/geo-nd-rs"
 [dependencies.num-traits]
 version = "0.2.1"
 
-[dependencies]
-core_simd = { git = "https://github.com/rust-lang/stdsimd", optional = true }
+# [dependencies.core_simd]
+# git = "https://github.com/rust-lang/stdsimd"
+# optional = true
 
-[features]
-simd = ["core_simd"]
+# [features]
+# simd = ["core_simd"]
