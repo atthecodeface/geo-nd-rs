@@ -1,0 +1,23 @@
+[package]
+name = "geometry"
+version = "0.1.0"
+readme = "README.md"
+authors = ["Gavin J Stark"]
+# exclude = ["/bors.toml", "/ci/*", "/.github/*"]
+description = "Traits and types particularly for 2D and 3D geometry with implementations for [float] and optionally SIMD\n"
+homepage = "https://github.com/rust-num/num"
+documentation = "https://docs.rs/num"
+readme = "README.md"
+keywords = ["mathematics", "numerics", "bignum"]
+categories = ["algorithms", "data-structures", "science", "no-std"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rust-num/num"
+
+[dependencies.num-traits]
+version = "0.2.1"
+
+[dependencies]
+core_simd = { git = "https://github.com/rust-lang/stdsimd", optional = true }
+
+[features]
+simd = ["core_simd"]
