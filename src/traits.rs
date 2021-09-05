@@ -322,88 +322,104 @@ pub trait Quaternion<F, V3, V4> : Clone
     + std::ops::DivAssign<F>
 where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
 {
-        //fp from_array
-        /// Create a quaternion from an array of [Float]
-        fn from_array(data:[F;4]) -> Self;
+    //fp from_array
+    /// Create a quaternion from an array of [Float]
+    fn from_array(data:[F;4]) -> Self;
 
-        //fp as_rijk
-        /// Break out into r, i, j, k
-        fn as_rijk(&self) -> (F, F, F, F);
+    //fp as_rijk
+    /// Break out into r, i, j, k
+    fn as_rijk(&self) -> (F, F, F, F);
 
-        //fp of_rijk
-        /// Create from r, i, j, k
-        fn of_rijk(r:F, i:F, j:F, k:F) -> Self;
+    //fp of_rijk
+    /// Create from r, i, j, k
+    fn of_rijk(r:F, i:F, j:F, k:F) -> Self;
 
-        //fp conjugate
-        /// Create the conjugate of a quaternion
-        fn conjugate(&self) -> Self {
-            let (r,i,j,k) = self.as_rijk();
-            Self::of_rijk(r,-i,-j,-k)
-        }
-
-        //fp unit
-        /// Create a quaternion whose elements are all zero
-        fn unit() -> Self;
-
-        //fp of_axis_angle
-        fn of_axis_angle(axis:&V3, angle:F) -> Self {
-            let (s,c) = F::sin_cos(angle / F::from(2).unwrap());
-            let i = s * axis[0];
-            let j = s * axis[1];
-            let k = s * axis[2];
-            let r = c;
-            Self::of_rijk(r,i,j,k)
-        }
-
-        //mp set_zero
-        /// Set the quaternion to be all zeros
-        fn set_zero(&mut self);
-
-        //mp mix
-        /// Create a linear combination of this [Quaternion] and another using parameter `t` from zero to one
-        fn mix(&self, other:&Self, t:F) -> Self;
-
-        //mp dot
-        /// Return the dot product of two quaternions; basically used for length
-        fn dot(&self, other:&Self) -> F;
-
-        //mp length_sq
-        /// Return the square of the length of the quaternion
-        fn length_sq(&self) -> F { self.dot(self) }
-
-        //mp length
-        /// Return the length of the quaternion
-        fn length(&self)    -> F { self.length_sq().sqrt() }
-
-        //mp distance_sq
-        /// Return the square of the distance between this quaternion and another
-        fn distance_sq(&self, other:&Self) -> F { (*self - *other).length_sq() }
-
-        //mp distance
-        /// Return the distance between this quaternion and another
-        fn distance(&self, other:&Self) -> F { self.distance_sq(other).sqrt() }
-
-        //mp normalize
-        /// Normalize the quaternion; if its length is close to zero, then set it to be zero
-        fn normalize(&mut self) { let l = self.length(); if l < F::epsilon() {self.set_zero()} else {*self /= l} }
-
-        //fp of_rotation3
-        /// Find the unit quaternion of a Matrix3 assuming it is purely a rotation
-        fn of_rotation3<M> (rotation:&M) -> Self
-        where M:SqMatrix<V3, F, 3, 9>;
-
-        //fp set_rotation3
-        /// Set a Matrix3 to be the rotation matrix corresponding to the unit quaternion
-        fn set_rotation3<M> (&self, m:&mut M)
-        where M:SqMatrix<V3, F, 3, 9>;
-
-        //fp set_rotation4
-        /// Set a Matrix4 to be the rotation matrix corresponding to the unit quaternion
-        fn set_rotation4<M> (&self, m:&mut M)
-        where M:SqMatrix<V4, F, 4, 16>;
-
-        //zz All done
+    //fp conjugate
+    /// Create the conjugate of a quaternion
+    fn conjugate(&self) -> Self {
+        let (r,i,j,k) = self.as_rijk();
+        Self::of_rijk(r,-i,-j,-k)
     }
+
+    //fp unit
+    /// Create a quaternion whose elements are all zero
+    fn unit() -> Self;
+
+    //fp of_axis_angle
+    fn of_axis_angle(axis:&V3, angle:F) -> Self {
+        let (s,c) = F::sin_cos(angle / F::from(2).unwrap());
+        let i = s * axis[0];
+        let j = s * axis[1];
+        let k = s * axis[2];
+        let r = c;
+        Self::of_rijk(r,i,j,k)
+    }
+
+    //fp as_axis_angle
+    fn as_axis_angle(&self) -> (V3, F) {
+        let (r,i,j,k) = self.as_rijk();
+        let i2 = i * i;
+        let j2 = j * j;
+        let k2 = k * k;
+        let l = (i2 + j2 + k2).sqrt();
+        if l < F::epsilon() {
+            (V3::from_array([i, j, k]), F::zero())
+        } else {
+            let rl = F::one()/l;
+            (V3::from_array([i*rl, j*rl, k*rl]),
+            F::atan2(l,r))
+        }
+    }
+
+    //mp set_zero
+    /// Set the quaternion to be all zeros
+    fn set_zero(&mut self);
+
+    //mp mix
+    /// Create a linear combination of this [Quaternion] and another using parameter `t` from zero to one
+    fn mix(&self, other:&Self, t:F) -> Self;
+
+    //mp dot
+    /// Return the dot product of two quaternions; basically used for length
+    fn dot(&self, other:&Self) -> F;
+
+    //mp length_sq
+    /// Return the square of the length of the quaternion
+    fn length_sq(&self) -> F { self.dot(self) }
+
+    //mp length
+    /// Return the length of the quaternion
+    fn length(&self)    -> F { self.length_sq().sqrt() }
+
+    //mp distance_sq
+    /// Return the square of the distance between this quaternion and another
+    fn distance_sq(&self, other:&Self) -> F { (*self - *other).length_sq() }
+
+    //mp distance
+    /// Return the distance between this quaternion and another
+    fn distance(&self, other:&Self) -> F { self.distance_sq(other).sqrt() }
+
+    //mp normalize
+    /// Normalize the quaternion; if its length is close to zero, then set it to be zero
+    fn normalize(&mut self) { let l = self.length(); if l < F::epsilon() {self.set_zero()} else {*self /= l} }
+
+    //fp of_rotation3
+    /// Find the unit quaternion of a Matrix3 assuming it is purely a rotation
+    fn of_rotation3<M> (rotation:&M) -> Self
+    where M:SqMatrix<V3, F, 3, 9>;
+
+    //fp set_rotation3
+    /// Set a Matrix3 to be the rotation matrix corresponding to the unit quaternion
+    fn set_rotation3<M> (&self, m:&mut M)
+    where M:SqMatrix<V3, F, 3, 9>;
+
+    //fp set_rotation4
+    /// Set a Matrix4 to be the rotation matrix corresponding to the unit quaternion
+    fn set_rotation4<M> (&self, m:&mut M)
+    where M:SqMatrix<V4, F, 4, 16>;
+
+    //zz All done
+}
 
 //a Vector3D, Geometry3D
 //tt Vector3D
@@ -435,10 +451,10 @@ pub trait Geometry3D<Scalar: Float> {
     type Mat3: SqMatrix<Self::Vec3, Scalar, 3, 9>;
     /// The type of a 3D matrix which allows for translations, that can transform Vec4
     type Mat4: SqMatrix<Self::Vec4, Scalar, 4, 16>;
+    /// The quaternion type that provides for rotations in 3D
+    type Quat: Quaternion<Scalar, Self::Vec3, Self::Vec4>;
     // fn perspective4
     // fn translate4
-    // fn from_quat3
-    // fn from_quat4
     // fn of_transform3/4?
     // cross_product3
     // axis_of_rotation3/4

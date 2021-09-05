@@ -155,6 +155,7 @@ impl Geometry3D<f32> for f32 {
     type Vec4 = FArray<f32, 4>;
     type Mat3 = FArray2<f32, 3, 9>;
     type Mat4 = FArray2<f32, 4, 16>;
+    type Quat = QArray<f32, FArray<f32, 3>, FArray<f32, 4>>;
 }
 
 //ip Geometry2D for f32
@@ -176,6 +177,7 @@ impl Geometry3D<f64> for f64 {
     type Vec4 = FArray<f64, 4>;
     type Mat3 = FArray2<f64, 3, 9>;
     type Mat4 = FArray2<f64, 4, 16>;
+    type Quat = QArray<f64, FArray<f64, 3>, FArray<f64, 4>>;
 }
 
 //ip Geometry2D for f64

@@ -26,7 +26,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-geo-nd = "0.1"
+geo-nd = "0.1.2"
 ```
 
 ## Features
