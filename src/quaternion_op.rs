@@ -21,6 +21,16 @@ use crate::{Num, Float};
 use crate::vector_op as vector;
 use crate::matrix_op as matrix;
 
+//a Notes on matrices of quaternions
+/// 1 - 2*j2 - 2*k2           2*i*j - 2*k*r        2*i*k + 2*j*r
+///     2*i*j + 2*k*r     1 - 2*i2 - 2*k2          2*j*k - 2*i*r
+///     2*i*k - 2*j*r         2*j*k + 2*i*r    1 - 2*i2 - 2*j2
+///
+/// m[0] + m[4] + m[9] = 3 - 4(i^2+j^2+k^2) = 3 - 4(1-r^2) = 4r^2 - 1
+/// m[7] - m[5] = 4*i*r ( if <0 then i<0 )
+/// m[2] - m[6] = 4*j*r ( if <0 then j<0 )
+/// m[3] - m[1] = 4*k*r ( if <0 then k<0 )
+
 //a Constructors and desconstructors
 //fp new
 /// Create a new quaternion
@@ -57,9 +67,91 @@ pub fn of_axis_angle<V:Float>(axis:&[V;3], angle:V) -> [V;4] {
     [ i, j, k, r ]
 }
 
+//fp to_rotation3
+/// Convert a matrix-3 from the quaternion
+pub fn to_rotation3<V:Float>(q:&[V;4], m:&mut [V;9])  {
+    let i2 = q[0] * q[0];
+    let j2 = q[1] * q[1];
+    let k2 = q[2] * q[2];
+    let r2 = q[3] * q[3];
+
+    let l2  = r2 + i2 + j2 + k2;
+    let rl2 = V::one() / l2;
+
+    m[0] = (r2 + i2 - j2 - k2) * rl2;
+    m[4] = (r2 - i2 + j2 - k2) * rl2;
+    m[8] = (r2 - i2 - j2 + k2) * rl2;
+
+    let drl2 = V::frac(2,1) * rl2;
+
+    m[1] = (q[0]*q[1] - q[2]*q[3]) * drl2 ;
+    m[3] = (q[0]*q[1] + q[2]*q[3]) * drl2 ;
+
+    m[2] = (q[2]*q[0] + q[1]*q[3]) * drl2 ;
+    m[6] = (q[2]*q[0] - q[1]*q[3]) * drl2 ;
+    
+    m[5] = (q[1]*q[2] - q[0]*q[3]) * drl2 ;
+    m[7] = (q[1]*q[2] + q[0]*q[3]) * drl2 ;
+    
+}
+
+//fp to_rotation4
+/// Convert to a matrix-4 from a unit quaternion
+pub fn to_rotation4<V:Float>(q:&[V;4], m:&mut [V;16])  {
+    let i2 = q[0] * q[0];
+    let j2 = q[1] * q[1];
+    let k2 = q[2] * q[2];
+    let r2 = q[3] * q[3];
+
+    let l2  = r2 + i2 + j2 + k2;
+    let rl2 = V::one() / l2;
+
+    m[0] = (r2 + i2 - j2 - k2) * rl2;
+    m[5] = (r2 - i2 + j2 - k2) * rl2;
+    m[10] = (r2 - i2 - j2 + k2) * rl2;
+
+    let drl2 = V::frac(2,1) * rl2;
+
+    m[1] = (q[0]*q[1] - q[2]*q[3]) * drl2 ;
+    m[4] = (q[0]*q[1] + q[2]*q[3]) * drl2 ;
+
+    m[2] = (q[2]*q[0] + q[1]*q[3]) * drl2 ;
+    m[8] = (q[2]*q[0] - q[1]*q[3]) * drl2 ;
+    
+    m[6] = (q[1]*q[2] - q[0]*q[3]) * drl2 ;
+    m[9] = (q[1]*q[2] + q[0]*q[3]) * drl2 ;
+
+    m[3] = V::zero();
+    m[7] = V::zero();
+    m[11] = V::zero();
+    m[12] = V::zero();
+    m[13] = V::zero();
+    m[14] = V::zero();
+    m[15] = V::one();
+}
+
 //fp of_rotation
 /// Find the quaternion of a Matrix3 assuming it is purely a rotation
-pub fn of_rotation<V:Float>(rotation:&[V;9]) -> [V;4] {
+pub fn of_rotation<V:Float>(m:&[V;9]) -> [V;4] {
+    fn safe_sqrt<V:Float>(x:V) -> V { if x<V::zero() {V::zero()} else {x.sqrt()} }
+    let r = safe_sqrt(V::one() + m[0] + m[4] + m[8]) * V::frac(1,2);
+    let mut i = safe_sqrt(V::one() + m[0] - m[4] - m[8]) * V::frac(1,2);
+    let mut j = safe_sqrt(V::one() - m[0] + m[4] - m[8]) * V::frac(1,2);
+    let mut k = safe_sqrt(V::one() - m[0] - m[4] + m[8]) * V::frac(1,2);
+
+    let r_i_4 = m[7] - m[5];
+    let r_j_4 = m[2] - m[6];
+    let r_k_4 = m[3] - m[1];
+    if r_i_4 < -V::epsilon() { i = -i; }
+    if r_j_4 < -V::epsilon() { j = -j; }
+    if r_k_4 < -V::epsilon() { k = -k; }
+
+    [i, j, k, r]
+}
+
+//fp of_rotation_old
+/// Find the quaternion of a Matrix3 assuming it is purely a rotation
+pub fn of_rotation_old<V:Float>(rotation:&[V;9]) -> [V;4] {
     let axis = vector::axis_of_rotation3(rotation);
 
     // Find a decent vector not parallel to the axis
@@ -148,7 +240,24 @@ pub fn multiply<V:Num>(a:&[V;4], b:&[V;4]) -> [V;4] {
     let j = a[1]*b[3] + a[3]*b[1] + a[2]*b[0] - a[0]*b[2];
     let k = a[2]*b[3] + a[3]*b[2] + a[0]*b[1] - a[1]*b[0];
     let r = a[3]*b[3] - a[0]*b[0] - a[1]*b[1] - a[2]*b[2];
+    dbg!(a,b);
+    dbg!(r,i,j,k);
     [ i, j, k, r ]
+}
+
+//cp divide
+/// Multiply one quaternion by the conjugate of the other / len2 of other
+pub fn divide<V:Float>(a:&[V;4], b:&[V;4]) -> [V;4] {
+    let l2 = vector::length_sq(b);
+    if l2 < V::epsilon() {
+        [V::zero(); 4]
+    } else {
+        let i = a[0]*b[3] - a[3]*b[0] - a[1]*b[2] + a[2]*b[1];
+        let j = a[1]*b[3] - a[3]*b[1] - a[2]*b[0] + a[0]*b[2];
+        let k = a[2]*b[3] - a[3]*b[2] - a[0]*b[1] + a[1]*b[0];
+        let r = a[3]*b[3] + a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+        [ i/l2, j/l2, k/l2, r/l2 ]
+    }
 }
 
 //fp nlerp

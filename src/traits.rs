@@ -249,6 +249,130 @@ pub trait SqMatrix<V:Vector<F,D>, F:Float, const D:usize, const D2:usize> : Clon
         fn transform(&self, v:V) -> V;
     }
 
+//tt Quaternion
+/// The [Quaternion] trait describes a 4-dimensional vector of [Float] type.
+///
+/// Such [Quaternion]s support basic arithmetic using addition and
+/// subtraction, and they provide quaternion multiplication and division.
+///
+/// They also support basic arithmetic to all components of the
+/// [Quaternion] for addition, subtraction, multiplication and division by
+/// a scalar [Float] value type that they are comprised of. Hence a
+/// `q:Quaternion<F>` may be scaled by a `s:F` using `q * s`.
+///
+/// The [Quaternion] can be indexed only by a `usize`; that is individual
+/// components of the vector can be accessed, but ranges may not.
+pub trait Quaternion<F:Float> : Clone
+    + Copy
+    + std::fmt::Debug
+    + std::fmt::Display
+    + std::default::Default
+    + std::convert::AsRef<[F;4]>
+    + std::convert::AsMut<[F;4]>
+    + std::convert::AsRef<[F]>
+    + std::convert::AsMut<[F]>
+    + std::ops::Index<usize, Output = F>
+    + std::ops::IndexMut<usize>
+    + std::ops::Neg<Output = Self>
+    + std::ops::Add<Self, Output = Self>
+    + std::ops::Add<F, Output = Self>
+    + std::ops::AddAssign<Self>
+    + std::ops::AddAssign<F>
+    + std::ops::Sub<Self, Output = Self>
+    + std::ops::Sub<F, Output = Self>
+    + std::ops::SubAssign<Self>
+    + std::ops::SubAssign<F>
+    // + std::ops::Mul<Self, Output = Self>
+    + std::ops::Mul<F, Output = Self>
+    // + std::ops::MulAssign<Self>
+    + std::ops::MulAssign<F>
+    // + std::ops::Div<Self, Output = Self>
+    + std::ops::Div<F, Output = Self>
+    // + std::ops::DivAssign<Self>
+    + std::ops::DivAssign<F> {
+        //fp from_array
+        /// Create a quaternion from an array of [Float]
+        fn from_array(data:[F;4]) -> Self;
+
+        //fp as_rijk
+        /// Break out into r, i, j, k
+        fn as_rijk(&self) -> (F, F, F, F);
+
+        //fp of_rijk
+        /// Create from r, i, j, k
+        fn of_rijk(r:F, i:F, j:F, k:F) -> Self;
+
+        //fp conjugate
+        /// Create the conjugate of a quaternion
+        fn conjugate(&self) -> Self {
+            let (r,i,j,k) = self.as_rijk();
+            Self::of_rijk(r,-i,-j,-k)
+        }
+
+        //fp unit
+        /// Create a quaternion whose elements are all zero
+        fn unit() -> Self;
+
+        //fp of_axis_angle
+        fn of_axis_angle<V:Vector<F,3>> (axis:&V, angle:F) -> Self {
+            let (s,c) = F::sin_cos(angle / F::from(2).unwrap());
+            let i = s * axis[0];
+            let j = s * axis[1];
+            let k = s * axis[2];
+            let r = c;
+            Self::of_rijk(r,i,j,k)
+        }
+
+        //mp set_zero
+        /// Set the quaternion to be all zeros
+        fn set_zero(&mut self);
+
+        //mp mix
+        /// Create a linear combination of this [Quaternion] and another using parameter `t` from zero to one
+        fn mix(&self, other:&Self, t:F) -> Self;
+
+        //mp dot
+        /// Return the dot product of two quaternions; basically used for length
+        fn dot(&self, other:&Self) -> F;
+
+        //mp length_sq
+        /// Return the square of the length of the quaternion
+        fn length_sq(&self) -> F { self.dot(self) }
+
+        //mp length
+        /// Return the length of the quaternion
+        fn length(&self)    -> F { self.length_sq().sqrt() }
+
+        //mp distance_sq
+        /// Return the square of the distance between this quaternion and another
+        fn distance_sq(&self, other:&Self) -> F { (*self - *other).length_sq() }
+
+        //mp distance
+        /// Return the distance between this quaternion and another
+        fn distance(&self, other:&Self) -> F { self.distance_sq(other).sqrt() }
+
+        //mp normalize
+        /// Normalize the quaternion; if its length is close to zero, then set it to be zero
+        fn normalize(&mut self) { let l = self.length(); if l < F::epsilon() {self.set_zero()} else {*self /= l} }
+
+        //fp of_rotation3
+        /// Find the unit quaternion of a Matrix3 assuming it is purely a rotation
+        fn of_rotation3<M,V> (rotation:&M) -> Self
+        where V:Vector<F,3>,M:SqMatrix<V, F, 3, 9>;
+        
+        //fp set_rotation3
+        /// Set a Matrix3 to be the rotation matrix corresponding to the unit quaternion
+        fn set_rotation3<M,V> (&self, m:&mut M)
+        where V:Vector<F,3>,M:SqMatrix<V, F, 3, 9>;
+        
+        //fp set_rotation4
+        /// Set a Matrix4 to be the rotation matrix corresponding to the unit quaternion
+        fn set_rotation4<M,V> (&self, m:&mut M)
+        where V:Vector<F,4>,M:SqMatrix<V, F, 4, 16>;
+        
+        //zz All done
+    }
+
 //a Vector3D, Geometry3D
 //tt Vector3D
 /// This is probably a temporary trait used until SIMD supports Geometry3D and Geometry2D

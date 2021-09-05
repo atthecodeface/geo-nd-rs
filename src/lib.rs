@@ -89,11 +89,13 @@ mod matrix_op;
 
 mod fslice;
 mod fslice2;
+mod qarray;
 
 //a Exports
-pub use traits::*;
+pub use traits::{Num, Float, Vector, Quaternion, SqMatrix, Vector3D, Geometry3D, Geometry2D};
 pub use fslice::FArray;
 pub use fslice2::FArray2;
+pub use qarray::QArray;
 
 /// Vector functions module
 ///
