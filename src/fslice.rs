@@ -1,6 +1,6 @@
 //a Imports
+use super::vector;
 use super::{Float, Vector};
-use super::{vector};
 
 //a Macros
 //mi index_ops!
@@ -77,7 +77,9 @@ macro_rules! binary_op {
 /// It provides implementations of the traits required for a [Vector]
 /// trait, hence it can be used for a [Vector] of any size `D`.
 #[derive(Clone, Copy, Debug)]
-pub struct FArray<F:Float, const D:usize> { data: [F;D] }
+pub struct FArray<F: Float, const D: usize> {
+    data: [F; D],
+}
 
 //ip FArray
 index_ops! { FArray }
@@ -88,29 +90,39 @@ binary_op! { FArray, Sub, sub, -, SubAssign, sub_assign, -= }
 binary_op! { FArray, Mul, mul, *, MulAssign, mul_assign, *= }
 binary_op! { FArray, Div, div, /, DivAssign, div_assign, /= }
 
-impl <F:Float, const D:usize> std::ops::Neg for FArray<F, D> {
+impl<F: Float, const D: usize> std::ops::Neg for FArray<F, D> {
     type Output = Self;
     fn neg(self) -> Self::Output {
-        let mut data = [F::zero();D];
-        for i in 0..D { data[i] = -self.data[i]; }
+        let mut data = [F::zero(); D];
+        for i in 0..D {
+            data[i] = -self.data[i];
+        }
         Self { data }
     }
 }
-impl <F:Float, const D:usize> std::default::Default for FArray<F, D> {
-    fn default() -> Self { Self { data:vector::zero() } }
+impl<F: Float, const D: usize> std::default::Default for FArray<F, D> {
+    fn default() -> Self {
+        Self {
+            data: vector::zero(),
+        }
+    }
 }
 
-impl <F:Float, const D:usize> std::fmt::Display for FArray<F, D> {
+impl<F: Float, const D: usize> std::fmt::Display for FArray<F, D> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         vector::fmt(f, &self.data)
     }
 }
 
 //ip Vector<F,D> for FArray
-impl <F:Float, const D:usize> Vector<F, D> for FArray<F, D> {
-    fn from_array(data:[F;D]) -> Self { Self { data  } }
+impl<F: Float, const D: usize> Vector<F, D> for FArray<F, D> {
+    fn from_array(data: [F; D]) -> Self {
+        Self { data }
+    }
     fn zero() -> Self {
-        Self { data:vector::zero() }
+        Self {
+            data: vector::zero(),
+        }
     }
     fn is_zero(&self) -> bool {
         vector::is_zero(&self.data)
@@ -118,16 +130,19 @@ impl <F:Float, const D:usize> Vector<F, D> for FArray<F, D> {
     fn set_zero(&mut self) {
         vector::set_zero(&mut self.data)
     }
-    fn mix(&self, other:&Self, t:F) -> Self {
-        Self { data:vector::mix(&self.data, &other.data, t) }
+    fn mix(&self, other: &Self, t: F) -> Self {
+        Self {
+            data: vector::mix(&self.data, &other.data, t),
+        }
     }
     fn reduce_sum(&self) -> F {
         let mut r = F::zero();
-        for d in self.data { r = r + d }
+        for d in self.data {
+            r = r + d
+        }
         r
     }
-    fn dot(&self, other:&Self) -> F {
+    fn dot(&self, other: &Self) -> F {
         vector::dot(&self.data, &other.data)
     }
 }
-

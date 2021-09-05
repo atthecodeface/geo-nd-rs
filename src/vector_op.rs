@@ -17,8 +17,8 @@ limitations under the License.
  */
 
 //a Imports
-use crate::{Num, Float};
 use super::matrix_op as matrix;
+use crate::{Float, Num};
 
 //a Vector constructors
 //fp zero
@@ -32,7 +32,9 @@ use super::matrix_op as matrix;
 /// assert_eq!( a, [0., 0., 0., 0.]);
 /// ```
 ///
-pub fn zero<V:Num,const D:usize> () -> [V; D] { [V::zero();D] }
+pub fn zero<V: Num, const D: usize>() -> [V; D] {
+    [V::zero(); D]
+}
 
 //mp set_zero
 /// Set the vector in-place to be zero
@@ -46,8 +48,10 @@ pub fn zero<V:Num,const D:usize> () -> [V; D] { [V::zero();D] }
 /// assert_eq!( a, [0., 0., 0.]);
 /// ```
 ///
-pub fn set_zero<V:Num> (v:&mut [V]) {
-    for c in v.iter_mut() { c.set_zero(); }
+pub fn set_zero<V: Num>(v: &mut [V]) {
+    for c in v.iter_mut() {
+        c.set_zero();
+    }
 }
 
 //fp is_zero
@@ -62,8 +66,12 @@ pub fn set_zero<V:Num> (v:&mut [V]) {
 /// assert!( vector::is_zero(&a) );
 /// ```
 ///
-pub fn is_zero<V:Num> (v:&[V]) -> bool {
-    for c in v { if !c.is_zero() {return false;}}
+pub fn is_zero<V: Num>(v: &[V]) -> bool {
+    for c in v {
+        if !c.is_zero() {
+            return false;
+        }
+    }
     true
 }
 
@@ -87,7 +95,7 @@ pub fn is_zero<V:Num> (v:&[V]) -> bool {
 /// let z = vector::cross_product3(&x, &y);
 /// assert_eq!( z, [0., 0., 1.] );
 /// ```
-pub fn cross_product3<V:Num> (x:&[V;3], y:&[V;3]) -> [V;3] {
+pub fn cross_product3<V: Num>(x: &[V; 3], y: &[V; 3]) -> [V; 3] {
     let c0 = x[1] * y[2] - x[2] * y[1];
     let c1 = x[2] * y[0] - x[0] * y[2];
     let c2 = x[0] * y[1] - x[1] * y[0];
@@ -108,7 +116,7 @@ pub fn cross_product3<V:Num> (x:&[V;3], y:&[V;3]) -> [V;3] {
 /// assert_eq!( vector::mix( &a, &b, 0.5), [2.5, 2.]);
 /// ```
 ///
-pub fn mix<V:Float,const D:usize> (a:&[V;D], b:&[V;D], t:V) -> [V;D] {
+pub fn mix<V: Float, const D: usize>(a: &[V; D], b: &[V; D], t: V) -> [V; D] {
     let mut v = zero();
     let omt = V::one() - t;
     for i in 0..D {
@@ -205,9 +213,9 @@ pub fn mix<V:Float,const D:usize> (a:&[V;D], b:&[V;D], t:V) -> [V;D] {
 /// Then subtracting across the diagonal yields 2sx, 2sy, 2sz
 ///
 /// However, if 2+2c is close to 0 then this fails
-pub fn axis_of_rotation3<V:Float>(rotation:&[V;9]) -> [V;3] {
+pub fn axis_of_rotation3<V: Float>(rotation: &[V; 9]) -> [V; 3] {
     let mut rot_min_id = rotation.clone();
-    let almost_one  = V::from(99999).unwrap() / V::from(100000).unwrap();
+    let almost_one = V::from(99999).unwrap() / V::from(100000).unwrap();
     let almost_zero = V::one() / V::from(100000).unwrap();
     rot_min_id[0] = rot_min_id[8] - almost_one;
     rot_min_id[4] = rot_min_id[8] - almost_one;
@@ -219,9 +227,11 @@ pub fn axis_of_rotation3<V:Float>(rotation:&[V;9]) -> [V;3] {
         let mut last_v = [V::zero(); 3];
         for _ in 0..10 {
             last_v = v;
-            v = normalize(matrix::transform_vec3( &rot_min_id_i, &v ));
+            v = normalize(matrix::transform_vec3(&rot_min_id_i, &v));
         }
-        if distance_sq(&v, &last_v) < almost_zero { return v; }
+        if distance_sq(&v, &last_v) < almost_zero {
+            return v;
+        }
     }
     [V::zero(); 3]
 }
@@ -238,8 +248,10 @@ pub fn axis_of_rotation3<V:Float>(rotation:&[V;9]) -> [V;3] {
 /// assert_eq!( a, [2., 4., 6.]);
 /// ```
 ///
-pub fn scale<V:Num,const D:usize> (mut v:[V;D], s:V) -> [V;D] {
-    for c in &mut v { *c = (*c) * s; }
+pub fn scale<V: Num, const D: usize>(mut v: [V; D], s: V) -> [V; D] {
+    for c in &mut v {
+        *c = (*c) * s;
+    }
     v
 }
 
@@ -255,8 +267,10 @@ pub fn scale<V:Num,const D:usize> (mut v:[V;D], s:V) -> [V;D] {
 /// assert_eq!( a, [2., 0., 12.]);
 /// ```
 ///
-pub fn comp_mult<V:Num,const D:usize> (mut v:[V;D], s:&[V;D]) -> [V;D] {
-    for i in 0..D { v[i] = v[i] * s[i]; }
+pub fn comp_mult<V: Num, const D: usize>(mut v: [V; D], s: &[V; D]) -> [V; D] {
+    for i in 0..D {
+        v[i] = v[i] * s[i];
+    }
     v
 }
 
@@ -271,8 +285,10 @@ pub fn comp_mult<V:Num,const D:usize> (mut v:[V;D], s:&[V;D]) -> [V;D] {
 /// assert_eq!( a, [1., 2., 3.]);
 /// ```
 ///
-pub fn reduce<V:Num,const D:usize> (mut v:[V;D], s:V) -> [V;D] {
-    for c in &mut v { *c = (*c) / s; }
+pub fn reduce<V: Num, const D: usize>(mut v: [V; D], s: V) -> [V; D] {
+    for c in &mut v {
+        *c = (*c) / s;
+    }
     v
 }
 
@@ -288,7 +304,7 @@ pub fn reduce<V:Num,const D:usize> (mut v:[V;D], s:V) -> [V;D] {
 /// assert_eq!( vector::add( a, &b, 3.), [9., 10.]);
 /// ```
 ///
-pub fn add<V:Num,const D:usize> (mut v:[V;D], other:&[V;D], scale:V) -> [V;D] {
+pub fn add<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [V; D] {
     for i in 0..D {
         v[i] = v[i] + other[i] * scale;
     }
@@ -298,7 +314,7 @@ pub fn add<V:Num,const D:usize> (mut v:[V;D], other:&[V;D], scale:V) -> [V;D] {
 //cp sub
 /// Consume the vector, and return a new vector that is the sum of
 /// this and a borrowed other vector scaled
-pub fn sub<V:Num,const D:usize> (mut v:[V;D], other:&[V;D], scale:V) -> [V;D] {
+pub fn sub<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [V; D] {
     for i in 0..D {
         v[i] = v[i] - other[i] * scale;
     }
@@ -318,9 +334,15 @@ pub fn sub<V:Num,const D:usize> (mut v:[V;D], other:&[V;D], scale:V) -> [V;D] {
 /// assert_eq!( vector::clamp( a, -10., 10.), [-1., 3.]);
 /// ```
 ///
-pub fn clamp<V:Float,const D:usize> (mut a:[V;D], min:V, max:V) -> [V;D] {
+pub fn clamp<V: Float, const D: usize>(mut a: [V; D], min: V, max: V) -> [V; D] {
     for i in 0..D {
-        a[i] = if a[i] < min {min} else if a[i] > max {max} else {a[i]};
+        a[i] = if a[i] < min {
+            min
+        } else if a[i] > max {
+            max
+        } else {
+            a[i]
+        };
     }
     a
 }
@@ -338,7 +360,7 @@ pub fn clamp<V:Float,const D:usize> (mut a:[V;D], min:V, max:V) -> [V;D] {
 /// assert_eq!( vector::normalize([0.,0.]), [0.,0.] );
 /// ```
 ///
-pub fn normalize<V:Float,const D:usize> (mut v:[V;D]) -> [V;D] {
+pub fn normalize<V: Float, const D: usize>(mut v: [V; D]) -> [V; D] {
     let l = length(&v);
     if l < V::epsilon() {
         set_zero(&mut v);
@@ -370,12 +392,18 @@ pub fn normalize<V:Float,const D:usize> (mut v:[V;D]) -> [V;D] {
 /// assert!( vector::distance_sq( &vector::rotate_around(a, &pivot, (90.0_f32).to_radians(), 1, 2 ), &[3., -2., 1.] ) < 1E-8 );
 /// ```
 ///
-pub fn rotate_around<V:Float,const D:usize> (mut v:[V;D], pivot:&[V;D], angle:V, c0:usize, c1:usize) -> [V;D] {
-    let (s,c) = angle.sin_cos();
+pub fn rotate_around<V: Float, const D: usize>(
+    mut v: [V; D],
+    pivot: &[V; D],
+    angle: V,
+    c0: usize,
+    c1: usize,
+) -> [V; D] {
+    let (s, c) = angle.sin_cos();
     let dx = v[c0] - pivot[c0];
     let dy = v[c1] - pivot[c1];
-    let x1 = c*dx - s*dy;
-    let y1 = c*dy + s*dx;
+    let x1 = c * dx - s * dy;
+    let y1 = c * dy + s * dx;
     v[c0] = x1 + pivot[c0];
     v[c1] = y1 + pivot[c1];
     v
@@ -392,9 +420,11 @@ pub fn rotate_around<V:Float,const D:usize> (mut v:[V;D], pivot:&[V;D], angle:V,
 /// assert_eq!( vector::length_sq(&[3., 4.]), 25. );
 /// ```
 ///
-pub fn length_sq<V:Num> (v:&[V]) -> V {
+pub fn length_sq<V: Num>(v: &[V]) -> V {
     let mut r = V::zero();
-    for c in v.iter() { r = r + (*c) * (*c) }
+    for c in v.iter() {
+        r = r + (*c) * (*c)
+    }
     r
 }
 
@@ -408,7 +438,7 @@ pub fn length_sq<V:Num> (v:&[V]) -> V {
 /// assert_eq!( vector::length(&[3., 4.]), 5. );
 /// ```
 ///
-pub fn length<V:Float> (v:&[V]) -> V {
+pub fn length<V: Float>(v: &[V]) -> V {
     length_sq(v).sqrt()
 }
 
@@ -422,7 +452,7 @@ pub fn length<V:Float> (v:&[V]) -> V {
 /// assert_eq!( vector::distance_sq(&[1.,-1.], &[4., 3.]), 25. );
 /// ```
 ///
-pub fn distance_sq<V:Num,const D:usize> (v:&[V;D], other:&[V;D]) -> V {
+pub fn distance_sq<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
     let mut r = V::zero();
     for i in 0..D {
         let d = v[i] - other[i];
@@ -441,8 +471,8 @@ pub fn distance_sq<V:Num,const D:usize> (v:&[V;D], other:&[V;D]) -> V {
 /// assert_eq!( vector::distance(&[1.,-1.], &[4., 3.]), 5. );
 /// ```
 ///
-pub fn distance<V:Float,const D:usize> (v:&[V;D], other:&[V;D]) -> V {
-    distance_sq(v,other).sqrt()
+pub fn distance<V: Float, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
+    distance_sq(v, other).sqrt()
 }
 
 //mp dot
@@ -455,10 +485,10 @@ pub fn distance<V:Float,const D:usize> (v:&[V;D], other:&[V;D]) -> V {
 /// assert_eq!( vector::dot(&[1.,-1.], &[4., 1.]), 3. );
 /// ```
 ///
-pub fn dot<V:Num,const D:usize> (v:&[V;D], other:&[V;D]) -> V {
+pub fn dot<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
     let mut r = V::zero();
     for i in 0..D {
-        r = r + v[i]*other[i];
+        r = r + v[i] * other[i];
     }
     r
 }
@@ -477,9 +507,9 @@ pub fn dot<V:Num,const D:usize> (v:&[V;D], other:&[V;D]) -> V {
 /// }
 /// assert_eq!( format!("{}", &Pt{c:[0., 1.]} ), "(0,1)" );
 /// ```
-pub fn fmt<V:Num>(f: &mut std::fmt::Formatter, v : &[V]) -> std::fmt::Result {
+pub fn fmt<V: Num>(f: &mut std::fmt::Formatter, v: &[V]) -> std::fmt::Result {
     for i in 0..v.len() {
-        if i==0 {
+        if i == 0 {
             write!(f, "({}", v[i])?;
         } else {
             write!(f, ",{}", v[i])?;
@@ -489,15 +519,13 @@ pub fn fmt<V:Num>(f: &mut std::fmt::Formatter, v : &[V]) -> std::fmt::Result {
 }
 
 /*
-    #f transformMat3
-    @staticmethod
-    def transformMat4(a:Vec4,x:Vec4,M:Mat4) -> Vec4:
-        c0=M[0]*x[0] + M[4]*x[1] + M[8]*x[2]  + M[12]*x[3];
-        c1=M[1]*x[0] + M[5]*x[1] + M[9]*x[2]  + M[13]*x[3];
-        c2=M[2]*x[0] + M[6]*x[1] + M[10]*x[2] + M[14]*x[3];
-        c3=M[3]*x[0] + M[7]*x[1] + M[11]*x[2] + M[15]*x[3];
-        a[0]=c0; a[1]=c1; a[2]=c2; a[3]=c3;
-        return a
- */
-
-
+   #f transformMat3
+   @staticmethod
+   def transformMat4(a:Vec4,x:Vec4,M:Mat4) -> Vec4:
+       c0=M[0]*x[0] + M[4]*x[1] + M[8]*x[2]  + M[12]*x[3];
+       c1=M[1]*x[0] + M[5]*x[1] + M[9]*x[2]  + M[13]*x[3];
+       c2=M[2]*x[0] + M[6]*x[1] + M[10]*x[2] + M[14]*x[3];
+       c3=M[3]*x[0] + M[7]*x[1] + M[11]*x[2] + M[15]*x[3];
+       a[0]=c0; a[1]=c1; a[2]=c2; a[3]=c3;
+       return a
+*/

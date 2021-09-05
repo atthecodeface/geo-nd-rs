@@ -23,10 +23,17 @@ limitations under the License.
 /// operate on integer types such as i32, i64 and isize
 ///
 /// The trait requires basic numeric operations, plus specifically [std::fmt::Display].
-pub trait Num : std::ops::Neg<Output=Self> +
-    num_traits::Num + num_traits::NumAssignOps +
-    Clone + Copy + PartialEq + std::fmt::Display + std::fmt::Debug {
-    }
+pub trait Num:
+    std::ops::Neg<Output = Self>
+    + num_traits::Num
+    + num_traits::NumAssignOps
+    + Clone
+    + Copy
+    + PartialEq
+    + std::fmt::Display
+    + std::fmt::Debug
+{
+}
 
 //tp Float
 /// The [Float] trait is required for matrix or vector elements which have a float aspect, such as `sqrt`.
@@ -39,19 +46,23 @@ pub trait Num : std::ops::Neg<Output=Self> +
 /// possible to require, as would perhaps be desired, a From<f32>
 /// trait, without conflicts occurring.
 ///
-pub trait Float : Num + num_traits::Float {
+pub trait Float: Num + num_traits::Float {
     //fp int
     /// Create a [Float] from an `isize` value; this should support
     /// constant implementations with no run-time overhead.
     #[inline]
-    fn int(n:isize) -> Self { Self::from(n).unwrap() }
+    fn int(n: isize) -> Self {
+        Self::from(n).unwrap()
+    }
 
     //fp frac
     /// Create a [Float] as a fraction described by a numerator and
     /// denomiator pair of `isize` values; this should support
     /// constant implementations with no run-time overhead.
     #[inline]
-    fn frac(n:isize, d:usize) -> Self { Self::from((n as f32)/(d as f32)).unwrap() }
+    fn frac(n: isize, d: usize) -> Self {
+        Self::from((n as f32) / (d as f32)).unwrap()
+    }
 }
 
 //ti Num for f32/f64/i32/i64/isize
@@ -80,13 +91,14 @@ impl Float for f64 {}
 ///
 /// The [Vector] can be indexed only by a `usize`; that is individual
 /// components of the vector can be accessed, but ranges may not.
-pub trait Vector<F:Float, const D:usize> : Clone
+pub trait Vector<F: Float, const D: usize>:
+    Clone
     + Copy
     + std::fmt::Debug
     + std::fmt::Display
     + std::default::Default
-    + std::convert::AsRef<[F;D]>
-    + std::convert::AsMut<[F;D]>
+    + std::convert::AsRef<[F; D]>
+    + std::convert::AsMut<[F; D]>
     + std::convert::AsRef<[F]>
     + std::convert::AsMut<[F]>
     + std::ops::Index<usize, Output = F>
@@ -107,77 +119,93 @@ pub trait Vector<F:Float, const D:usize> : Clone
     + std::ops::Div<Self, Output = Self>
     + std::ops::Div<F, Output = Self>
     + std::ops::DivAssign<Self>
-    + std::ops::DivAssign<F> {
-        //fp from_array
-        /// Create a vector from an array of [Float]
-        fn from_array(data:[F;D]) -> Self;
+    + std::ops::DivAssign<F>
+{
+    //fp from_array
+    /// Create a vector from an array of [Float]
+    fn from_array(data: [F; D]) -> Self;
 
-        //fp zero
-        /// Create a vector whose elements are all zero
-        fn zero() -> Self;
+    //fp zero
+    /// Create a vector whose elements are all zero
+    fn zero() -> Self;
 
-        //mp is_zero
-        /// Return true if the vector is all zeros
-        fn is_zero(&self) -> bool;
+    //mp is_zero
+    /// Return true if the vector is all zeros
+    fn is_zero(&self) -> bool;
 
-        //mp set_zero
-        /// Set the vector to be all zeros
-        fn set_zero(&mut self);
+    //mp set_zero
+    /// Set the vector to be all zeros
+    fn set_zero(&mut self);
 
-        //mp reduce_sum
-        /// Sum all of the components of the vector
-        fn reduce_sum(&self) -> F;
+    //mp reduce_sum
+    /// Sum all of the components of the vector
+    fn reduce_sum(&self) -> F;
 
-        //mp mix
-        /// Create a linear combination of this [Vector] and another using parameter `t` from zero to one
-        fn mix(&self, other:&Self, t:F) -> Self;
+    //mp mix
+    /// Create a linear combination of this [Vector] and another using parameter `t` from zero to one
+    fn mix(&self, other: &Self, t: F) -> Self;
 
-        //mp dot
-        /// Return the dot product of two vectors
-        fn dot(&self, other:&Self) -> F;
+    //mp dot
+    /// Return the dot product of two vectors
+    fn dot(&self, other: &Self) -> F;
 
-        //mp length_sq
-        /// Return the square of the length of the vector
-        fn length_sq(&self) -> F { self.dot(self) }
+    //mp length_sq
+    /// Return the square of the length of the vector
+    fn length_sq(&self) -> F {
+        self.dot(self)
+    }
 
-        //mp length
-        /// Return the length of the vector
-        fn length(&self)    -> F { self.length_sq().sqrt() }
+    //mp length
+    /// Return the length of the vector
+    fn length(&self) -> F {
+        self.length_sq().sqrt()
+    }
 
-        //mp distance_sq
-        /// Return the square of the distance between this vector and another
-        fn distance_sq(&self, other:&Self) -> F { (*self - *other).length_sq() }
+    //mp distance_sq
+    /// Return the square of the distance between this vector and another
+    fn distance_sq(&self, other: &Self) -> F {
+        (*self - *other).length_sq()
+    }
 
-        //mp distance
-        /// Return the distance between this vector and another
-        fn distance(&self, other:&Self) -> F { self.distance_sq(other).sqrt() }
+    //mp distance
+    /// Return the distance between this vector and another
+    fn distance(&self, other: &Self) -> F {
+        self.distance_sq(other).sqrt()
+    }
 
-        //mp normalize
-        /// Normalize the vector; if its length is close to zero, then set it to be zero
-        fn normalize(&mut self) { let l = self.length(); if l < F::epsilon() {self.set_zero()} else {*self /= l} }
-        // clamp
-
-        //cp rotate_around
-        /// Rotate a vector within a plane around a
-        /// *pivot* point by the specified angle
-        ///
-        /// The plane of rotation is specified by providing two vector indices for the elements to adjust. For a 2D rotation then the values of c0 and c1 should be 0 and 1.
-        ///
-        /// For a 3D rotation about the Z axis, they should be 0 and 1; for
-        /// rotation about the Y axis they should be 2 and 0; and for rotation
-        /// about the X axis they should be 1 and 2.
-        ///
-        fn rotate_around(mut self, pivot:&Self, angle:F, c0:usize, c1:usize) -> Self {
-            let (s,c) = angle.sin_cos();
-            let dx = self[c0] - pivot[c0];
-            let dy = self[c1] - pivot[c1];
-            let x1 = c*dx - s*dy;
-            let y1 = c*dy + s*dx;
-            self[c0] = x1 + pivot[c0];
-            self[c1] = y1 + pivot[c1];
-            self
+    //mp normalize
+    /// Normalize the vector; if its length is close to zero, then set it to be zero
+    fn normalize(&mut self) {
+        let l = self.length();
+        if l < F::epsilon() {
+            self.set_zero()
+        } else {
+            *self /= l
         }
     }
+    // clamp
+
+    //cp rotate_around
+    /// Rotate a vector within a plane around a
+    /// *pivot* point by the specified angle
+    ///
+    /// The plane of rotation is specified by providing two vector indices for the elements to adjust. For a 2D rotation then the values of c0 and c1 should be 0 and 1.
+    ///
+    /// For a 3D rotation about the Z axis, they should be 0 and 1; for
+    /// rotation about the Y axis they should be 2 and 0; and for rotation
+    /// about the X axis they should be 1 and 2.
+    ///
+    fn rotate_around(mut self, pivot: &Self, angle: F, c0: usize, c1: usize) -> Self {
+        let (s, c) = angle.sin_cos();
+        let dx = self[c0] - pivot[c0];
+        let dy = self[c1] - pivot[c1];
+        let x1 = c * dx - s * dy;
+        let y1 = c * dy + s * dx;
+        self[c0] = x1 + pivot[c0];
+        self[c1] = y1 + pivot[c1];
+        self
+    }
+}
 
 //tt SqMatrix
 /// The [SqMatrix] trait describes an N-dimensional square matrix of [Float] type that operates on a [Vector].
@@ -192,12 +220,13 @@ pub trait Vector<F:Float, const D:usize> : Clone
 /// [SqMatrix] for addition, subtraction, multiplication and division by
 /// a scalar [Float] value type that they are comprised of. Hence a
 /// `m:SqMatrix<F>` may be scaled by a `s:F` using `m * s`.
-pub trait SqMatrix<V:Vector<F,D>, F:Float, const D:usize, const D2:usize> : Clone
+pub trait SqMatrix<V: Vector<F, D>, F: Float, const D: usize, const D2: usize>:
+    Clone
     + Copy
     + std::fmt::Debug
     + std::default::Default
-    + std::convert::AsRef<[F;D2]>
-    + std::convert::AsMut<[F;D2]>
+    + std::convert::AsRef<[F; D2]>
+    + std::convert::AsMut<[F; D2]>
     + std::convert::AsRef<[F]>
     + std::convert::AsMut<[F]>
     + std::ops::Add<Output = Self>
@@ -209,45 +238,46 @@ pub trait SqMatrix<V:Vector<F,D>, F:Float, const D:usize, const D2:usize> : Clon
     + std::ops::Mul<F, Output = Self>
     + std::ops::MulAssign<F>
     + std::ops::Div<F, Output = Self>
-    + std::ops::DivAssign<F> {
-        //fp from_array
-        /// Create a [SqMatrix] from an array of [Float]s
-        fn from_array(data:[F;D2]) -> Self;
+    + std::ops::DivAssign<F>
+{
+    //fp from_array
+    /// Create a [SqMatrix] from an array of [Float]s
+    fn from_array(data: [F; D2]) -> Self;
 
-        //fp identity
-        /// Create an identity [SqMatrix]
-        fn identity() -> Self;
+    //fp identity
+    /// Create an identity [SqMatrix]
+    fn identity() -> Self;
 
-        //fp zero
-        /// Create a zero [SqMatrix]
-        fn zero() -> Self;
+    //fp zero
+    /// Create a zero [SqMatrix]
+    fn zero() -> Self;
 
-        //fp is_zero
-        /// Return true if the matrix is zer
-        fn is_zero(&self) -> bool;
+    //fp is_zero
+    /// Return true if the matrix is zer
+    fn is_zero(&self) -> bool;
 
-        //fp set_zero
-        /// Set the matrix to zero
-        fn set_zero(&mut self);
+    //fp set_zero
+    /// Set the matrix to zero
+    fn set_zero(&mut self);
 
-        // absmax
+    // absmax
 
-        //mp transpose
-        /// Return a transpose matrix
-        fn transpose(&self) -> Self;
+    //mp transpose
+    /// Return a transpose matrix
+    fn transpose(&self) -> Self;
 
-        //mp determinant
-        /// Calculate the determinant of the matrix
-        fn determinant(&self) -> F;
+    //mp determinant
+    /// Calculate the determinant of the matrix
+    fn determinant(&self) -> F;
 
-        //mp inverse
-        /// Create an inverse matrix
-        fn inverse(&self) -> Self;
+    //mp inverse
+    /// Create an inverse matrix
+    fn inverse(&self) -> Self;
 
-        //mp transform
-        /// Apply the matrix to a vector to transform it
-        fn transform(&self, v:V) -> V;
-    }
+    //mp transform
+    /// Apply the matrix to a vector to transform it
+    fn transform(&self, v: V) -> V;
+}
 
 //tt Quaternion
 /// The [Quaternion] trait describes a 4-dimensional vector of [Float] type.
@@ -262,7 +292,7 @@ pub trait SqMatrix<V:Vector<F,D>, F:Float, const D:usize, const D2:usize> : Clon
 ///
 /// The [Quaternion] can be indexed only by a `usize`; that is individual
 /// components of the vector can be accessed, but ranges may not.
-pub trait Quaternion<F:Float> : Clone
+pub trait Quaternion<F, V3, V4> : Clone
     + Copy
     + std::fmt::Debug
     + std::fmt::Display
@@ -289,7 +319,9 @@ pub trait Quaternion<F:Float> : Clone
     // + std::ops::Div<Self, Output = Self>
     + std::ops::Div<F, Output = Self>
     // + std::ops::DivAssign<Self>
-    + std::ops::DivAssign<F> {
+    + std::ops::DivAssign<F>
+where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
+{
         //fp from_array
         /// Create a quaternion from an array of [Float]
         fn from_array(data:[F;4]) -> Self;
@@ -314,7 +346,7 @@ pub trait Quaternion<F:Float> : Clone
         fn unit() -> Self;
 
         //fp of_axis_angle
-        fn of_axis_angle<V:Vector<F,3>> (axis:&V, angle:F) -> Self {
+        fn of_axis_angle(axis:&V3, angle:F) -> Self {
             let (s,c) = F::sin_cos(angle / F::from(2).unwrap());
             let i = s * axis[0];
             let j = s * axis[1];
@@ -357,19 +389,19 @@ pub trait Quaternion<F:Float> : Clone
 
         //fp of_rotation3
         /// Find the unit quaternion of a Matrix3 assuming it is purely a rotation
-        fn of_rotation3<M,V> (rotation:&M) -> Self
-        where V:Vector<F,3>,M:SqMatrix<V, F, 3, 9>;
-        
+        fn of_rotation3<M> (rotation:&M) -> Self
+        where M:SqMatrix<V3, F, 3, 9>;
+
         //fp set_rotation3
         /// Set a Matrix3 to be the rotation matrix corresponding to the unit quaternion
-        fn set_rotation3<M,V> (&self, m:&mut M)
-        where V:Vector<F,3>,M:SqMatrix<V, F, 3, 9>;
-        
+        fn set_rotation3<M> (&self, m:&mut M)
+        where M:SqMatrix<V3, F, 3, 9>;
+
         //fp set_rotation4
         /// Set a Matrix4 to be the rotation matrix corresponding to the unit quaternion
-        fn set_rotation4<M,V> (&self, m:&mut M)
-        where V:Vector<F,4>,M:SqMatrix<V, F, 4, 16>;
-        
+        fn set_rotation4<M> (&self, m:&mut M)
+        where M:SqMatrix<V4, F, 4, 16>;
+
         //zz All done
     }
 
@@ -379,13 +411,13 @@ pub trait Quaternion<F:Float> : Clone
 ///
 /// The [Vector3D] trait describes vectors that may be used for
 /// 3D geometry
-pub trait Vector3D<Scalar:Float> {
+pub trait Vector3D<Scalar: Float> {
     /// The type of a 2D vector
-    type Vec2 : Vector<Scalar, 2>;
+    type Vec2: Vector<Scalar, 2>;
     /// The type of a 3D vector
-    type Vec3 : Vector<Scalar, 3>;
+    type Vec3: Vector<Scalar, 3>;
     /// The type of a 3D vector with an additional '1' expected in its extra element
-    type Vec4 : Vector<Scalar, 4>;
+    type Vec4: Vector<Scalar, 4>;
 }
 
 //tt Geometry3D
@@ -394,15 +426,15 @@ pub trait Vector3D<Scalar:Float> {
 /// quaternion type.
 ///
 /// An implementation of [Geometry3D] can be used for OpenGL and Vulkan graphics, for example.
-pub trait Geometry3D<Scalar:Float> {
+pub trait Geometry3D<Scalar: Float> {
     /// The type of a 3D vector
-    type Vec3 : Vector<Scalar, 3>;
+    type Vec3: Vector<Scalar, 3>;
     /// The type of a 3D vector with an additional '1' expected in its extra element
-    type Vec4 : Vector<Scalar, 4>;
+    type Vec4: Vector<Scalar, 4>;
     /// The type of a 3D matrix that can transform Vec3
-    type Mat3 : SqMatrix<Self::Vec3, Scalar, 3, 9>;
+    type Mat3: SqMatrix<Self::Vec3, Scalar, 3, 9>;
     /// The type of a 3D matrix which allows for translations, that can transform Vec4
-    type Mat4 : SqMatrix<Self::Vec4, Scalar, 4, 16>;
+    type Mat4: SqMatrix<Self::Vec4, Scalar, 4, 16>;
     // fn perspective4
     // fn translate4
     // fn from_quat3
@@ -418,10 +450,9 @@ pub trait Geometry3D<Scalar:Float> {
 ///
 /// The [Geometry2D] trait supplies a framework for implementing 2D
 /// vector and matrix operations.
-pub trait Geometry2D<Scalar:Float> {
+pub trait Geometry2D<Scalar: Float> {
     /// The type of a 2D vector
-    type Vec2 : Vector<Scalar, 2>;
+    type Vec2: Vector<Scalar, 2>;
     /// The type of a 2D matrix that can transform a Vec2
-    type Mat2 : SqMatrix<Self::Vec2, Scalar, 2, 4>;
+    type Mat2: SqMatrix<Self::Vec2, Scalar, 2, 4>;
 }
-

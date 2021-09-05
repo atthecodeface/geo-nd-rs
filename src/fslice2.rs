@@ -1,6 +1,6 @@
 //a Imports
-use super::{Float, Vector, SqMatrix};
-use super::{FArray, vector, matrix};
+use super::{matrix, vector, FArray};
+use super::{Float, SqMatrix, Vector};
 
 //a Macros
 //mi index_ops!
@@ -77,7 +77,9 @@ macro_rules! binary_op {
 /// It provides implementations of the traits required for a [SqMatrix]
 /// trait operating on an [FArray] of dimesion D.
 #[derive(Clone, Copy, Debug)]
-pub struct FArray2 <F:Float, const D:usize, const D2:usize> { data: [F;D2] }
+pub struct FArray2<F: Float, const D: usize, const D2: usize> {
+    data: [F; D2],
+}
 
 //ip FArray2
 index_ops! { FArray2 }
@@ -88,62 +90,122 @@ binary_op! { FArray2, Sub, sub, -, SubAssign, sub_assign, -= }
 binary_op! { FArray2, Mul, mul, *, MulAssign, mul_assign, *= }
 binary_op! { FArray2, Div, div, /, DivAssign, div_assign, /= }
 
-impl <F:Float, const D:usize, const D2:usize>   std::default::Default for FArray2<F, D, D2> {
-    fn default() -> Self { Self { data:vector::zero() } }
+impl<F: Float, const D: usize, const D2: usize> std::default::Default for FArray2<F, D, D2> {
+    fn default() -> Self {
+        Self {
+            data: vector::zero(),
+        }
+    }
 }
 
 //ip SqMatrix<F,D,D2> for FArray2
-impl <F:Float> SqMatrix<FArray<F,2>, F, 2, 4> for FArray2<F, 2, 4> {
-    fn from_array(data:[F;4]) -> Self { Self { data  } }
-    fn zero() -> Self { Self { data:vector::zero() }    }
-    fn identity() -> Self { Self { data:vector::zero() }   }
-    fn is_zero(&self) -> bool { vector::is_zero(&self.data)    }
-    fn set_zero(&mut self) { vector::set_zero(&mut self.data)    }
-    fn transpose(&self) -> Self {
-        Self::from_array(matrix::transpose::<F,4,2,2> (self.data) )
+impl<F: Float> SqMatrix<FArray<F, 2>, F, 2, 4> for FArray2<F, 2, 4> {
+    fn from_array(data: [F; 4]) -> Self {
+        Self { data }
     }
-    fn determinant(&self) -> F { matrix::determinant2(&self.data) }
+    fn zero() -> Self {
+        Self {
+            data: vector::zero(),
+        }
+    }
+    fn identity() -> Self {
+        Self {
+            data: vector::zero(),
+        }
+    }
+    fn is_zero(&self) -> bool {
+        vector::is_zero(&self.data)
+    }
+    fn set_zero(&mut self) {
+        vector::set_zero(&mut self.data)
+    }
+    fn transpose(&self) -> Self {
+        Self::from_array(matrix::transpose::<F, 4, 2, 2>(self.data))
+    }
+    fn determinant(&self) -> F {
+        matrix::determinant2(&self.data)
+    }
     fn inverse(&self) -> Self {
         Self::from_array(matrix::inverse2(&self.data))
     }
-    fn transform(&self, v:FArray<F,2>) -> FArray<F,2> {
-        FArray::from_array(matrix::multiply::<F,4,2,2,2,2,1> (&self.data, v.as_ref()))
+    fn transform(&self, v: FArray<F, 2>) -> FArray<F, 2> {
+        FArray::from_array(matrix::multiply::<F, 4, 2, 2, 2, 2, 1>(
+            &self.data,
+            v.as_ref(),
+        ))
     }
 }
 
-impl <F:Float> SqMatrix<FArray<F,3>, F, 3, 9> for FArray2<F, 3, 9> {
-    fn from_array(data:[F;9]) -> Self { Self { data  } }
-    fn zero() -> Self { Self { data:vector::zero() }    }
-    fn identity() -> Self { Self { data:vector::zero() }   }
-    fn is_zero(&self) -> bool { vector::is_zero(&self.data)    }
-    fn set_zero(&mut self) { vector::set_zero(&mut self.data)    }
-    fn transpose(&self) -> Self {
-        Self::from_array(matrix::transpose::<F,9,3,3> (self.data) )
+impl<F: Float> SqMatrix<FArray<F, 3>, F, 3, 9> for FArray2<F, 3, 9> {
+    fn from_array(data: [F; 9]) -> Self {
+        Self { data }
     }
-    fn determinant(&self) -> F { matrix::determinant3(&self.data) }
+    fn zero() -> Self {
+        Self {
+            data: vector::zero(),
+        }
+    }
+    fn identity() -> Self {
+        Self {
+            data: vector::zero(),
+        }
+    }
+    fn is_zero(&self) -> bool {
+        vector::is_zero(&self.data)
+    }
+    fn set_zero(&mut self) {
+        vector::set_zero(&mut self.data)
+    }
+    fn transpose(&self) -> Self {
+        Self::from_array(matrix::transpose::<F, 9, 3, 3>(self.data))
+    }
+    fn determinant(&self) -> F {
+        matrix::determinant3(&self.data)
+    }
     fn inverse(&self) -> Self {
         Self::from_array(matrix::inverse3(&self.data))
     }
-    fn transform(&self, v:FArray<F,3>) -> FArray<F,3> {
-        FArray::from_array(matrix::multiply::<F,9,3,3,3,3,1> (&self.data, v.as_ref()))
+    fn transform(&self, v: FArray<F, 3>) -> FArray<F, 3> {
+        FArray::from_array(matrix::multiply::<F, 9, 3, 3, 3, 3, 1>(
+            &self.data,
+            v.as_ref(),
+        ))
     }
 }
 
-impl <F:Float> SqMatrix<FArray<F,4>, F, 4, 16> for FArray2<F, 4, 16> {
-    fn from_array(data:[F;16]) -> Self { Self { data  } }
-    fn zero() -> Self { Self { data:vector::zero() }    }
-    fn identity() -> Self { Self { data:vector::zero() }   }
-    fn is_zero(&self) -> bool { vector::is_zero(&self.data)    }
-    fn set_zero(&mut self) { vector::set_zero(&mut self.data)    }
-    fn transpose(&self) -> Self {
-        Self::from_array(matrix::transpose::<F,16,4,4> (self.data) )
+impl<F: Float> SqMatrix<FArray<F, 4>, F, 4, 16> for FArray2<F, 4, 16> {
+    fn from_array(data: [F; 16]) -> Self {
+        Self { data }
     }
-    fn determinant(&self) -> F { matrix::determinant4(&self.data) }
+    fn zero() -> Self {
+        Self {
+            data: vector::zero(),
+        }
+    }
+    fn identity() -> Self {
+        Self {
+            data: vector::zero(),
+        }
+    }
+    fn is_zero(&self) -> bool {
+        vector::is_zero(&self.data)
+    }
+    fn set_zero(&mut self) {
+        vector::set_zero(&mut self.data)
+    }
+    fn transpose(&self) -> Self {
+        Self::from_array(matrix::transpose::<F, 16, 4, 4>(self.data))
+    }
+    fn determinant(&self) -> F {
+        matrix::determinant4(&self.data)
+    }
     fn inverse(&self) -> Self {
         Self::from_array(matrix::inverse4(&self.data))
     }
-    fn transform(&self, v:FArray<F,4>) -> FArray<F,4> {
-        FArray::from_array(matrix::multiply::<F,16,4,4,4,4,1> (&self.data, v.as_ref()))
+    fn transform(&self, v: FArray<F, 4>) -> FArray<F, 4> {
+        FArray::from_array(matrix::multiply::<F, 16, 4, 4, 4, 4, 1>(
+            &self.data,
+            v.as_ref(),
+        ))
     }
 }
-

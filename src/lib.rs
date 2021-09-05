@@ -81,62 +81,62 @@ assert_eq!( vector::length(&xy), (5.0f64).sqrt(), "|x + 2*y| = sqrt(5)");
 extern crate num_traits;
 
 //a Imports
+mod matrix_op;
+mod matrixr_op;
+mod quaternion_op;
 mod traits;
 mod vector_op;
-mod quaternion_op;
-mod matrixr_op;
-mod matrix_op;
 
 mod fslice;
 mod fslice2;
 mod qarray;
 
 //a Exports
-pub use traits::{Num, Float, Vector, Quaternion, SqMatrix, Vector3D, Geometry3D, Geometry2D};
 pub use fslice::FArray;
 pub use fslice2::FArray2;
 pub use qarray::QArray;
+pub use traits::{Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, Vector, Vector3D};
 
 /// Vector functions module
 ///
 /// This module provides numerous N-dimensional vector operations operating on [Num; N] (or [Float; N]).
-pub mod vector   {
-    pub use super::vector_op::* ;
+pub mod vector {
+    pub use super::vector_op::*;
 }
 
 /// Quaternion module
-pub mod quat     {
-    pub use super::quaternion_op::* ;
+pub mod quat {
+    pub use super::quaternion_op::*;
 }
 
 /// Matrix library
-pub mod matrix   {
-    pub use super::matrixr_op::* ;
-    pub use super::matrix_op::* ;
+pub mod matrix {
+    pub use super::matrix_op::*;
+    pub use super::matrixr_op::*;
 }
 
 //a SIMD configuration
-#[cfg(feature="simd")]
+#[cfg(feature = "simd")]
 extern crate core_simd;
-#[cfg(feature="simd")]
+#[cfg(feature = "simd")]
 pub mod simd {
     mod simd_vec;
-    pub use self::simd_vec::{F32x4Vec2, F32x4Vec3,F32x4Vec4, F32x2Vec2};
+    pub use self::simd_vec::{F32x2Vec2, F32x4Vec2, F32x4Vec3, F32x4Vec4};
 
     //tp SimdVecF32A16 - empty struct that provides a wrapper for the associated types
     pub struct VecF32A16 {}
     impl crate::Vector3D<f32> for VecF32A16 {
-        type Vec2   = F32x4Vec2;
-        type Vec3   = F32x4Vec3;
-        type Vec4   = F32x4Vec4;
+        type Vec2 = F32x4Vec2;
+        type Vec3 = F32x4Vec3;
+        type Vec4 = F32x4Vec4;
     }
 
     //tp SimdVecF32A8 - empty struct that provides a wrapper for the associated types
     pub struct VecF32A8 {}
     impl crate::Vector3D<f32> for VecF32A8 {
-        type Vec2   = F32x2Vec2;
-        type Vec3   = F32x4Vec3;
-        type Vec4   = F32x4Vec4;
+        type Vec2 = F32x2Vec2;
+        type Vec3 = F32x4Vec3;
+        type Vec4 = F32x4Vec4;
     }
 }
 
@@ -144,44 +144,44 @@ pub mod simd {
 //a Vector3D and Geometry3D for f32/f64 using FArray/FArray2
 //ip Vector3D for f32
 impl Vector3D<f32> for f32 {
-    type Vec2 = FArray<f32,2>;
-    type Vec3 = FArray<f32,3>;
-    type Vec4 = FArray<f32,4>;
+    type Vec2 = FArray<f32, 2>;
+    type Vec3 = FArray<f32, 3>;
+    type Vec4 = FArray<f32, 4>;
 }
 
 //ip Geometry3D for f32
 impl Geometry3D<f32> for f32 {
-    type Vec3 = FArray<f32,3>;
-    type Vec4 = FArray<f32,4>;
-    type Mat3 = FArray2<f32,3,9>;
-    type Mat4 = FArray2<f32,4,16>;
+    type Vec3 = FArray<f32, 3>;
+    type Vec4 = FArray<f32, 4>;
+    type Mat3 = FArray2<f32, 3, 9>;
+    type Mat4 = FArray2<f32, 4, 16>;
 }
 
 //ip Geometry2D for f32
 impl Geometry2D<f32> for f32 {
-    type Vec2 = FArray<f32,2>;
-    type Mat2 = FArray2<f32,2,4>;
+    type Vec2 = FArray<f32, 2>;
+    type Mat2 = FArray2<f32, 2, 4>;
 }
 
 //ip Vector3D for f64
 impl Vector3D<f64> for f64 {
-    type Vec2 = FArray<f64,2>;
-    type Vec3 = FArray<f64,3>;
-    type Vec4 = FArray<f64,4>;
+    type Vec2 = FArray<f64, 2>;
+    type Vec3 = FArray<f64, 3>;
+    type Vec4 = FArray<f64, 4>;
 }
 
 //ip Geometry3D for f64
 impl Geometry3D<f64> for f64 {
-    type Vec3 = FArray<f64,3>;
-    type Vec4 = FArray<f64,4>;
-    type Mat3 = FArray2<f64,3,9>;
-    type Mat4 = FArray2<f64,4,16>;
+    type Vec3 = FArray<f64, 3>;
+    type Vec4 = FArray<f64, 4>;
+    type Mat3 = FArray2<f64, 3, 9>;
+    type Mat4 = FArray2<f64, 4, 16>;
 }
 
 //ip Geometry2D for f64
 impl Geometry2D<f64> for f64 {
-    type Vec2 = FArray<f64,2>;
-    type Mat2 = FArray2<f64,2,4>;
+    type Vec2 = FArray<f64, 2>;
+    type Mat2 = FArray2<f64, 2, 4>;
 }
 
 /*a Stuff
