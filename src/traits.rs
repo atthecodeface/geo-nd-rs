@@ -285,18 +285,14 @@ pub trait SqMatrix<V: Vector<F, D>, F: Float, const D: usize, const D2: usize>:
 //tt Vector3
 /// The [Vector3] trait describes a 3-dimensional vector of [Float]
 ///
-pub trait Vector3<F: Float> :
-    Vector<F, 3>
-{
-    fn cross_product(&self, other:&Self) -> Self;
+pub trait Vector3<F: Float>: Vector<F, 3> {
+    fn cross_product(&self, other: &Self) -> Self;
 }
 
 //tt SqMatrix3
 /// The [SqMatrix3] trait describes a 3-dimensional square matrix of [Float] type that operates on a [Vector].
 ///
-pub trait SqMatrix3<V3: Vector<F, 3>, F: Float> :
-SqMatrix<V3, F, 3, 9>
-{
+pub trait SqMatrix3<V3: Vector<F, 3>, F: Float>: SqMatrix<V3, F, 3, 9> {
     // fn invert(&mut self);
     // fn inverse(&self) -> Self;
 }
@@ -304,15 +300,13 @@ SqMatrix<V3, F, 3, 9>
 //tt SqMatrix4
 /// The [SqMatrix4] trait describes a 4-dimensional square matrix of [Float] type that operates on a [Vector].
 ///
-pub trait SqMatrix4<F: Float, V3: Vector<F, 3>, V4: Vector<F, 4>> :
-SqMatrix<V4, F, 4, 16>
-{
+pub trait SqMatrix4<F: Float, V3: Vector<F, 3>, V4: Vector<F, 4>>: SqMatrix<V4, F, 4, 16> {
     // fn invert(&mut self);
     // fn inverse(&self) -> Self;
     fn perspective(fov: F, aspect: F, near: F, far: F) -> Self;
-    fn look_at(eye:&V3, center:&V3, up:&V3) -> Self;
-    fn translate3(&mut self, by:&V3);
-    fn translate4(&mut self, by:&V4);
+    fn look_at(eye: &V3, center: &V3, up: &V3) -> Self;
+    fn translate3(&mut self, by: &V3);
+    fn translate4(&mut self, by: &V4);
 }
 
 //tt Quaternion
@@ -459,63 +453,64 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
         let data = quat::apply3(self.as_ref(), other.as_ref());
         V3::from_array(data)
     }
-    
+
     //fp apply4
     /// Apply the quaternion to a V4
     fn apply4(self, other: &V4) -> V4 {
         let data = quat::apply4(self.as_ref(), other.as_ref());
         V4::from_array(data)
     }
-    
+
     //zz All done
 }
 
 //tt Transform
 /// The [Transform] trait describes a translation, rotation and
 /// scaling for 3D, represented eventually as a Mat4
-pub trait Transform<F, V3, V4, M4, Q> : Clone
-    + Copy
-    + std::fmt::Debug
-    + std::fmt::Display
-    + std::default::Default
-    + std::ops::Neg<Output = Self>
-    // apply to self - this is possible
-    // + std::ops::Mul<Self, Output = Self>
-    // + std::ops::MulAssign<Self>
-    // + std::ops::Div<Self, Output = Self>
-    // + std::ops::DivAssign<Self>
-    // translation of self - can only choose one of V3 or V4
-    // + std::ops::Add<V3, Output = Self>
-    // + std::ops::AddAssign<V3>
-    // + std::ops::Sub<V3, Output = Self>
-    // + std::ops::SubAssign<V3>
-    // + std::ops::Add<V4, Output = Self>
-    // + std::ops::AddAssign<V4>
-    // + std::ops::Sub<V4, Output = Self>
-    // + std::ops::SubAssign<V4>
-    // scaling
-    // + std::ops::Mul<F, Output = Self>
-    // + std::ops::MulAssign<F>
-    // + std::ops::Div<F, Output = Self>
-    // + std::ops::DivAssign<F>
-    // rotation
-    // + std::ops::Mul<Q, Output = Self>
-    // + std::ops::MulAssign<Q>
-    // + std::ops::Div<Q, Output = Self>
-    // + std::ops::DivAssign<Q>
-    // and probably where Q:std::ops::Mul<Self, Output=Self> etc
-where F:Float, V3:Vector<F,3>,
-      V4:Vector<F,4>,
-      M4:SqMatrix4<F, V3, V4>,
-      Q:Quaternion<F, V3, V4>
+pub trait Transform<F, V3, V4, M4, Q>:
+    Clone + Copy + std::fmt::Debug + std::fmt::Display + std::default::Default
+// + std::ops::Neg<Output = Self>
+// apply to self - this is possible
+// + std::ops::Mul<Self, Output = Self>
+// + std::ops::MulAssign<Self>
+// + std::ops::Div<Self, Output = Self>
+// + std::ops::DivAssign<Self>
+// translation of self - can only choose one of V3 or V4
+// + std::ops::Add<V3, Output = Self>
+// + std::ops::AddAssign<V3>
+// + std::ops::Sub<V3, Output = Self>
+// + std::ops::SubAssign<V3>
+// + std::ops::Add<V4, Output = Self>
+// + std::ops::AddAssign<V4>
+// + std::ops::Sub<V4, Output = Self>
+// + std::ops::SubAssign<V4>
+// scaling
+// + std::ops::Mul<F, Output = Self>
+// + std::ops::MulAssign<F>
+// + std::ops::Div<F, Output = Self>
+// + std::ops::DivAssign<F>
+// rotation
+// + std::ops::Mul<Q, Output = Self>
+// + std::ops::MulAssign<Q>
+// + std::ops::Div<Q, Output = Self>
+// + std::ops::DivAssign<Q>
+// and probably where Q:std::ops::Mul<Self, Output=Self> etc
+where
+    F: Float,
+    V3: Vector<F, 3>,
+    V4: Vector<F, 4>,
+    M4: SqMatrix4<F, V3, V4>,
+    Q: Quaternion<F, V3, V4>,
 {
+    fn of_trs(t: V3, r: Q, s: F) -> Self;
     fn get_scale(&self) -> F;
     fn get_translation(&self) -> V3;
     fn get_rotation(&self) -> Q;
     fn inverse(&self) -> Self;
     fn invert(&mut self);
+    fn as_mat(&self) -> M4;
 }
-    
+
 //a Vector3D, Geometry3D
 //tt Vector3D
 /// This is probably a temporary trait used until SIMD supports Geometry3D and Geometry2D
@@ -548,6 +543,8 @@ pub trait Geometry3D<Scalar: Float> {
     type Mat4: SqMatrix4<Scalar, Self::Vec3, Self::Vec4>;
     /// The quaternion type that provides for rotations in 3D
     type Quat: Quaternion<Scalar, Self::Vec3, Self::Vec4>;
+    /// The transform type
+    type Trans: Transform<Scalar, Self::Vec3, Self::Vec4, Self::Mat4, Self::Quat>;
     // fn of_transform3/4?
     // cross_product3
     // axis_of_rotation3/4

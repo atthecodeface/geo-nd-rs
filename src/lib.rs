@@ -87,15 +87,20 @@ mod quaternion_op;
 mod traits;
 mod vector_op;
 
+mod fqarray;
 mod fslice;
 mod fslice2;
 mod qarray;
 
 //a Exports
+pub use fqarray::FQArrayTrans;
 pub use fslice::FArray;
 pub use fslice2::FArray2;
 pub use qarray::QArray;
-pub use traits::{Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Vector, Vector3D};
+pub use traits::{
+    Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform,
+    Vector, Vector3D,
+};
 
 /// Vector functions module
 ///
@@ -156,6 +161,7 @@ impl Geometry3D<f32> for f32 {
     type Mat3 = FArray2<f32, 3, 9>;
     type Mat4 = FArray2<f32, 4, 16>;
     type Quat = QArray<f32, FArray<f32, 3>, FArray<f32, 4>>;
+    type Trans = FQArrayTrans<f32>;
 }
 
 //ip Geometry2D for f32
@@ -178,6 +184,7 @@ impl Geometry3D<f64> for f64 {
     type Mat3 = FArray2<f64, 3, 9>;
     type Mat4 = FArray2<f64, 4, 16>;
     type Quat = QArray<f64, FArray<f64, 3>, FArray<f64, 4>>;
+    type Trans = FQArrayTrans<f64>;
 }
 
 //ip Geometry2D for f64

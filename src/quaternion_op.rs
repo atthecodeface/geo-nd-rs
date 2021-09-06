@@ -78,8 +78,8 @@ pub fn of_axis_angle<V: Float>(axis: &[V; 3], angle: V) -> [V; 4] {
 
 //fp as_axis_angle
 /// Return the axis of the rotation and the angle from the quaternion
-pub fn as_axis_angle<V: Float>(q:&[V;4]) -> ([V; 3], V) {
-    let (r,i,j,k) = as_rijk(q);
+pub fn as_axis_angle<V: Float>(q: &[V; 4]) -> ([V; 3], V) {
+    let (r, i, j, k) = as_rijk(q);
     let i2 = i * i;
     let j2 = j * j;
     let k2 = k * k;
@@ -87,9 +87,8 @@ pub fn as_axis_angle<V: Float>(q:&[V;4]) -> ([V; 3], V) {
     if l < V::epsilon() {
         ([i, j, k], V::zero())
     } else {
-        let rl = V::one()/l;
-        ([i*rl, j*rl, k*rl],
-         V::atan2(l,r))
+        let rl = V::one() / l;
+        ([i * rl, j * rl, k * rl], V::atan2(l, r))
     }
 }
 
@@ -188,7 +187,7 @@ pub fn of_rotation<V: Float>(m: &[V; 9]) -> [V; 4] {
 
 //fp look_at
 /// Create quaternion for a rotation that maps unit dirn to (0,0,-1) and unit up to (0,1,0)
-pub fn look_at<V:Float>(dirn:&[V;3], up:&[V;3]) -> [V; 4] {
+pub fn look_at<V: Float>(dirn: &[V; 3], up: &[V; 3]) -> [V; 4] {
     let m = matrix::look_at3(dirn, up);
     of_rotation(&m)
 }
@@ -345,22 +344,34 @@ pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
 
 //fp apply3
 /// Apply the quaternion to a vector3
-pub fn apply3<V: Float>(q: &[V; 4], v:&[V;3]) -> [V; 3] {
+pub fn apply3<V: Float>(q: &[V; 4], v: &[V; 3]) -> [V; 3] {
     let (r, i, j, k) = as_rijk(q);
-    let two = V::frac(2,1);
-    let x = (r*r + i*i - j*j - k*k) * v[0] + two*(i*k + r*j)*v[2] + two*(i*j-r*k)*v[1];
-    let y = (r*r - i*i + j*j - k*k) * v[1] + two*(j*i + r*k)*v[0] + two*(j*k-r*i)*v[2];
-    let z = (r*r - i*i - j*j + k*k) * v[2] + two*(k*j + r*i)*v[1] + two*(k*i-r*j)*v[0];
+    let two = V::frac(2, 1);
+    let x = (r * r + i * i - j * j - k * k) * v[0]
+        + two * (i * k + r * j) * v[2]
+        + two * (i * j - r * k) * v[1];
+    let y = (r * r - i * i + j * j - k * k) * v[1]
+        + two * (j * i + r * k) * v[0]
+        + two * (j * k - r * i) * v[2];
+    let z = (r * r - i * i - j * j + k * k) * v[2]
+        + two * (k * j + r * i) * v[1]
+        + two * (k * i - r * j) * v[0];
     [x, y, z]
 }
 
 //fp apply4
 /// Apply the quaternion to a vector3
-pub fn apply4<V: Float>(q: &[V; 4], v:&[V;4]) -> [V; 4] {
+pub fn apply4<V: Float>(q: &[V; 4], v: &[V; 4]) -> [V; 4] {
     let (r, i, j, k) = as_rijk(q);
-    let two = V::frac(2,1);
-    let x = (r*r + i*i - j*j - k*k) * v[0] + two*(i*k + r*j)*v[2] + two*(i*j-r*k)*v[1];
-    let y = (r*r - i*i + j*j - k*k) * v[1] + two*(j*i + r*k)*v[0] + two*(j*k-r*i)*v[2];
-    let z = (r*r - i*i - j*j + k*k) * v[2] + two*(k*j + r*i)*v[1] + two*(k*i-r*j)*v[0];
+    let two = V::frac(2, 1);
+    let x = (r * r + i * i - j * j - k * k) * v[0]
+        + two * (i * k + r * j) * v[2]
+        + two * (i * j - r * k) * v[1];
+    let y = (r * r - i * i + j * j - k * k) * v[1]
+        + two * (j * i + r * k) * v[0]
+        + two * (j * k - r * i) * v[2];
+    let z = (r * r - i * i - j * j + k * k) * v[2]
+        + two * (k * j + r * i) * v[1]
+        + two * (k * i - r * j) * v[0];
     [x, y, z, v[3]]
 }

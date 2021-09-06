@@ -1,6 +1,6 @@
 //a Imports
 use super::{matrix, vector, FArray};
-use super::{Float, SqMatrix, Vector, SqMatrix3, SqMatrix4};
+use super::{Float, SqMatrix, SqMatrix3, SqMatrix4, Vector};
 
 //a Macros
 //mi index_ops!
@@ -175,8 +175,7 @@ impl<F: Float> SqMatrix<FArray<F, 3>, F, 3, 9> for FArray2<F, 3, 9> {
 }
 
 //ip SqMatrix3<F> for FArray2
-impl<F: Float> SqMatrix3<FArray<F, 3>, F> for FArray2<F, 3, 9> {
-}
+impl<F: Float> SqMatrix3<FArray<F, 3>, F> for FArray2<F, 3, 9> {}
 
 //ip SqMatrix<F,4,16> for FArray2
 impl<F: Float> SqMatrix<FArray<F, 4>, F, 4, 16> for FArray2<F, 4, 16> {
@@ -221,18 +220,17 @@ impl<F: Float> SqMatrix4<F, FArray<F, 3>, FArray<F, 4>> for FArray2<F, 4, 16> {
     fn perspective(fov: F, aspect: F, near: F, far: F) -> Self {
         Self::from_array(matrix::perspective4(fov, aspect, near, far))
     }
-    fn look_at(eye:&FArray<F,3>, center:&FArray<F,3>, up:&FArray<F,3>) -> Self {
+    fn look_at(eye: &FArray<F, 3>, center: &FArray<F, 3>, up: &FArray<F, 3>) -> Self {
         Self::from_array(matrix::look_at4(eye.as_ref(), center.as_ref(), up.as_ref()))
     }
-    fn translate3(&mut self, by:&FArray<F,3>) {
+    fn translate3(&mut self, by: &FArray<F, 3>) {
         self.data[3] += by[0];
         self.data[7] += by[1];
         self.data[11] += by[2];
     }
-    fn translate4(&mut self, by:&FArray<F,4>) {
+    fn translate4(&mut self, by: &FArray<F, 4>) {
         self.data[3] += by[0];
         self.data[7] += by[1];
         self.data[11] += by[2];
     }
 }
-
