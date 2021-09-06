@@ -31,7 +31,7 @@ use crate::{Float, Num};
 /// m[2] - m[6] = 4*j*r ( if <0 then j<0 )
 /// m[3] - m[1] = 4*k*r ( if <0 then k<0 )
 
-//a Constructors and desconstructors
+//a Constructors and destructors
 //fp new
 /// Create a new quaternion
 pub fn new<V: Num>() -> [V; 4] {
@@ -40,18 +40,21 @@ pub fn new<V: Num>() -> [V; 4] {
 
 //fp as_rijk
 /// Return the breakdown of a quaternion
+#[inline]
 pub fn as_rijk<V: Num>(v: &[V; 4]) -> (V, V, V, V) {
     (v[3], v[0], v[1], v[2])
 }
 
 //fp of_rijk
 /// Create a quaternion from its components
+#[inline]
 pub fn of_rijk<V: Num>(r: V, i: V, j: V, k: V) -> [V; 4] {
     [i, j, k, r]
 }
 
 //fp identity
 /// Create an identity quaternion
+#[inline]
 pub fn identity<V: Num>() -> [V; 4] {
     [V::zero(), V::zero(), V::zero(), V::one()]
 }
@@ -60,11 +63,34 @@ pub fn identity<V: Num>() -> [V; 4] {
 /// Find the quaternion for a rotation of an angle around an axis
 pub fn of_axis_angle<V: Float>(axis: &[V; 3], angle: V) -> [V; 4] {
     let (s, c) = V::sin_cos(angle / V::from(2).unwrap());
-    let i = s * axis[0];
-    let j = s * axis[1];
-    let k = s * axis[2];
-    let r = c;
-    [i, j, k, r]
+    let l = vector::length(axis);
+    if l < V::epsilon() {
+        identity()
+    } else {
+        let s = s / l;
+        let i = s * axis[0];
+        let j = s * axis[1];
+        let k = s * axis[2];
+        let r = c;
+        [i, j, k, r]
+    }
+}
+
+//fp as_axis_angle
+/// Return the axis of the rotation and the angle from the quaternion
+pub fn as_axis_angle<V: Float>(q:&[V;4]) -> ([V; 3], V) {
+    let (r,i,j,k) = as_rijk(q);
+    let i2 = i * i;
+    let j2 = j * j;
+    let k2 = k * k;
+    let l = (i2 + j2 + k2).sqrt();
+    if l < V::epsilon() {
+        ([i, j, k], V::zero())
+    } else {
+        let rl = V::one()/l;
+        ([i*rl, j*rl, k*rl],
+         V::atan2(l,r))
+    }
 }
 
 //fp to_rotation3
@@ -160,32 +186,11 @@ pub fn of_rotation<V: Float>(m: &[V; 9]) -> [V; 4] {
     [i, j, k, r]
 }
 
-//fp of_rotation_old
-/// Find the quaternion of a Matrix3 assuming it is purely a rotation
-pub fn of_rotation_old<V: Float>(rotation: &[V; 9]) -> [V; 4] {
-    let axis = vector::axis_of_rotation3(rotation);
-
-    // Find a decent vector not parallel to the axis
-    let mut w = [V::one(), V::zero(), V::zero()];
-    if V::abs(axis[0]) > (V::from(9).unwrap() / V::from(10).unwrap()) {
-        w[0] = V::zero();
-        w[1] = V::one();
-    }
-
-    // Find three vectors (axis, na0, na1) that are all mutually perpendicular
-    let na0 = vector::normalize(vector::cross_product3(&w, &axis));
-    let na1 = vector::normalize(vector::cross_product3(&axis, &na0));
-
-    // Rotate na0, na1 around the axis of rotation by angle A - i.e. apply 'rotation'
-    let na0_r = matrix::transform_vec3(&rotation, &na0);
-    let na1_r = matrix::transform_vec3(&rotation, &na1);
-
-    //  Get angle of rotation
-    let cos_angle = vector::dot(&na0, &na0_r);
-    let sin_angle = -vector::dot(&na0, &na1_r);
-    let angle = V::atan2(sin_angle, cos_angle);
-
-    of_axis_angle(&axis, angle)
+//fp look_at
+/// Create quaternion for a rotation that maps unit dirn to (0,0,-1) and unit up to (0,1,0)
+pub fn look_at<V:Float>(dirn:&[V;3], up:&[V;3]) -> [V; 4] {
+    let m = matrix::look_at3(dirn, up);
+    of_rotation(&m)
 }
 
 //a Mapping functions
@@ -250,13 +255,12 @@ pub fn rotate_z<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
 
 //cp multiply
 /// Multiply two quaternions together
+#[inline]
 pub fn multiply<V: Num>(a: &[V; 4], b: &[V; 4]) -> [V; 4] {
     let i = a[0] * b[3] + a[3] * b[0] + a[1] * b[2] - a[2] * b[1];
     let j = a[1] * b[3] + a[3] * b[1] + a[2] * b[0] - a[0] * b[2];
     let k = a[2] * b[3] + a[3] * b[2] + a[0] * b[1] - a[1] * b[0];
     let r = a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2];
-    dbg!(a, b);
-    dbg!(r, i, j, k);
     [i, j, k, r]
 }
 
@@ -337,4 +341,26 @@ pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
         }
     };
     (bank, heading, attitude)
+}
+
+//fp apply3
+/// Apply the quaternion to a vector3
+pub fn apply3<V: Float>(q: &[V; 4], v:&[V;3]) -> [V; 3] {
+    let (r, i, j, k) = as_rijk(q);
+    let two = V::frac(2,1);
+    let x = (r*r + i*i - j*j - k*k) * v[0] + two*(i*k + r*j)*v[2] + two*(i*j-r*k)*v[1];
+    let y = (r*r - i*i + j*j - k*k) * v[1] + two*(j*i + r*k)*v[0] + two*(j*k-r*i)*v[2];
+    let z = (r*r - i*i - j*j + k*k) * v[2] + two*(k*j + r*i)*v[1] + two*(k*i-r*j)*v[0];
+    [x, y, z]
+}
+
+//fp apply4
+/// Apply the quaternion to a vector3
+pub fn apply4<V: Float>(q: &[V; 4], v:&[V;4]) -> [V; 4] {
+    let (r, i, j, k) = as_rijk(q);
+    let two = V::frac(2,1);
+    let x = (r*r + i*i - j*j - k*k) * v[0] + two*(i*k + r*j)*v[2] + two*(i*j-r*k)*v[1];
+    let y = (r*r - i*i + j*j - k*k) * v[1] + two*(j*i + r*k)*v[0] + two*(j*k-r*i)*v[2];
+    let z = (r*r - i*i - j*j + k*k) * v[2] + two*(k*j + r*i)*v[1] + two*(k*i-r*j)*v[0];
+    [x, y, z, v[3]]
 }

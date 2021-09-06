@@ -17,7 +17,7 @@ limitations under the License.
  */
 
 //a Imports
-use super::matrixr_op;
+use super::{matrixr_op, vector_op};
 use crate::{Float, Num};
 
 //fp identity
@@ -252,6 +252,22 @@ pub fn transform_vec3<V: Float>(m: &[V; 9], v: &[V; 3]) -> [V; 3] {
     matrixr_op::transform_vec::<V, 9, 3, 3>(m, v)
 }
 
+//fp look_at3
+/// Create a matrix that maps unit dirn to [0,0,-1] and unit up (perp to dirn) to [0,1,0]
+pub fn look_at3<V:Float>(dirn:&[V;3], up:&[V;3]) -> [V; 9] {
+    let d = vector_op::normalize(*dirn);
+    let du = vector_op::dot(&d, up);
+    let u = [up[0] - d[0] * du,
+             up[1] - d[1] * du,
+             up[2] - d[2] * du,
+    ];
+    let u = vector_op::normalize(u);
+    let m = [ u[2]*d[1]-u[1]*d[2], u[0]*d[2]-u[2]*d[0], u[1]*d[0]-u[0]*d[1],
+              u[0], u[1], u[2],
+              -d[0], -d[1], -d[2] ];
+    m
+}
+
 //fp multiply4
 /// Multiply two square 4x4 matrices and produce a result
 pub fn multiply4<V: Float>(a: &[V; 16], b: &[V; 16]) -> [V; 16] {
@@ -275,6 +291,24 @@ pub fn translate4<V: Num>(m: &[V; 16], v: &[V; 4]) -> [V; 16] {
     r[14] = m[2] * v[0] + m[4 + 2] * v[1] + m[8 + 2] * v[2] + m[12 + 2];
     r[15] = m[3] * v[0] + m[4 + 3] * v[1] + m[8 + 3] * v[2] + m[12 + 3];
     r
+}
+
+//fp look_at4
+/// Create a matrix that maps eye to [0,0,0], unit (centre-eye) to [0,0,-1] and unit up (perp to centre-eye) to [0,1,0]
+pub fn look_at4<V:Float>(eye:&[V;3], centre:&[V;3], up:&[V;3]) -> [V; 16] {
+    let dirn = vector_op::sub(*centre, eye, V::one());
+    let d = vector_op::normalize(dirn);
+    let du = vector_op::dot(&d, up);
+    let u = [up[0] - d[0] * du,
+             up[1] - d[1] * du,
+             up[2] - d[2] * du,
+    ];
+    let u = vector_op::normalize(u);
+    let m = [ u[2]*d[1]-u[1]*d[2], u[0]*d[2]-u[2]*d[0], u[1]*d[0]-u[0]*d[1], V::zero(),
+              u[0], u[1], u[2], V::zero(),
+              -d[0], -d[1], -d[2], V::zero(),
+              V::zero(), V::zero(), V::zero(), V::one() ];
+    m
 }
 
 //fp perspective4

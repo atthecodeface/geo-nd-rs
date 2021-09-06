@@ -95,7 +95,7 @@ mod qarray;
 pub use fslice::FArray;
 pub use fslice2::FArray2;
 pub use qarray::QArray;
-pub use traits::{Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, Vector, Vector3D};
+pub use traits::{Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Vector, Vector3D};
 
 /// Vector functions module
 ///
