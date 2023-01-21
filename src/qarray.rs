@@ -307,3 +307,15 @@ where
         quat::to_rotation4(self.as_ref(), matrix.as_mut())
     }
 }
+
+//ip From<[F;D]> for QArray
+impl<F, V3, V4> From<[F; 4]> for QArray<F, V3, V4>
+where
+    F: Float,
+    V3: Vector<F, 3>,
+    V4: Vector<F, 4>,
+{
+    fn from(data: [F; 4]) -> Self {
+        Self::from_array(data)
+    }
+}

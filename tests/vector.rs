@@ -21,9 +21,9 @@ struct Banana<V: Vector3D<f32>> {
 /// types of V they must.
 impl<V2, V3, V4, V> Banana<V>
 where
-    V2: Vector<f32, 2>,
-    V3: Vector<f32, 3>,
-    V4: Vector<f32, 4>,
+    V2: Vector<f32, 2> + From<[f32; 2]>,
+    V3: Vector<f32, 3> + From<[f32; 3]>,
+    V4: Vector<f32, 4> + From<[f32; 4]>,
     V: Vector3D<f32, Vec2 = V2, Vec3 = V3, Vec4 = V4>,
 {
     // test length, length_sq, distance, distance_sq, and ALU op both of V and f32
@@ -122,8 +122,8 @@ where
 
     fn test_vec4() {
         let zero = V4::zero();
-        let ones = V4::from_array([1., 1., 1., 1.]);
-        let b = V4::from_array([3., 4., 12., 84.]);
+        let ones = [1.0, 1., 1., 1.].into();
+        let b = [3., 4., 12., 84.].into();
         Self::test_vecn_len_dist(zero, ones, b, 85. * 85., 134. + 83. * 83.);
         Self::test_vecn_index(zero, ones, b, 0, 3.);
         Self::test_vecn_index(zero, ones, b, 1, 4.);
@@ -133,8 +133,8 @@ where
 
     fn test_vec3() {
         let zero = V3::zero();
-        let ones = V3::from_array([1., 1., 1.]);
-        let b = V3::from_array([3., 4., 12.]);
+        let ones = [1., 1., 1.].into();
+        let b = [3., 4., 12.].into();
         Self::test_vecn_len_dist(zero, ones, b, 169., 134.);
         Self::test_vecn_index(zero, ones, b, 0, 3.);
         Self::test_vecn_index(zero, ones, b, 1, 4.);
@@ -143,8 +143,8 @@ where
 
     fn test_vec2() {
         let zero = V2::zero();
-        let ones = V2::from_array([1., 1.]);
-        let b = V2::from_array([3., 4.]);
+        let ones = [1., 1.].into();
+        let b = [3., 4.].into();
         Self::test_vecn_len_dist(zero, ones, b, 25., 13.);
         Self::test_vecn_index(zero, ones, b, 0, 3.);
         Self::test_vecn_index(zero, ones, b, 1, 4.);

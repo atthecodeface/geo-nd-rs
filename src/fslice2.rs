@@ -98,6 +98,12 @@ impl<F: Float, const D: usize, const D2: usize> std::default::Default for FArray
     }
 }
 
+//ip From<[F;D]> for FArray
+impl<F: Float, const D: usize, const D2: usize> From<[F; D2]> for FArray2<F, D, D2> {
+    fn from(data: [F; D2]) -> Self {
+        Self { data }
+    }
+}
 //ip SqMatrix<F,2,4> for FArray2
 impl<F: Float> SqMatrix<FArray<F, 2>, F, 2, 4> for FArray2<F, 2, 4> {
     fn from_array(data: [F; 4]) -> Self {

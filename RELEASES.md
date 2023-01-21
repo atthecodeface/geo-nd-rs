@@ -1,3 +1,7 @@
+# Release 0.1.4 (2023-01-16)
+
+- Added From<[F;]> implementations for FArray, FArray2, QArray
+
 # Release 0.1.3 (2021-09-06)
 
 - Added the Transform trait, FQArray type, and added Trans to the Geometry3D

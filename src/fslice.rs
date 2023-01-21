@@ -146,3 +146,10 @@ impl<F: Float, const D: usize> Vector<F, D> for FArray<F, D> {
         vector::dot(&self.data, &other.data)
     }
 }
+
+//ip From<[F;D]> for FArray
+impl<F: Float, const D: usize> From<[F; D]> for FArray<F, D> {
+    fn from(data: [F; D]) -> Self {
+        Self { data }
+    }
+}

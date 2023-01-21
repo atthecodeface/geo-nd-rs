@@ -49,9 +49,9 @@ fn quat_eq_rijk(q: &Quat, rijk: (f32, f32, f32, f32)) -> bool {
 }
 #[test]
 fn test() {
-    let x = FArray::<f32, 3>::from_array([1., 0., 0.]);
-    let y = FArray::<f32, 3>::from_array([0., 1., 0.]);
-    let z = FArray::<f32, 3>::from_array([0., 0., 1.]);
+    let x: FArray<f32, 3> = [1., 0., 0.].into();
+    let y: FArray<f32, 3> = [0., 1., 0.].into();
+    let z: FArray<f32, 3> = [0., 0., 1.].into();
 
     let mut xy = x + y;
     let mut yz = z + y;
