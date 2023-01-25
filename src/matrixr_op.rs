@@ -133,6 +133,30 @@ pub fn multiply<
     m
 }
 
+//mp multiply_dyn
+/// Multiply two matrices, dynamically sized
+pub fn multiply_dyn<V: Float>(
+    r: usize,
+    x: usize,
+    c: usize,
+    a: &[V],     // r by x
+    b: &[V],     // x by c
+    m: &mut [V], // r by c
+) {
+    assert!(a.len() >= r * x);
+    assert!(b.len() >= x * c);
+    assert!(m.len() >= r * c);
+    for ri in 0..r {
+        for ci in 0..c {
+            let mut v = V::zero();
+            for xi in 0..x {
+                v += a[ri * x + xi] * b[xi * c + ci];
+            }
+            m[ri * c + ci] = v;
+        }
+    }
+}
+
 //mp transform_vec
 /// Transform a vector
 pub fn transform_vec<V: Float, const RD: usize, const R: usize, const D: usize>(
