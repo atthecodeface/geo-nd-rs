@@ -1,14 +1,21 @@
 //a Imports
-use crate::{matrix, vector, FArray, FArray2};
-use crate::{Float, QArray, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform, Vector};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug)]
-pub struct FQArrayTrans<F: Float> {
+use crate::{FArray, FArray2};
+use crate::{Float, QArray, Quaternion, SqMatrix, Transform, Vector};
+
+//tp FQArrayTrans
+/// A transformation that is a rotation, translation and scaling
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub struct FQArrayTrans<F: Float + Serialize> {
+    /// Quaternion of the rotation
     quat: QArray<F, FArray<F, 3>, FArray<F, 4>>,
+    /// Translation and scaling
     trans_scale: FArray<F, 4>,
 }
 
-impl<F: Float> std::default::Default for FQArrayTrans<F> {
+//ip FQArrayTrans
+impl<F: Float + Serialize> std::default::Default for FQArrayTrans<F> {
     fn default() -> Self {
         Self {
             quat: QArray::default(),
@@ -20,7 +27,7 @@ impl<F: Float> std::default::Default for FQArrayTrans<F> {
 //ip Display for FQArrayTrans<F>
 impl<F> std::fmt::Display for FQArrayTrans<F>
 where
-    F: Float,
+    F: Float + Serialize,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
@@ -35,7 +42,8 @@ where
     }
 }
 
-impl<F: Float>
+//ip FQArrayTrans
+impl<F: Float + Serialize>
     Transform<
         F,
         FArray<F, 3>,

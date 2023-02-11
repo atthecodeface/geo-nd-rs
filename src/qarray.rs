@@ -1,7 +1,10 @@
 //a Imports
+use std::marker::PhantomData;
+
+use serde::{Deserialize, Serialize};
+
 use super::{quat, vector};
 use super::{Float, Quaternion, SqMatrix, Vector};
-use std::marker::PhantomData;
 
 //a Macros
 //mi binary_op!
@@ -76,6 +79,37 @@ where
     v3: PhantomData<V3>,
 }
 
+//ip Serialize for FArray
+impl<F, V3, V4> Serialize for QArray<F, V3, V4>
+where
+    F: Float + serde::Serialize,
+    V3: Vector<F, 3>,
+    V4: Vector<F, 4> + serde::Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.data.serialize(serializer)
+    }
+}
+
+//ip Deserialize for FArray
+impl<'de, F, V3, V4> Deserialize<'de> for QArray<F, V3, V4>
+where
+    F: Float + serde::Deserialize<'de>,
+    V3: Vector<F, 3>,
+    V4: Vector<F, 4> + serde::Deserialize<'de>,
+{
+    fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
+    where
+        DE: serde::Deserializer<'de>,
+    {
+        let data: V4 = V4::deserialize(deserializer)?;
+        Ok(Self::of_vector(data))
+    }
+}
+
 //ip QArray
 impl<F, V3, V4> QArray<F, V3, V4>
 where
@@ -83,6 +117,8 @@ where
     V3: Vector<F, 3>,
     V4: Vector<F, 4>,
 {
+    /// Create a quaternion directly from a 4-element vecto
+    #[inline]
     pub fn of_vector(data: V4) -> Self {
         Self {
             data,
@@ -317,5 +353,17 @@ where
 {
     fn from(data: [F; 4]) -> Self {
         Self::from_array(data)
+    }
+}
+//ip From<FArray> for [F;D]
+impl<F, V3, V4> From<QArray<F, V3, V4>> for [F; 4]
+where
+    F: Float,
+    V3: Vector<F, 3>,
+    V4: Vector<F, 4>,
+{
+    fn from(q: QArray<F, V3, V4>) -> [F; 4] {
+        let v: &[F; 4] = q.data.as_ref();
+        *v
     }
 }

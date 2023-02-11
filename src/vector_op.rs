@@ -75,6 +75,44 @@ pub fn is_zero<V: Num>(v: &[V]) -> bool {
     true
 }
 
+//fp uniform_dist_sphere3
+/// Generate a unit vector (point on a sphere) uniformly distributed
+/// given a [V;2] with each coordinate in the range [0, 1)
+///
+/// This considers the [V;2] as a mapping onto the surface of a
+/// cylinder, and wraps that onto the sphere; this works as related by
+/// Archimedes.
+///
+/// The mapping here is more complex in that it can map (with rotation+offset) the input
+/// vector so that the distribution for uniform input
+/// vectors are more evenly spaced across the sphere
+#[inline]
+pub fn uniform_dist_sphere3<V: Float>(x: [V; 2], map: bool) -> [V; 3] {
+    let one = V::frac(1, 1);
+    let two = V::frac(2, 1);
+
+    let (u, v) = if map {
+        let cos_map = V::frac(5, 13);
+        let sin_map = V::frac(12, 13);
+        let u_ofs = V::frac(13, 101);
+        let v_ofs = V::frac(6, 73);
+        let u = u_ofs + x[0] * cos_map - x[1] * sin_map;
+        let v = v_ofs + x[0] * sin_map + x[1] * cos_map;
+        (u, v)
+    } else {
+        (x[0], x[1])
+    };
+
+    let v = v - v.floor();
+    let theta = two * V::pi() * u;
+    let phi = (two * v - one).acos();
+    let sin_theta = theta.sin();
+    let cos_theta = theta.cos();
+    let sin_phi = phi.sin();
+    let cos_phi = phi.cos();
+    [cos_theta * sin_phi, sin_theta * sin_phi, cos_phi]
+}
+
 //fp cross_product3
 /// Return the outer product (cross product) of two 3-dimensional vectors
 ///
@@ -508,12 +546,11 @@ pub fn dot<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
 /// assert_eq!( format!("{}", &Pt{c:[0., 1.]} ), "(0,1)" );
 /// ```
 pub fn fmt<V: Num>(f: &mut std::fmt::Formatter, v: &[V]) -> std::fmt::Result {
-    for i in 0..v.len() {
-        if i == 0 {
-            write!(f, "({}", v[i])?;
-        } else {
-            write!(f, ",{}", v[i])?;
-        }
+    let mut sep = "(";
+    for d in v {
+        std::fmt::Display::fmt(sep, f)?;
+        std::fmt::Display::fmt(d, f)?;
+        sep = ",";
     }
     write!(f, ")")
 }

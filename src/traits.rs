@@ -66,6 +66,13 @@ pub trait Float: Num + num_traits::Float {
     fn frac(n: isize, d: usize) -> Self {
         Self::from((n as f32) / (d as f32)).unwrap()
     }
+
+    //fp pi
+    /// Return the value of PI
+    #[inline]
+    fn pi() -> Self {
+        Self::frac(314_159_265_358_979, 100_000_000_000_000)
+    }
 }
 
 //ti Num for f32/f64/i32/i64/isize
@@ -76,8 +83,18 @@ impl Num for i64 {}
 impl Num for isize {}
 
 //ti Float for f32/f64
-impl Float for f32 {}
-impl Float for f64 {}
+impl Float for f32 {
+    #[inline]
+    fn pi() -> Self {
+        std::f32::consts::PI
+    }
+}
+impl Float for f64 {
+    #[inline]
+    fn pi() -> Self {
+        std::f64::consts::PI
+    }
+}
 
 //a Vector, SqMatrix, Quaternion
 //tt Vector
@@ -303,9 +320,16 @@ pub trait SqMatrix3<V3: Vector<F, 3>, F: Float>: SqMatrix<V3, F, 3, 9> {
 pub trait SqMatrix4<F: Float, V3: Vector<F, 3>, V4: Vector<F, 4>>: SqMatrix<V4, F, 4, 16> {
     // fn invert(&mut self);
     // fn inverse(&self) -> Self;
+    /// Generate a perspective matrix
     fn perspective(fov: F, aspect: F, near: F, far: F) -> Self;
+
+    /// Generate a matrix that represents a 'look at a vector'
     fn look_at(eye: &V3, center: &V3, up: &V3) -> Self;
+
+    /// Translate the matrix by a Vec3
     fn translate3(&mut self, by: &V3);
+
+    /// Translate the matrix by a Vec4
     fn translate4(&mut self, by: &V4);
 }
 
@@ -502,12 +526,19 @@ where
     M4: SqMatrix4<F, V3, V4>,
     Q: Quaternion<F, V3, V4>,
 {
+    /// Create a transformation that is a translation, rotation and scaling
     fn of_trs(t: V3, r: Q, s: F) -> Self;
+    /// Get the scale of the transform
     fn get_scale(&self) -> F;
+    /// Get a translation by a vector
     fn get_translation(&self) -> V3;
+    /// Get the rotation of the transfirnatuib
     fn get_rotation(&self) -> Q;
+    /// Get the inverse transformation
     fn inverse(&self) -> Self;
+    /// Invert the transformation
     fn invert(&mut self);
+    /// Convert it to a 4-by-4 matrix
     fn as_mat(&self) -> M4;
 }
 

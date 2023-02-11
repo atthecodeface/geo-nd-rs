@@ -375,3 +375,78 @@ pub fn apply4<V: Float>(q: &[V; 4], v: &[V; 4]) -> [V; 4] {
         + two * (k * i - r * j) * v[0];
     [x, y, z, v[3]]
 }
+
+//fp weighted_average
+/// Calculate the weighted average of two unit quaternions
+///
+/// w_a + w_b must be 1.
+///
+/// See http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf
+/// Averaging Quaternions by F. Landis Markley
+pub fn weighted_average<V: Float>(qa: &[V; 4], w_a: V, qb: &[V; 4], w_b: V) -> [V; 4] {
+    let (ra, ia, ja, ka) = as_rijk(qa);
+    let (rb, ib, jb, kb) = as_rijk(qb);
+    let four = V::frac(4, 1);
+    let w_diff = w_a - w_b;
+    let q1_q2 = ra * rb + ia * ib + ja * jb + ka * kb;
+    let z_sq = w_diff * w_diff + four * w_a * w_b * q1_q2 * q1_q2;
+    let z = z_sq.sqrt();
+    let rw_a_sq = w_a * (z + w_diff) / z / (z + w_a + w_b);
+    let rw_b_sq = w_b * (z - w_diff) / z / (z + w_a + w_b);
+    let rw_a = rw_a_sq.sqrt();
+    let rw_b = rw_b_sq.sqrt() * q1_q2.signum();
+    let result = of_rijk(
+        rw_a * ra + rw_b * rb,
+        rw_a * ia + rw_b * ib,
+        rw_a * ja + rw_b * jb,
+        rw_a * ka + rw_b * kb,
+    );
+    result
+}
+
+//fp weighted_average_many
+/// Calculate the weighted average of many unit quaternions
+///
+/// weights need not add up to 1
+///
+/// This is an approximation compared to the Landis Markley paper
+pub fn weighted_average_many<V: Float>(values: &[(V, [V; 4])]) -> [V; 4] {
+    assert!(!values.is_empty());
+    let num_values = values.len();
+    if num_values == 1 {
+        values[0].1
+    } else {
+        let mut next_values = Vec::new();
+        for i in 0..(num_values + 1) / 2 {
+            if 2 * i + 1 == num_values {
+                let (w, v) = values[2 * i];
+                next_values.push((w, v));
+            } else {
+                let (w1, v1) = values[2 * i];
+                let (w2, v2) = values[2 * i + 1];
+                let w12 = w1 + w2;
+                let av = weighted_average(&v1, w1 / w12, &v2, w2 / w12);
+                next_values.push((w12, av));
+            }
+        }
+        weighted_average_many(&next_values)
+    }
+}
+
+//fp get_rotation_of_vec_to_vec
+/// Get a quaternion that is a rotation of one vector to another
+///
+/// The vectors must be unit vectors
+pub fn get_rotation_of_vec_to_vec<V: Float>(a: &[V; 3], b: &[V; 3]) -> [V; 4] {
+    let obtuse = vector::dot(a, b) < V::zero();
+    let cp = vector::cross_product3(a, b);
+    let sa = vector::length(&cp);
+    let angle = sa.asin();
+    let angle = if obtuse {
+        let pi = (-V::one()).acos();
+        pi - angle
+    } else {
+        angle
+    };
+    of_axis_angle(&cp, angle)
+}

@@ -1,6 +1,6 @@
 [package]
 name = "geo-nd"
-version = "0.1.5"
+version = "0.1.7"
 edition = "2018"
 readme = "README.md"
 authors = ["Gavin J Stark"]
@@ -15,6 +15,10 @@ repository = "https://github.com/atthecodeface/geo-nd-rs"
 
 [dependencies.num-traits]
 version = "0.2.1"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
 
 # [dependencies.core_simd]
 # git = "https://github.com/rust-lang/stdsimd"

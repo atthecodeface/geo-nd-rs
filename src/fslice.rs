@@ -1,4 +1,6 @@
 //a Imports
+use serde::{Deserialize, Serialize};
+
 use super::vector;
 use super::{Float, Vector};
 
@@ -81,6 +83,39 @@ pub struct FArray<F: Float, const D: usize> {
     data: [F; D],
 }
 
+//ip Serialize for FArray
+impl<F: Float + serde::Serialize, const D: usize> Serialize for FArray<F, D> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeTuple;
+        let mut seq = serializer.serialize_tuple(D)?;
+        for e in self.data.iter() {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+//ip Deserialize for FArray
+impl<'de, F: Float + serde::Deserialize<'de>, const D: usize> Deserialize<'de> for FArray<F, D> {
+    fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
+    where
+        DE: serde::Deserializer<'de>,
+    {
+        let array = Vec::<F>::deserialize(deserializer)?;
+        if array.len() != D {
+            return Err(serde::de::Error::invalid_length(array.len(), &"<D> floats"));
+        }
+        let mut data = Self::default();
+        for (i, d) in array.into_iter().enumerate() {
+            data[i] = d;
+        }
+        Ok(data)
+    }
+}
+
 //ip FArray
 index_ops! { FArray }
 ref_op! { FArray, [F;D] }
@@ -90,6 +125,7 @@ binary_op! { FArray, Sub, sub, -, SubAssign, sub_assign, -= }
 binary_op! { FArray, Mul, mul, *, MulAssign, mul_assign, *= }
 binary_op! { FArray, Div, div, /, DivAssign, div_assign, /= }
 
+//ip Neg for FArray
 impl<F: Float, const D: usize> std::ops::Neg for FArray<F, D> {
     type Output = Self;
     fn neg(self) -> Self::Output {
@@ -100,6 +136,8 @@ impl<F: Float, const D: usize> std::ops::Neg for FArray<F, D> {
         Self { data }
     }
 }
+
+//ip Default for FArray
 impl<F: Float, const D: usize> std::default::Default for FArray<F, D> {
     fn default() -> Self {
         Self {
@@ -108,6 +146,7 @@ impl<F: Float, const D: usize> std::default::Default for FArray<F, D> {
     }
 }
 
+//ip Display for FArray
 impl<F: Float, const D: usize> std::fmt::Display for FArray<F, D> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         vector::fmt(f, &self.data)
@@ -151,5 +190,12 @@ impl<F: Float, const D: usize> Vector<F, D> for FArray<F, D> {
 impl<F: Float, const D: usize> From<[F; D]> for FArray<F, D> {
     fn from(data: [F; D]) -> Self {
         Self { data }
+    }
+}
+
+//ip From<FArray> for [F;D]
+impl<F: Float, const D: usize> From<FArray<F, D>> for [F; D] {
+    fn from(s: FArray<F, D>) -> [F; D] {
+        s.data
     }
 }

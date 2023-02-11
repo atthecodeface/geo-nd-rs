@@ -1,3 +1,7 @@
+# Release 0.1.6 (2023-01-31)
+
+- Improved formatting of vectors
+
 # Release 0.1.4 (2023-01-16)
 
 - Added From<[F;]> implementations for FArray, FArray2, QArray

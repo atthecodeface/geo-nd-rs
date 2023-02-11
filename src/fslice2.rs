@@ -1,4 +1,6 @@
 //a Imports
+use serde::{Deserialize, Serialize};
+
 use super::{matrix, vector, FArray};
 use super::{Float, SqMatrix, SqMatrix3, SqMatrix4, Vector};
 
@@ -95,6 +97,41 @@ impl<F: Float, const D: usize, const D2: usize> std::default::Default for FArray
         Self {
             data: vector::zero(),
         }
+    }
+}
+
+//ip Serialize for FArray2
+impl<F: Float + serde::Serialize, const D: usize, const D2: usize> Serialize for FArray2<F, D, D2> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeTuple;
+        let mut seq = serializer.serialize_tuple(D2)?;
+        for e in self.data.iter() {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+//ip Deserialize for FArray2
+impl<'de, F: Float + serde::Deserialize<'de>, const D: usize, const D2: usize> Deserialize<'de>
+    for FArray2<F, D, D2>
+{
+    fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
+    where
+        DE: serde::Deserializer<'de>,
+    {
+        let array = Vec::<F>::deserialize(deserializer)?;
+        if array.len() != D2 {
+            return Err(serde::de::Error::invalid_length(array.len(), &"<D> floats"));
+        }
+        let mut data = Self::default();
+        for (i, d) in array.into_iter().enumerate() {
+            data[i] = d;
+        }
+        Ok(data)
     }
 }
 
