@@ -128,12 +128,12 @@ binary_op! { FArray, Div, div, /, DivAssign, div_assign, /= }
 //ip Neg for FArray
 impl<F: Float, const D: usize> std::ops::Neg for FArray<F, D> {
     type Output = Self;
-    fn neg(self) -> Self::Output {
-        let mut data = [F::zero(); D];
-        for i in 0..D {
-            data[i] = -self.data[i];
+    fn neg(mut self) -> Self::Output {
+        let data: &mut [F; D] = self.as_mut();
+        for d in data.iter_mut() {
+            *d = -*d;
         }
-        Self { data }
+        self
     }
 }
 
@@ -177,7 +177,7 @@ impl<F: Float, const D: usize> Vector<F, D> for FArray<F, D> {
     fn reduce_sum(&self) -> F {
         let mut r = F::zero();
         for d in self.data {
-            r = r + d
+            r += d
         }
         r
     }

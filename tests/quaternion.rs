@@ -1,15 +1,12 @@
 //a Imports
 use geo_nd::{quat, vector};
 use geo_nd::{FArray, Float, Geometry3D, QArray, Quaternion, SqMatrix, Vector};
-use std::marker::PhantomData;
 
 //a Test type
 //ti Banana
 // This type is required so that implementations of the associated types of V (e.g. Vec2/3/4) can be used within
 type Vec3 = <f32 as Geometry3D<f32>>::Vec3;
-type Vec4 = <f32 as Geometry3D<f32>>::Vec4;
 type Mat3 = <f32 as Geometry3D<f32>>::Mat3;
-type Mat4 = <f32 as Geometry3D<f32>>::Mat4;
 type Quat = <f32 as Geometry3D<f32>>::Quat;
 
 //ii Banana
@@ -223,7 +220,6 @@ fn test() {
 }
 #[test]
 fn test_matrix() {
-    let ra = std::f32::consts::PI / 2.;
     let rsqrt2 = (0.5_f32).sqrt();
 
     let x = Vec3::from_array([1., 0., 0.]);
@@ -239,7 +235,7 @@ fn test_matrix() {
     xz.normalize();
     xyz.normalize();
 
-    let mut q = Quat::of_rijk(1., 0., 0., 0.);
+    let q = Quat::of_rijk(1., 0., 0., 0.);
     let mut m = Mat3::default();
     q.set_rotation3(&mut m);
     assert_eq!(
@@ -249,7 +245,7 @@ fn test_matrix() {
     let q2 = Quat::of_rotation3(&m);
     assert!(quat_eq(&q, &q2));
 
-    let mut q = Quat::of_rijk(0., 1., 0., 0.);
+    let q = Quat::of_rijk(0., 1., 0., 0.);
     let mut m = Mat3::default();
     q.set_rotation3(&mut m);
     assert_eq!(
@@ -259,7 +255,7 @@ fn test_matrix() {
     let q2 = Quat::of_rotation3(&m);
     assert!(quat_eq(&q, &q2));
 
-    let mut q = Quat::of_rijk(0., 0., 1., 0.);
+    let q = Quat::of_rijk(0., 0., 1., 0.);
     let mut m = Mat3::default();
     q.set_rotation3(&mut m);
     assert_eq!(
@@ -269,7 +265,7 @@ fn test_matrix() {
     let q2 = Quat::of_rotation3(&m);
     assert!(quat_eq(&q, &q2));
 
-    let mut q = Quat::of_rijk(0., 0., 0., 1.);
+    let q = Quat::of_rijk(0., 0., 0., 1.);
     let mut m = Mat3::default();
     q.set_rotation3(&mut m);
     assert_eq!(
@@ -311,9 +307,6 @@ fn test_matrix() {
 }
 #[test]
 fn test_look_at() {
-    let ra = std::f32::consts::PI / 2.;
-    let rsqrt2 = (0.5_f32).sqrt();
-
     let x = Vec3::from_array([1., 0., 0.]);
     let y = Vec3::from_array([0., 1., 0.]);
     let z = Vec3::from_array([0., 0., 1.]);
@@ -327,29 +320,29 @@ fn test_look_at() {
     xz.normalize();
     xyz.normalize();
 
-    let mut q = Quat::look_at(&z, &y);
+    let q = Quat::look_at(&z, &y);
     let t = q.apply3(&z);
     assert!(vec3_eq(t.as_ref(), &[0., 0., -1.]));
     let t = q.apply3(&y);
     assert!(vec3_eq(t.as_ref(), &[0., 1., 0.]));
 
-    let mut q = Quat::look_at(&xy, &z);
+    let q = Quat::look_at(&xy, &z);
     let t = q.apply3(&xy);
     assert!(vec3_eq(t.as_ref(), &[0., 0., -1.]));
     let t = q.apply3(&z);
     assert!(vec3_eq(t.as_ref(), &[0., 1., 0.]));
 
-    let mut q = Quat::look_at(&xy, &yz);
+    let q = Quat::look_at(&xy, &yz);
     let t = q.apply3(&xy);
     assert!(vec3_eq(t.as_ref(), &[0., 0., -1.]));
 
-    let mut q = Quat::look_at(&xy, &y);
+    let q = Quat::look_at(&xy, &y);
     let t = q.apply3(&xy);
     assert!(vec3_eq(t.as_ref(), &[0., 0., -1.]));
     let t = q.apply3(&z);
     assert!(vec3_eq(t.as_ref(), &[1., 0., 0.]));
 
-    let mut q = Quat::look_at(&xy, &x);
+    let q = Quat::look_at(&xy, &x);
     let t = q.apply3(&xy);
     assert!(vec3_eq(t.as_ref(), &[0., 0., -1.]));
     let t = q.apply3(&z);

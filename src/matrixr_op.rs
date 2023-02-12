@@ -125,7 +125,7 @@ pub fn multiply<
         for c in 0..C {
             let mut v = V::zero();
             for x in 0..X {
-                v = v + a[r * X + x] * b[x * C + c];
+                v += a[r * X + x] * b[x * C + c];
             }
             m[r * C + c] = v;
         }
@@ -188,13 +188,13 @@ pub fn transform_vec<V: Float, const RD: usize, const R: usize, const D: usize>(
 /// ```
 pub fn fmt<V: Num, const C: usize>(f: &mut std::fmt::Formatter, v: &[V]) -> std::fmt::Result {
     let mut c = 0;
-    for i in 0..v.len() {
+    for (i, value) in v.iter().enumerate() {
         if i == 0 {
-            write!(f, "[{}", v[i])?;
+            write!(f, "[{}", value)?;
         } else if c == 0 {
-            write!(f, " {}", v[i])?;
+            write!(f, " {}", value)?;
         } else {
-            write!(f, ",{}", v[i])?;
+            write!(f, ",{}", value)?;
         }
         c += 1;
         if c == C {

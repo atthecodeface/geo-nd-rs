@@ -291,9 +291,9 @@ pub fn distance_sq<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
     let qi = invert(a);
     let mut qn = multiply(&qi, b);
     if qn[3] < V::zero() {
-        qn[3] = qn[3] + V::one();
+        qn[3] += V::one();
     } else {
-        qn[3] = qn[3] - V::one();
+        qn[3] -= V::one();
     }
     vector::length_sq(&qn)
 }
@@ -395,13 +395,12 @@ pub fn weighted_average<V: Float>(qa: &[V; 4], w_a: V, qb: &[V; 4], w_b: V) -> [
     let rw_b_sq = w_b * (z - w_diff) / z / (z + w_a + w_b);
     let rw_a = rw_a_sq.sqrt();
     let rw_b = rw_b_sq.sqrt() * q1_q2.signum();
-    let result = of_rijk(
+    of_rijk(
         rw_a * ra + rw_b * rb,
         rw_a * ia + rw_b * ib,
         rw_a * ja + rw_b * jb,
         rw_a * ka + rw_b * kb,
-    );
-    result
+    )
 }
 
 //fp weighted_average_many

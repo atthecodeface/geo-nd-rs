@@ -207,12 +207,12 @@ where
     V4: Vector<F, 4>,
 {
     type Output = Self;
-    fn neg(self) -> Self::Output {
-        let mut data = [F::zero(); 4];
-        for i in 0..4 {
-            data[i] = -self.data[i];
+    fn neg(mut self) -> Self::Output {
+        let data: &mut [F; 4] = self.as_mut();
+        for d in data.iter_mut() {
+            *d = -*d;
         }
-        Self::from_array(data)
+        self
     }
 }
 

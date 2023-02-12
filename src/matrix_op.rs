@@ -122,17 +122,21 @@ pub fn inverse3<V: Float>(m: &[V; 9]) -> [V; 9] {
         }
     };
 
-    r[0] = (m[3 + 1] * m[6 + 2] - m[3 + 2] * m[6 + 1]) * r_d;
-    r[3] = (m[3 + 2] * m[6 + 0] - m[3 + 0] * m[6 + 2]) * r_d;
-    r[6] = (m[3 + 0] * m[6 + 1] - m[3 + 1] * m[6 + 0]) * r_d;
+    // Allow clippy identity lint for <n>+0 to keep matrix clarity
+    #[allow(clippy::identity_op)]
+    {
+        r[0] = (m[3 + 1] * m[6 + 2] - m[3 + 2] * m[6 + 1]) * r_d;
+        r[3] = (m[3 + 2] * m[6 + 0] - m[3 + 0] * m[6 + 2]) * r_d;
+        r[6] = (m[3 + 0] * m[6 + 1] - m[3 + 1] * m[6 + 0]) * r_d;
 
-    r[1] = (m[6 + 1] * m[0 + 2] - m[6 + 2] * m[0 + 1]) * r_d;
-    r[4] = (m[6 + 2] * m[0 + 0] - m[6 + 0] * m[0 + 2]) * r_d;
-    r[7] = (m[6 + 0] * m[0 + 1] - m[6 + 1] * m[0 + 0]) * r_d;
+        r[1] = (m[6 + 1] * m[0 + 2] - m[6 + 2] * m[0 + 1]) * r_d;
+        r[4] = (m[6 + 2] * m[0 + 0] - m[6 + 0] * m[0 + 2]) * r_d;
+        r[7] = (m[6 + 0] * m[0 + 1] - m[6 + 1] * m[0 + 0]) * r_d;
 
-    r[2] = (m[0 + 1] * m[3 + 2] - m[0 + 2] * m[3 + 1]) * r_d;
-    r[5] = (m[0 + 2] * m[3 + 0] - m[0 + 0] * m[3 + 2]) * r_d;
-    r[8] = (m[0 + 0] * m[3 + 1] - m[0 + 1] * m[3 + 0]) * r_d;
+        r[2] = (m[0 + 1] * m[3 + 2] - m[0 + 2] * m[3 + 1]) * r_d;
+        r[5] = (m[0 + 2] * m[3 + 0] - m[0 + 0] * m[3 + 2]) * r_d;
+        r[8] = (m[0 + 0] * m[3 + 1] - m[0 + 1] * m[3 + 0]) * r_d;
+    }
     r
 }
 
@@ -147,36 +151,46 @@ pub fn from_quat3<V: Float>(q: [V; 4]) -> [V; 9] {
     let one = V::one();
     let two = V::from(2).unwrap();
 
-    r[0 + 0] = one - two * y * y - two * z * z;
-    r[0 + 1] = two * x * y + two * z * w;
-    r[0 + 2] = two * x * z - two * y * w;
-    r[3 + 1] = one - two * z * z - two * x * x;
-    r[3 + 2] = two * y * z + two * x * w;
-    r[3 + 0] = two * x * y - two * z * w;
-    r[6 + 2] = one - two * x * x - two * y * y;
-    r[6 + 0] = two * z * x + two * y * w;
-    r[6 + 1] = two * y * z - two * x * w;
+    // Allow clippy identity lint for <n>+0 to keep vector clarity
+    #[allow(clippy::identity_op)]
+    {
+        r[0 + 0] = one - two * y * y - two * z * z;
+        r[0 + 1] = two * x * y + two * z * w;
+        r[0 + 2] = two * x * z - two * y * w;
+        r[3 + 1] = one - two * z * z - two * x * x;
+        r[3 + 2] = two * y * z + two * x * w;
+        r[3 + 0] = two * x * y - two * z * w;
+        r[6 + 2] = one - two * x * x - two * y * y;
+        r[6 + 0] = two * z * x + two * y * w;
+        r[6 + 1] = two * y * z - two * x * w;
+    }
     r
 }
 
 //fp determinant4
 /// Find the determinant of a 4-by-4 matrix
 pub fn determinant4<V: Num>(m: &[V; 16]) -> V {
-    m[0] * (m[4 + 1] * (m[8 + 2] * m[12 + 3] - m[8 + 3] * m[12 + 2])
-        + (m[4 + 2] * (m[8 + 3] * m[12 + 1] - m[8 + 1] * m[12 + 3]))
-        + (m[4 + 3] * (m[8 + 1] * m[12 + 2] - m[8 + 2] * m[12 + 1])))
-        - m[1]
+    // Allow clippy identity lint for <n>+0 to keep matrix clarity
+    #[allow(clippy::identity_op)]
+    {
+        let det0 = m[0]
+            * (m[4 + 1] * (m[8 + 2] * m[12 + 3] - m[8 + 3] * m[12 + 2])
+                + (m[4 + 2] * (m[8 + 3] * m[12 + 1] - m[8 + 1] * m[12 + 3]))
+                + (m[4 + 3] * (m[8 + 1] * m[12 + 2] - m[8 + 2] * m[12 + 1])));
+        let det1 = m[1]
             * (m[4 + 2] * (m[8 + 3] * m[12 + 0] - m[8 + 0] * m[12 + 3])
                 + (m[4 + 3] * (m[8 + 0] * m[12 + 2] - m[8 + 2] * m[12 + 0]))
-                + (m[4 + 0] * (m[8 + 2] * m[12 + 3] - m[8 + 3] * m[12 + 2])))
-        + m[2]
+                + (m[4 + 0] * (m[8 + 2] * m[12 + 3] - m[8 + 3] * m[12 + 2])));
+        let det2 = m[2]
             * (m[4 + 3] * (m[8 + 0] * m[12 + 1] - m[8 + 1] * m[12 + 0])
                 + (m[4 + 0] * (m[8 + 1] * m[12 + 3] - m[8 + 3] * m[12 + 1]))
-                + (m[4 + 1] * (m[8 + 3] * m[12 + 0] - m[8 + 0] * m[12 + 3])))
-        - m[3]
+                + (m[4 + 1] * (m[8 + 3] * m[12 + 0] - m[8 + 0] * m[12 + 3])));
+        let det3 = m[3]
             * (m[4 + 0] * (m[8 + 1] * m[12 + 2] - m[8 + 2] * m[12 + 1])
                 + (m[4 + 1] * (m[8 + 2] * m[12 + 0] - m[8 + 0] * m[12 + 2]))
-                + (m[4 + 2] * (m[8 + 0] * m[12 + 1] - m[8 + 1] * m[12 + 0])))
+                + (m[4 + 2] * (m[8 + 0] * m[12 + 1] - m[8 + 1] * m[12 + 0])));
+        det0 - det1 + det2 - det3
+    }
 }
 
 //fp inverse4
@@ -259,7 +273,7 @@ pub fn look_at3<V: Float>(dirn: &[V; 3], up: &[V; 3]) -> [V; 9] {
     let du = vector_op::dot(&d, up);
     let u = [up[0] - d[0] * du, up[1] - d[1] * du, up[2] - d[2] * du];
     let u = vector_op::normalize(u);
-    let m = [
+    [
         u[2] * d[1] - u[1] * d[2],
         u[0] * d[2] - u[2] * d[0],
         u[1] * d[0] - u[0] * d[1],
@@ -269,8 +283,7 @@ pub fn look_at3<V: Float>(dirn: &[V; 3], up: &[V; 3]) -> [V; 9] {
         -d[0],
         -d[1],
         -d[2],
-    ];
-    m
+    ]
 }
 
 //fp multiply4
@@ -290,11 +303,16 @@ pub fn transform_vec4<V: Float>(m: &[V; 16], v: &[V; 4]) -> [V; 4] {
 ///
 /// Same as postmultiply by [1 0 0 v0], [0 1 0 v1], [0 0 1 v2], [0 0 0 1]
 pub fn translate4<V: Num>(m: &[V; 16], v: &[V; 4]) -> [V; 16] {
-    let mut r = m.clone();
-    r[12] = m[0] * v[0] + m[4 + 0] * v[1] + m[8 + 0] * v[2] + m[12 + 0];
-    r[13] = m[1] * v[0] + m[4 + 1] * v[1] + m[8 + 1] * v[2] + m[12 + 1];
-    r[14] = m[2] * v[0] + m[4 + 2] * v[1] + m[8 + 2] * v[2] + m[12 + 2];
-    r[15] = m[3] * v[0] + m[4 + 3] * v[1] + m[8 + 3] * v[2] + m[12 + 3];
+    let mut r = *m;
+
+    // Allow clippy identity lint for <n>+0 to keep matrix clarity
+    #[allow(clippy::identity_op)]
+    {
+        r[12] = m[0] * v[0] + m[4 + 0] * v[1] + m[8 + 0] * v[2] + m[12 + 0];
+        r[13] = m[1] * v[0] + m[4 + 1] * v[1] + m[8 + 1] * v[2] + m[12 + 1];
+        r[14] = m[2] * v[0] + m[4 + 2] * v[1] + m[8 + 2] * v[2] + m[12 + 2];
+        r[15] = m[3] * v[0] + m[4 + 3] * v[1] + m[8 + 3] * v[2] + m[12 + 3];
+    }
     r
 }
 
@@ -306,7 +324,7 @@ pub fn look_at4<V: Float>(eye: &[V; 3], centre: &[V; 3], up: &[V; 3]) -> [V; 16]
     let du = vector_op::dot(&d, up);
     let u = [up[0] - d[0] * du, up[1] - d[1] * du, up[2] - d[2] * du];
     let u = vector_op::normalize(u);
-    let m = [
+    [
         u[2] * d[1] - u[1] * d[2],
         u[0] * d[2] - u[2] * d[0],
         u[1] * d[0] - u[0] * d[1],
@@ -323,8 +341,7 @@ pub fn look_at4<V: Float>(eye: &[V; 3], centre: &[V; 3], up: &[V; 3]) -> [V; 16]
         V::zero(),
         V::zero(),
         V::one(),
-    ];
-    m
+    ]
 }
 
 //fp perspective4
@@ -353,20 +370,24 @@ pub fn from_quat4<V: Float>(q: [V; 4]) -> [V; 16] {
     let one = V::one();
     let two = V::from(2).unwrap();
 
-    r[0 + 0] = one - two * y * y - two * z * z;
-    r[0 + 1] = two * x * y + two * z * w;
-    r[0 + 2] = two * x * z - two * y * w;
-    // r[0+3]= 0;
-    r[4 + 1] = one - two * z * z - two * x * x;
-    r[4 + 2] = two * y * z + two * x * w;
-    r[4 + 0] = two * x * y - two * z * w;
-    // r[4+3]= 0;
-    r[8 + 2] = one - two * x * x - two * y * y;
-    r[8 + 0] = two * z * x + two * y * w;
-    r[8 + 1] = two * y * z - two * x * w;
-    // r[8+3]= 0;
-    // r[12]=0; r[13]=0; a[14]=0;
-    r[15] = V::one();
+    // Allow clippy identity lint for <n>+0 to keep matrix clarity
+    #[allow(clippy::identity_op)]
+    {
+        r[0 + 0] = one - two * y * y - two * z * z;
+        r[0 + 1] = two * x * y + two * z * w;
+        r[0 + 2] = two * x * z - two * y * w;
+        // r[0+3]= 0;
+        r[4 + 1] = one - two * z * z - two * x * x;
+        r[4 + 2] = two * y * z + two * x * w;
+        r[4 + 0] = two * x * y - two * z * w;
+        // r[4+3]= 0;
+        r[8 + 2] = one - two * x * x - two * y * y;
+        r[8 + 0] = two * z * x + two * y * w;
+        r[8 + 1] = two * y * z - two * x * w;
+        // r[8+3]= 0;
+        // r[12]=0; r[13]=0; a[14]=0;
+        r[15] = V::one();
+    }
     r
 }
 

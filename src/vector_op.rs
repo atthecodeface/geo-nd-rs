@@ -252,12 +252,16 @@ pub fn mix<V: Float, const D: usize>(a: &[V; D], b: &[V; D], t: V) -> [V; D] {
 ///
 /// However, if 2+2c is close to 0 then this fails
 pub fn axis_of_rotation3<V: Float>(rotation: &[V; 9]) -> [V; 3] {
-    let mut rot_min_id = rotation.clone();
+    let mut rot_min_id = *rotation;
     let almost_one = V::from(99999).unwrap() / V::from(100000).unwrap();
     let almost_zero = V::one() / V::from(100000).unwrap();
-    rot_min_id[0] = rot_min_id[8] - almost_one;
-    rot_min_id[4] = rot_min_id[8] - almost_one;
-    rot_min_id[8] = rot_min_id[8] - almost_one;
+    // Allow clippt lint for assigning rot_min_id[8] to keep operation obvious
+    #[allow(clippy::assign_op_pattern)]
+    {
+        rot_min_id[0] = rot_min_id[8] - almost_one;
+        rot_min_id[4] = rot_min_id[8] - almost_one;
+        rot_min_id[8] = rot_min_id[8] - almost_one;
+    }
     let rot_min_id_i = matrix::inverse3(&rot_min_id);
     for j in 0..3 {
         let mut v = [V::zero(); 3];
@@ -288,7 +292,7 @@ pub fn axis_of_rotation3<V: Float>(rotation: &[V; 9]) -> [V; 3] {
 ///
 pub fn scale<V: Num, const D: usize>(mut v: [V; D], s: V) -> [V; D] {
     for c in &mut v {
-        *c = (*c) * s;
+        *c *= s;
     }
     v
 }
@@ -307,7 +311,7 @@ pub fn scale<V: Num, const D: usize>(mut v: [V; D], s: V) -> [V; D] {
 ///
 pub fn comp_mult<V: Num, const D: usize>(mut v: [V; D], s: &[V; D]) -> [V; D] {
     for i in 0..D {
-        v[i] = v[i] * s[i];
+        v[i] *= s[i];
     }
     v
 }
@@ -325,7 +329,7 @@ pub fn comp_mult<V: Num, const D: usize>(mut v: [V; D], s: &[V; D]) -> [V; D] {
 ///
 pub fn reduce<V: Num, const D: usize>(mut v: [V; D], s: V) -> [V; D] {
     for c in &mut v {
-        *c = (*c) / s;
+        *c /= s;
     }
     v
 }
@@ -344,7 +348,7 @@ pub fn reduce<V: Num, const D: usize>(mut v: [V; D], s: V) -> [V; D] {
 ///
 pub fn add<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [V; D] {
     for i in 0..D {
-        v[i] = v[i] + other[i] * scale;
+        v[i] += other[i] * scale;
     }
     v
 }
@@ -354,7 +358,7 @@ pub fn add<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [
 /// this and a borrowed other vector scaled
 pub fn sub<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [V; D] {
     for i in 0..D {
-        v[i] = v[i] - other[i] * scale;
+        v[i] -= other[i] * scale;
     }
     v
 }
@@ -373,13 +377,13 @@ pub fn sub<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [
 /// ```
 ///
 pub fn clamp<V: Float, const D: usize>(mut a: [V; D], min: V, max: V) -> [V; D] {
-    for i in 0..D {
-        a[i] = if a[i] < min {
+    for data in a.iter_mut() {
+        *data = if *data < min {
             min
-        } else if a[i] > max {
+        } else if *data > max {
             max
         } else {
-            a[i]
+            *data
         };
     }
     a
@@ -458,10 +462,11 @@ pub fn rotate_around<V: Float, const D: usize>(
 /// assert_eq!( vector::length_sq(&[3., 4.]), 25. );
 /// ```
 ///
+#[inline]
 pub fn length_sq<V: Num>(v: &[V]) -> V {
     let mut r = V::zero();
     for c in v.iter() {
-        r = r + (*c) * (*c)
+        r += (*c) * (*c)
     }
     r
 }
@@ -476,6 +481,7 @@ pub fn length_sq<V: Num>(v: &[V]) -> V {
 /// assert_eq!( vector::length(&[3., 4.]), 5. );
 /// ```
 ///
+#[inline]
 pub fn length<V: Float>(v: &[V]) -> V {
     length_sq(v).sqrt()
 }
@@ -490,11 +496,12 @@ pub fn length<V: Float>(v: &[V]) -> V {
 /// assert_eq!( vector::distance_sq(&[1.,-1.], &[4., 3.]), 25. );
 /// ```
 ///
+#[inline]
 pub fn distance_sq<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
     let mut r = V::zero();
     for i in 0..D {
         let d = v[i] - other[i];
-        r = r + d * d;
+        r += d * d;
     }
     r
 }
@@ -509,6 +516,7 @@ pub fn distance_sq<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
 /// assert_eq!( vector::distance(&[1.,-1.], &[4., 3.]), 5. );
 /// ```
 ///
+#[inline]
 pub fn distance<V: Float, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
     distance_sq(v, other).sqrt()
 }
@@ -523,10 +531,11 @@ pub fn distance<V: Float, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
 /// assert_eq!( vector::dot(&[1.,-1.], &[4., 1.]), 3. );
 /// ```
 ///
+#[inline]
 pub fn dot<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
     let mut r = V::zero();
     for i in 0..D {
-        r = r + v[i] * other[i];
+        r += v[i] * other[i];
     }
     r
 }
