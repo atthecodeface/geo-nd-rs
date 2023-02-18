@@ -1,3 +1,29 @@
+# Release 0.5.0 (2023-02-18)
+
+- Added multiply_dyn to matrix
+
+- Added serialize/deserialize of types
+
+- Added float 'pi' method
+
+- Added uniform distribution of vectors on a unit sphere
+
+- Added quaternion weighted averaging
+
+- Much addition of inline and must_use
+
+- Moved to Rust 2021 edition
+
+- Added 'into_array' method
+
+- Fixed SqMatrix mulitplication by Self to be matrix multiplication
+
+- Removed SqMatrix division by Self
+
+- Improved library documentation and examples
+
+- Added glsl module, which is not ready yet
+
 # Release 0.1.6 (2023-01-31)
 
 - Improved formatting of vectors

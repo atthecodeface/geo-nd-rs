@@ -5,7 +5,11 @@ use crate::{FArray, FArray2};
 use crate::{Float, QArray, Quaternion, SqMatrix, Transform, Vector};
 
 //tp FQArrayTrans
-/// A transformation that is a rotation, translation and scaling
+/// A transformation that is a translation . scaling . rotation
+/// (i.e. it applies the rotation to an object, then scales it, then
+/// translates it)
+///
+/// This should probably mirror the QArray in using an F, V3 and V4.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct FQArrayTrans<F: Float + Serialize> {
     /// Quaternion of the rotation
@@ -52,25 +56,41 @@ impl<F: Float + Serialize>
         QArray<F, FArray<F, 3>, FArray<F, 4>>,
     > for FQArrayTrans<F>
 {
+    //fp of_trs
+    /// Create an [FQArrayTrans] from a Vector3 translation, Quat
+    /// rotation and Float scaling
     fn of_trs(t: FArray<F, 3>, r: QArray<F, FArray<F, 3>, FArray<F, 4>>, s: F) -> Self {
         Self {
             quat: r,
             trans_scale: FArray::from_array([t[0], t[1], t[2], s]),
         }
     }
-    fn get_scale(&self) -> F {
+
+    //mp scale
+    /// Get the scaling of the transformation
+    fn scale(&self) -> F {
         self.trans_scale[3]
     }
-    fn get_translation(&self) -> FArray<F, 3> {
+
+    //mp translation
+    /// Get the translation of the transformation
+    fn translation(&self) -> FArray<F, 3> {
         FArray::from_array([
             self.trans_scale[0],
             self.trans_scale[1],
             self.trans_scale[2],
         ])
     }
-    fn get_rotation(&self) -> QArray<F, FArray<F, 3>, FArray<F, 4>> {
+
+    //mp rotation
+    /// Get the rotation of the transformation
+    fn rotation(&self) -> QArray<F, FArray<F, 3>, FArray<F, 4>> {
         self.quat
     }
+
+    //cp inverse
+    /// Get a transformation that is the inverse of this
+    #[must_use]
     fn inverse(&self) -> Self {
         let scale = self.trans_scale[3];
         if scale.abs() < F::epsilon() {
@@ -87,9 +107,15 @@ impl<F: Float + Serialize>
             Self::of_trs(trans, iquat, scale)
         }
     }
+
+    //mp invert
+    /// Invert this transformation
     fn invert(&mut self) {
         *self = self.inverse();
     }
+
+    //mp as_mat
+    /// Return the matrix
     fn as_mat(&self) -> FArray2<F, 4, 16> {
         let mut m = FArray2::<F, 4, 16>::zero();
         self.quat.set_rotation4(&mut m);

@@ -301,41 +301,55 @@ where
     V3: Vector<F, 3>,
     V4: Vector<F, 4>,
 {
+    #[inline]
     fn from_array(data: [F; 4]) -> Self {
         Self::of_vector(V4::from_array(data))
     }
+    #[inline]
+    fn into_array(self) -> [F; 4] {
+        self.data.into_array()
+    }
+    #[inline]
     fn as_rijk(&self) -> (F, F, F, F) {
         quat::as_rijk(self.data.as_ref())
     }
+    #[inline]
     fn of_rijk(r: F, i: F, j: F, k: F) -> Self {
         Self::from_array(quat::of_rijk(r, i, j, k))
     }
+    #[inline]
     fn unit() -> Self {
         Self::of_rijk(F::one(), F::zero(), F::zero(), F::zero())
     }
+    #[inline]
     fn set_zero(&mut self) {
         self.data.set_zero();
     }
-    fn mix(&self, other: &Self, t: F) -> Self {
+    #[inline]
+    fn mix(self, other: &Self, t: F) -> Self {
         Self::of_vector(self.data.mix(&other.data, t))
     }
-    fn dot(&self, other: &Self) -> F {
+    #[inline]
+    fn dot(self, other: &Self) -> F {
         vector::dot(self.as_ref(), other.as_ref())
     }
     //fp of_rotation3
     /// Find the quaternion of a Matrix3 assuming it is purely a rotation
+    #[inline]
     fn of_rotation3<M>(rotation: &M) -> Self
     where
         M: SqMatrix<V3, F, 3, 9>,
     {
         Self::from_array(quat::of_rotation(rotation.as_ref()))
     }
+    #[inline]
     fn set_rotation3<M>(&self, matrix: &mut M)
     where
         M: SqMatrix<V3, F, 3, 9>,
     {
         quat::to_rotation3(self.as_ref(), matrix.as_mut())
     }
+    #[inline]
     fn set_rotation4<M>(&self, matrix: &mut M)
     where
         M: SqMatrix<V4, F, 4, 16>,

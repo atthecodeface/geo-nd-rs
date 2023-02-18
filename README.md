@@ -16,7 +16,7 @@ support architectural SIMD implementations within this crate.
 
 This crate is in alpha; it is used in a small number of applications,
 and the functionality is mature, but the API may undergo some changes
-in the near future (through Q3 2021) to ensure high performance OpenGL
+in the near future (through Q3 2023) to ensure high performance OpenGL
 and Vulkan operation while maintaining simplicity of operation for
 other applications.
 

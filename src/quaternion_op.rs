@@ -34,12 +34,15 @@ use crate::{Float, Num};
 //a Constructors and destructors
 //fp new
 /// Create a new quaternion
+#[must_use]
+#[inline]
 pub fn new<V: Num>() -> [V; 4] {
     [V::zero(), V::zero(), V::zero(), V::one()]
 }
 
 //fp as_rijk
 /// Return the breakdown of a quaternion
+#[must_use]
 #[inline]
 pub fn as_rijk<V: Num>(v: &[V; 4]) -> (V, V, V, V) {
     (v[3], v[0], v[1], v[2])
@@ -47,6 +50,7 @@ pub fn as_rijk<V: Num>(v: &[V; 4]) -> (V, V, V, V) {
 
 //fp of_rijk
 /// Create a quaternion from its components
+#[must_use]
 #[inline]
 pub fn of_rijk<V: Num>(r: V, i: V, j: V, k: V) -> [V; 4] {
     [i, j, k, r]
@@ -54,6 +58,7 @@ pub fn of_rijk<V: Num>(r: V, i: V, j: V, k: V) -> [V; 4] {
 
 //fp identity
 /// Create an identity quaternion
+#[must_use]
 #[inline]
 pub fn identity<V: Num>() -> [V; 4] {
     [V::zero(), V::zero(), V::zero(), V::one()]
@@ -61,6 +66,8 @@ pub fn identity<V: Num>() -> [V; 4] {
 
 //fp of_axis_angle
 /// Find the quaternion for a rotation of an angle around an axis
+#[must_use]
+#[inline]
 pub fn of_axis_angle<V: Float>(axis: &[V; 3], angle: V) -> [V; 4] {
     let (s, c) = V::sin_cos(angle / V::from(2).unwrap());
     let l = vector::length(axis);
@@ -78,6 +85,8 @@ pub fn of_axis_angle<V: Float>(axis: &[V; 3], angle: V) -> [V; 4] {
 
 //fp as_axis_angle
 /// Return the axis of the rotation and the angle from the quaternion
+#[must_use]
+#[inline]
 pub fn as_axis_angle<V: Float>(q: &[V; 4]) -> ([V; 3], V) {
     let (r, i, j, k) = as_rijk(q);
     let i2 = i * i;
@@ -156,6 +165,7 @@ pub fn to_rotation4<V: Float>(q: &[V; 4], m: &mut [V; 16]) {
 
 //fp of_rotation
 /// Find the quaternion of a Matrix3 assuming it is purely a rotation
+#[must_use]
 pub fn of_rotation<V: Float>(m: &[V; 9]) -> [V; 4] {
     fn safe_sqrt<V: Float>(x: V) -> V {
         if x < V::zero() {
@@ -187,6 +197,7 @@ pub fn of_rotation<V: Float>(m: &[V; 9]) -> [V; 4] {
 
 //fp look_at
 /// Create quaternion for a rotation that maps unit dirn to (0,0,-1) and unit up to (0,1,0)
+#[must_use]
 pub fn look_at<V: Float>(dirn: &[V; 3], up: &[V; 3]) -> [V; 4] {
     let m = matrix::look_at3(dirn, up);
     of_rotation(&m)
@@ -195,6 +206,8 @@ pub fn look_at<V: Float>(dirn: &[V; 3], up: &[V; 3]) -> [V; 4] {
 //a Mapping functions
 //cp invert
 /// Get the quaternion inverse
+#[must_use]
+#[inline]
 pub fn invert<V: Float>(a: &[V; 4]) -> [V; 4] {
     let l = vector::length_sq(a);
     let r_l = {
@@ -209,18 +222,28 @@ pub fn invert<V: Float>(a: &[V; 4]) -> [V; 4] {
 
 //cp conjugate
 /// Find the conjugate of a quaternion
+#[must_use]
+#[inline]
 pub fn conjugate<V: Num>(a: &[V; 4]) -> [V; 4] {
     [-a[0], -a[1], -a[2], a[3]]
 }
 
 //cp normalize
 /// Find the conjugate of a quaternion
+#[must_use]
+#[inline]
 pub fn normalize<V: Float>(a: [V; 4]) -> [V; 4] {
     vector::normalize(a)
 }
 
 //cp rotate_x
-/// Find a rotation about the X-axis
+/// Apply a rotation about the X-axis to this quaternion
+///
+/// Rotation about the X axis is c+i*s
+///
+/// (c+i*s) * a[] = c*a - s*a[i] + i.s*a[r] - j.s*a[k] + k.s*a[j]
+#[must_use]
+#[inline]
 pub fn rotate_x<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
     let (s, c) = V::sin_cos(angle / V::from(2).unwrap());
     let i = a[0] * c + a[3] * s;
@@ -231,7 +254,9 @@ pub fn rotate_x<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
 }
 
 //cp rotate_y
-/// Find a rotation about the Y-axis
+/// Apply a rotation about the Y-axis to this quaternion
+#[must_use]
+#[inline]
 pub fn rotate_y<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
     let (s, c) = V::sin_cos(angle / V::from(2).unwrap());
     let i = a[0] * c - a[2] * s;
@@ -242,7 +267,9 @@ pub fn rotate_y<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
 }
 
 //cp rotate_z
-/// Find a rotation about the Z-axis
+/// Apply a rotation about the Z-axis to this quaternion
+#[must_use]
+#[inline]
 pub fn rotate_z<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
     let (s, c) = V::sin_cos(angle / V::from(2).unwrap());
     let i = a[0] * c + a[1] * s;
@@ -254,6 +281,7 @@ pub fn rotate_z<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
 
 //cp multiply
 /// Multiply two quaternions together
+#[must_use]
 #[inline]
 pub fn multiply<V: Num>(a: &[V; 4], b: &[V; 4]) -> [V; 4] {
     let i = a[0] * b[3] + a[3] * b[0] + a[1] * b[2] - a[2] * b[1];
@@ -265,6 +293,8 @@ pub fn multiply<V: Num>(a: &[V; 4], b: &[V; 4]) -> [V; 4] {
 
 //cp divide
 /// Multiply one quaternion by the conjugate of the other / len2 of other
+#[must_use]
+#[inline]
 pub fn divide<V: Float>(a: &[V; 4], b: &[V; 4]) -> [V; 4] {
     let l2 = vector::length_sq(b);
     if l2 < V::epsilon() {
@@ -280,6 +310,8 @@ pub fn divide<V: Float>(a: &[V; 4], b: &[V; 4]) -> [V; 4] {
 
 //fp nlerp
 /// A simple normalized LERP from one quaterion to another (not spherical)
+#[must_use]
+#[inline]
 pub fn nlerp<V: Float>(t: V, in0: &[V; 4], in1: &[V; 4]) -> [V; 4] {
     normalize(vector::mix(in0, in1, t))
 }
@@ -287,6 +319,11 @@ pub fn nlerp<V: Float>(t: V, in0: &[V; 4], in1: &[V; 4]) -> [V; 4] {
 //a Operational functions
 //fp distance_sq
 /// Get a measure of the 'distance' between two quaternions
+///
+/// This is calculated as |a' * b|, where || is the l
+///
+/// Should this instead be 1 - <a.b>^2 where a.b is the inner product?
+#[inline]
 pub fn distance_sq<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
     let qi = invert(a);
     let mut qn = multiply(&qi, b);
@@ -300,20 +337,14 @@ pub fn distance_sq<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
 
 //fp distance
 /// Get a measure of the 'distance' between two quaternions
+#[inline]
 pub fn distance<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
     distance_sq(a, b).sqrt()
 }
 
-//fp get_axis_angle
-/// Get the axis of a quaternion, and the angle of rotation it corresponds to
-pub fn get_axis_angle<V: Float>(q: &[V; 4]) -> ([V; 3], V) {
-    let angle = V::from(2).unwrap() * V::acos(q[3]);
-    let axis = vector::normalize([q[0], q[1], q[2]]);
-    (axis, angle)
-}
-
 //fp to_euler
 /// Convert the quaternion to a bank, heading, altitude tuple - applied in that order
+#[must_use]
 pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
     let i = q[0];
     let j = q[1];
@@ -344,6 +375,7 @@ pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
 
 //fp apply3
 /// Apply the quaternion to a vector3
+#[must_use]
 pub fn apply3<V: Float>(q: &[V; 4], v: &[V; 3]) -> [V; 3] {
     let (r, i, j, k) = as_rijk(q);
     let two = V::frac(2, 1);
@@ -361,6 +393,7 @@ pub fn apply3<V: Float>(q: &[V; 4], v: &[V; 3]) -> [V; 3] {
 
 //fp apply4
 /// Apply the quaternion to a vector3
+#[must_use]
 pub fn apply4<V: Float>(q: &[V; 4], v: &[V; 4]) -> [V; 4] {
     let (r, i, j, k) = as_rijk(q);
     let two = V::frac(2, 1);
@@ -376,14 +409,15 @@ pub fn apply4<V: Float>(q: &[V; 4], v: &[V; 4]) -> [V; 4] {
     [x, y, z, v[3]]
 }
 
-//fp weighted_average
+//fp weighted_average_pair
 /// Calculate the weighted average of two unit quaternions
 ///
 /// w_a + w_b must be 1.
 ///
 /// See http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf
 /// Averaging Quaternions by F. Landis Markley
-pub fn weighted_average<V: Float>(qa: &[V; 4], w_a: V, qb: &[V; 4], w_b: V) -> [V; 4] {
+#[must_use]
+pub fn weighted_average_pair<V: Float>(qa: &[V; 4], w_a: V, qb: &[V; 4], w_b: V) -> [V; 4] {
     let (ra, ia, ja, ka) = as_rijk(qa);
     let (rb, ib, jb, kb) = as_rijk(qb);
     let four = V::frac(4, 1);
@@ -406,29 +440,55 @@ pub fn weighted_average<V: Float>(qa: &[V; 4], w_a: V, qb: &[V; 4], w_b: V) -> [
 //fp weighted_average_many
 /// Calculate the weighted average of many unit quaternions
 ///
-/// weights need not add up to 1
+/// weights need not add up to 1, but must be nonzero
 ///
 /// This is an approximation compared to the Landis Markley paper
-pub fn weighted_average_many<V: Float>(values: &[(V, [V; 4])]) -> [V; 4] {
-    assert!(!values.is_empty());
-    let num_values = values.len();
-    if num_values == 1 {
-        values[0].1
-    } else {
-        let mut next_values = Vec::new();
-        for i in 0..(num_values + 1) / 2 {
-            if 2 * i + 1 == num_values {
-                let (w, v) = values[2 * i];
-                next_values.push((w, v));
+#[must_use]
+pub fn weighted_average_many<I: Iterator<Item = (V, [V; 4])>, V: Float>(
+    mut values_iter: I,
+) -> [V; 4] {
+    let (mut weight_ih, mut value_ih) = values_iter
+        .next()
+        .expect("weighted_average_many MUST be invoked with at least one quaternion");
+    let mut next_values = Vec::new();
+    loop {
+        if let Some((second_weight, second_value)) = values_iter.next() {
+            let w12 = weight_ih + second_weight;
+            let av = weighted_average_pair(
+                &value_ih,
+                weight_ih / w12,
+                &second_value,
+                second_weight / w12,
+            );
+            next_values.push((w12, av));
+        } else {
+            // No value to pair with in-hand; if there are none on the
+            // list then the iterator only had one entry, so return that
+            if next_values.is_empty() {
+                return value_ih;
             } else {
-                let (w1, v1) = values[2 * i];
-                let (w2, v2) = values[2 * i + 1];
-                let w12 = w1 + w2;
-                let av = weighted_average(&v1, w1 / w12, &v2, w2 / w12);
-                next_values.push((w12, av));
+                // Iterator must have returned at least 2n+1 (n>=1) entries
+                //
+                // next_values must be 'n' long already, make it n+1 and break
+                next_values.push((weight_ih, value_ih));
+                break;
             }
         }
-        weighted_average_many(&next_values)
+        // In-hand values have been consumed, fill them up or finish
+        if let Some((w, v)) = values_iter.next() {
+            // Iterator must have returned at least 3 values now
+            weight_ih = w;
+            value_ih = v;
+        } else {
+            // Iterator has returned 2n values with n>=1
+            break;
+        }
+    }
+    if next_values.len() == 1 {
+        next_values[0].1
+    } else {
+        let values_iter = next_values.into_iter();
+        weighted_average_many(values_iter)
     }
 }
 
@@ -436,7 +496,8 @@ pub fn weighted_average_many<V: Float>(values: &[(V, [V; 4])]) -> [V; 4] {
 /// Get a quaternion that is a rotation of one vector to another
 ///
 /// The vectors must be unit vectors
-pub fn get_rotation_of_vec_to_vec<V: Float>(a: &[V; 3], b: &[V; 3]) -> [V; 4] {
+#[must_use]
+pub fn rotation_of_vec_to_vec<V: Float>(a: &[V; 3], b: &[V; 3]) -> [V; 4] {
     let obtuse = vector::dot(a, b) < V::zero();
     let cp = vector::cross_product3(a, b);
     let sa = vector::length(&cp);

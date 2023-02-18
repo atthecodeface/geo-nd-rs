@@ -1,8 +1,8 @@
 //a Imports
 use serde::{Deserialize, Serialize};
 
-use super::{matrix, vector, FArray};
-use super::{Float, SqMatrix, SqMatrix3, SqMatrix4, Vector};
+use crate::{matrix, vector, FArray};
+use crate::{Float, SqMatrix, SqMatrix3, SqMatrix4, Vector};
 
 //a Macros
 //mi index_ops!
@@ -72,6 +72,27 @@ macro_rules! binary_op {
     }
 }
 
+//mi binary_op_by_f!
+macro_rules! binary_op_by_f {
+    { $t:ident, $trait_op:ident, $op:ident, $binop:tt, $trait_assign_op:ident, $assign_op:ident, $assign_binop:tt } => {
+        impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_op<F> for $t<F, D, D2> {
+            type Output = Self;
+            fn $op(self, other: F) -> Self {
+                let mut data = [F::zero();D2];
+                for i in 0..D {
+                    data[i] = self.data[i] $binop other;
+                }
+                Self { data }
+            }
+        }
+        impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_assign_op<F> for $t<F, D, D2> {
+            fn $assign_op(&mut self, other: F) {
+                for i in 0..D {self.data[i] $assign_binop other;}
+            }
+        }
+    }
+}
+
 //a FArray2
 //tp FArray2
 /// The [FArray2] is a wrapper around a `D2 = D`^2` sized array of [Float]s.
@@ -89,14 +110,27 @@ ref_op! { FArray2, [F;D2] }
 ref_op! { FArray2, [F] }
 binary_op! { FArray2, Add, add, +, AddAssign, add_assign, += }
 binary_op! { FArray2, Sub, sub, -, SubAssign, sub_assign, -= }
-binary_op! { FArray2, Mul, mul, *, MulAssign, mul_assign, *= }
-binary_op! { FArray2, Div, div, /, DivAssign, div_assign, /= }
+binary_op_by_f! { FArray2, Mul, mul, *, MulAssign, mul_assign, *= }
+binary_op_by_f! { FArray2, Div, div, /, DivAssign, div_assign, /= }
 
 impl<F: Float, const D: usize, const D2: usize> std::default::Default for FArray2<F, D, D2> {
     fn default() -> Self {
         Self {
             data: vector::zero(),
         }
+    }
+}
+
+//ip Mul, MulAssign <Self> for FArray2
+impl<F: Float, const D: usize, const D2: usize> std::ops::Mul<Self> for FArray2<F, D, D2> {
+    type Output = Self;
+    fn mul(self, other: Self) -> Self {
+        matrix::multiply::<F, D2, D2, D2, D, D, D>(self.as_ref(), other.as_ref()).into()
+    }
+}
+impl<F: Float, const D: usize, const D2: usize> std::ops::MulAssign<Self> for FArray2<F, D, D2> {
+    fn mul_assign(&mut self, other: Self) {
+        *self = *self * other;
     }
 }
 
@@ -146,6 +180,9 @@ impl<F: Float> SqMatrix<FArray<F, 2>, F, 2, 4> for FArray2<F, 2, 4> {
     fn from_array(data: [F; 4]) -> Self {
         Self { data }
     }
+    fn into_array(self) -> [F; 4] {
+        self.data
+    }
     fn zero() -> Self {
         Self {
             data: vector::zero(),
@@ -183,6 +220,9 @@ impl<F: Float> SqMatrix<FArray<F, 2>, F, 2, 4> for FArray2<F, 2, 4> {
 impl<F: Float> SqMatrix<FArray<F, 3>, F, 3, 9> for FArray2<F, 3, 9> {
     fn from_array(data: [F; 9]) -> Self {
         Self { data }
+    }
+    fn into_array(self) -> [F; 9] {
+        self.data
     }
     fn zero() -> Self {
         Self {
@@ -224,6 +264,9 @@ impl<F: Float> SqMatrix3<FArray<F, 3>, F> for FArray2<F, 3, 9> {}
 impl<F: Float> SqMatrix<FArray<F, 4>, F, 4, 16> for FArray2<F, 4, 16> {
     fn from_array(data: [F; 16]) -> Self {
         Self { data }
+    }
+    fn into_array(self) -> [F; 16] {
+        self.data
     }
     fn zero() -> Self {
         Self {

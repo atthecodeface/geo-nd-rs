@@ -135,6 +135,8 @@ pub fn multiply<
 
 //mp multiply_dyn
 /// Multiply two matrices, dynamically sized
+///
+/// Until generic const expressions work cleanly this is a workaround
 pub fn multiply_dyn<V: Float>(
     r: usize,
     x: usize,
