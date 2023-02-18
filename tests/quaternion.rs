@@ -50,14 +50,14 @@ fn test() {
     let y: FArray<f32, 3> = [0., 1., 0.].into();
     let z: FArray<f32, 3> = [0., 0., 1.].into();
 
-    let mut xy = x + y;
-    let mut yz = z + y;
-    let mut xz = x + z;
-    let mut xyz = x + y + z;
-    xy.normalize();
-    yz.normalize();
-    xz.normalize();
-    xyz.normalize();
+    let xy = x + y;
+    let yz = z + y;
+    let xz = x + z;
+    let xyz = x + y + z;
+    let xy = xy.normalize();
+    let yz = yz.normalize();
+    let xz = xz.normalize();
+    let xyz = xyz.normalize();
 
     let ra = std::f32::consts::PI / 2.;
     let rsqrt2 = (0.5_f32).sqrt();
@@ -226,14 +226,14 @@ fn test_matrix() {
     let y = Vec3::from_array([0., 1., 0.]);
     let z = Vec3::from_array([0., 0., 1.]);
 
-    let mut xy = x + y;
-    let mut yz = z + y;
-    let mut xz = x + z;
-    let mut xyz = x + y + z;
-    xy.normalize();
-    yz.normalize();
-    xz.normalize();
-    xyz.normalize();
+    let xy = x + y;
+    let yz = z + y;
+    let xz = x + z;
+    let xyz = x + y + z;
+    let _xy = xy.normalize();
+    let _yz = yz.normalize();
+    let _xz = xz.normalize();
+    let xyz = xyz.normalize();
 
     let q = Quat::of_rijk(1., 0., 0., 0.);
     let mut m = Mat3::default();
@@ -286,13 +286,13 @@ fn test_matrix() {
     assert!(quat_eq(&q, &q2));
 
     q = Quat::of_rijk(1., 2., 3., 4.);
-    q.normalize();
+    q = q.normalize();
     q.set_rotation3(&mut m);
     let q2 = Quat::of_rotation3(&m);
     assert!(quat_eq(&q, &q2));
 
     q = Quat::of_rijk(4., 3., 2., 1.);
-    q.normalize();
+    q = q.normalize();
     q.set_rotation3(&mut m);
     let q2 = Quat::of_rotation3(&m);
     assert!(quat_eq(&q, &q2));
@@ -311,14 +311,14 @@ fn test_look_at() {
     let y = Vec3::from_array([0., 1., 0.]);
     let z = Vec3::from_array([0., 0., 1.]);
 
-    let mut xy = x + y;
-    let mut yz = z + y;
-    let mut xz = x + z;
-    let mut xyz = x + y + z;
-    xy.normalize();
-    yz.normalize();
-    xz.normalize();
-    xyz.normalize();
+    let xy = x + y;
+    let yz = z + y;
+    let xz = x + z;
+    let xyz = x + y + z;
+    let xy = xy.normalize();
+    let yz = yz.normalize();
+    let _xz = xz.normalize();
+    let _xyz = xyz.normalize();
 
     let q = Quat::look_at(&z, &y);
     let t = q.apply3(&z);

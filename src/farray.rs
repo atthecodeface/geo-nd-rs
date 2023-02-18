@@ -2,7 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::vector;
-use super::{Float, Vector};
+use super::{Float, Vector, Vector3};
 
 //a Macros
 //mi index_ops!
@@ -153,10 +153,16 @@ impl<F: Float, const D: usize> std::fmt::Display for FArray<F, D> {
     }
 }
 
+//ip Vector3<F> for FArray
+impl<F: Float> Vector3<F> for FArray<F, 3> {}
+
 //ip Vector<F,D> for FArray
 impl<F: Float, const D: usize> Vector<F, D> for FArray<F, D> {
     fn from_array(data: [F; D]) -> Self {
         Self { data }
+    }
+    fn into_array(self) -> [F; D] {
+        self.data
     }
     fn zero() -> Self {
         Self {
@@ -169,7 +175,7 @@ impl<F: Float, const D: usize> Vector<F, D> for FArray<F, D> {
     fn set_zero(&mut self) {
         vector::set_zero(&mut self.data)
     }
-    fn mix(&self, other: &Self, t: F) -> Self {
+    fn mix(self, other: &Self, t: F) -> Self {
         Self {
             data: vector::mix(&self.data, &other.data, t),
         }
