@@ -43,7 +43,7 @@ macro_rules! binary_op {
             type Output = Self;
             fn $op(self, other: Self) -> Self {
                 let mut data = [F::zero();D2];
-                for i in 0..D {
+                for i in 0..D2 {
                     data[i] = self.data[i] $binop other.data[i];
                 }
                 Self { data }
@@ -51,14 +51,14 @@ macro_rules! binary_op {
         }
         impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_assign_op<Self> for $t<F, D, D2> {
             fn $assign_op(&mut self, other: Self) {
-                for i in 0..D {self.data[i] $assign_binop other.data[i];}
+                for i in 0..D2 {self.data[i] $assign_binop other.data[i];}
             }
         }
         impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_op<F> for $t<F, D, D2> {
             type Output = Self;
             fn $op(self, other: F) -> Self {
                 let mut data = [F::zero();D2];
-                for i in 0..D {
+                for i in 0..D2 {
                     data[i] = self.data[i] $binop other;
                 }
                 Self { data }
@@ -66,7 +66,7 @@ macro_rules! binary_op {
         }
         impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_assign_op<F> for $t<F, D, D2> {
             fn $assign_op(&mut self, other: F) {
-                for i in 0..D {self.data[i] $assign_binop other;}
+                for i in 0..D2 {self.data[i] $assign_binop other;}
             }
         }
     }
@@ -79,7 +79,7 @@ macro_rules! binary_op_by_f {
             type Output = Self;
             fn $op(self, other: F) -> Self {
                 let mut data = [F::zero();D2];
-                for i in 0..D {
+                for i in 0..D2 {
                     data[i] = self.data[i] $binop other;
                 }
                 Self { data }
@@ -87,7 +87,7 @@ macro_rules! binary_op_by_f {
         }
         impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_assign_op<F> for $t<F, D, D2> {
             fn $assign_op(&mut self, other: F) {
-                for i in 0..D {self.data[i] $assign_binop other;}
+                for i in 0..D2 {self.data[i] $assign_binop other;}
             }
         }
     }

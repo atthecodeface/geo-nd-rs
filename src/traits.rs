@@ -69,10 +69,11 @@ pub trait Float: Num + num_traits::Float {
 
     //fp pi
     /// Return the value of PI
-    #[inline]
-    fn pi() -> Self {
-        Self::frac(314_159_265_358_979, 100_000_000_000_000)
-    }
+    fn pi() -> Self;
+
+    //fp tau
+    /// Return the value of 2*PI
+    fn tau() -> Self;
 }
 
 //ti Num for f32/f64/i32/i64/isize
@@ -88,11 +89,19 @@ impl Float for f32 {
     fn pi() -> Self {
         std::f32::consts::PI
     }
+    #[inline]
+    fn tau() -> Self {
+        std::f32::consts::TAU
+    }
 }
 impl Float for f64 {
     #[inline]
     fn pi() -> Self {
         std::f64::consts::PI
+    }
+    #[inline]
+    fn tau() -> Self {
+        std::f64::consts::TAU
     }
 }
 
