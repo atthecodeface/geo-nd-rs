@@ -189,9 +189,7 @@ impl<F: Float> SqMatrix<FArray<F, 2>, F, 2, 4> for FArray2<F, 2, 4> {
         }
     }
     fn identity() -> Self {
-        Self {
-            data: vector::zero(),
-        }
+        [F::one(), F::zero(), F::zero(), F::one()].into()
     }
     fn is_zero(&self) -> bool {
         vector::is_zero(&self.data)
@@ -230,9 +228,18 @@ impl<F: Float> SqMatrix<FArray<F, 3>, F, 3, 9> for FArray2<F, 3, 9> {
         }
     }
     fn identity() -> Self {
-        Self {
-            data: vector::zero(),
-        }
+        [
+            F::one(),
+            F::zero(),
+            F::zero(),
+            F::zero(),
+            F::one(),
+            F::zero(),
+            F::zero(),
+            F::zero(),
+            F::one(),
+        ]
+        .into()
     }
     fn is_zero(&self) -> bool {
         vector::is_zero(&self.data)
@@ -274,9 +281,25 @@ impl<F: Float> SqMatrix<FArray<F, 4>, F, 4, 16> for FArray2<F, 4, 16> {
         }
     }
     fn identity() -> Self {
-        Self {
-            data: vector::zero(),
-        }
+        [
+            F::one(),
+            F::zero(),
+            F::zero(),
+            F::zero(),
+            F::zero(),
+            F::one(),
+            F::zero(),
+            F::zero(),
+            F::zero(),
+            F::zero(),
+            F::one(),
+            F::zero(),
+            F::zero(),
+            F::zero(),
+            F::zero(),
+            F::one(),
+        ]
+        .into()
     }
     fn is_zero(&self) -> bool {
         vector::is_zero(&self.data)

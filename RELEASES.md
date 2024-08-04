@@ -1,3 +1,9 @@
+# Release 0.5.2 (2024-08-04)
+
+- Fix scaling of matrix by F
+
+- Fix identity matrices
+
 # Release 0.5.0 (2023-02-18)
 
 - Added multiply_dyn to matrix
