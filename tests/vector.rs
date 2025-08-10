@@ -74,8 +74,11 @@ where
             v_o_dist2,
             "Distance^2 of v-ones is 134"
         );
-        assert_eq!((v - 1.).length_sq(), v_o_dist2, "v - 1. Length 134");
-        assert_eq!((v + (-1.)).length_sq(), v_o_dist2, "v + -1. Length 134");
+
+        // No longer support vector + f
+        //
+        // assert_eq!((v - 1.).length_sq(), v_o_dist2, "v - 1. Length 134");
+        // assert_eq!((v + (-1.)).length_sq(), v_o_dist2, "v + -1. Length 134");
         assert_eq!(((-v) + zero).length(), v_len, "Length of (-v) + zero is 13");
         assert_eq!(((-v) + v).length(), 0., "Length of (-v) + v is 0");
     }
@@ -92,10 +95,12 @@ where
         assert_eq!(v[n], vn, "v has coordinate N of vn");
         assert_eq!((v - zero)[n], vn, "v-zeros has coordinate N of vn");
         assert_eq!((v - ones)[n], vn - 1., "v-ones has coordinate N of vn-1");
-        assert_eq!((v + 0.)[n], vn, "v+[0.] has coordinate N of vn");
-        assert_eq!((v + 1.)[n], vn + 1., "v+[1.] has coordinate N of vn+1");
-        assert_eq!((v - 0.)[n], vn, "v-[0.] has coordinate N of vn");
-        assert_eq!((v - 1.)[n], vn - 1., "v-[1.] has coordinate N of vn-1");
+        // No longer support vector + float
+        //
+        // assert_eq!((v + 0.)[n], vn, "v+[0.] has coordinate N of vn");
+        // assert_eq!((v + 1.)[n], vn + 1., "v+[1.] has coordinate N of vn+1");
+        // assert_eq!((v - 0.)[n], vn, "v-[0.] has coordinate N of vn");
+        // assert_eq!((v - 1.)[n], vn - 1., "v-[1.] has coordinate N of vn-1");
         assert_eq!((v * 0.)[n], 0., "v*[0.] has coordinate N of 0");
         assert_eq!((v * 1.)[n], vn, "v*[1.] has coordinate N of vn");
         assert_eq!((v * 0.)[n], 0., "v*[0.] has coordinate N of 0");

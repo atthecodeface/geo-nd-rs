@@ -325,18 +325,18 @@ mod traits;
 mod vector_op;
 
 mod farray;
-mod farray2;
-mod fqarray;
-mod qarray;
+// mod farray2;
+// mod fqarray;
+// mod qarray;
 
 //a Exports
 pub use farray::FArray;
-pub use farray2::FArray2;
-pub use fqarray::FQArrayTrans;
-pub use qarray::QArray;
+// pub use farray2::FArray2;
+// pub use fqarray::FQArrayTrans;
+// pub use qarray::QArray;
 pub use traits::{
     Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform,
-    Vector, Vector3, Vector3D,
+    Vector, Vector3, Vector3D, VectorF32,
 };
 
 /// Vector functions module
@@ -355,111 +355,4 @@ pub mod quat {
 pub mod matrix {
     pub use super::matrix_op::*;
     pub use super::matrixr_op::*;
-}
-
-//a SIMD configuration
-#[cfg(feature = "simd")]
-extern crate core_simd;
-#[cfg(feature = "simd")]
-pub mod simd {
-    mod simd_vec;
-    pub use self::simd_vec::{F32x2Vec2, F32x4Vec2, F32x4Vec3, F32x4Vec4};
-
-    //tp SimdVecF32A16 - empty struct that provides a wrapper for the associated types
-    pub struct VecF32A16 {}
-    impl crate::Vector3D<f32> for VecF32A16 {
-        type Vec2 = F32x4Vec2;
-        type Vec3 = F32x4Vec3;
-        type Vec4 = F32x4Vec4;
-    }
-
-    //tp SimdVecF32A8 - empty struct that provides a wrapper for the associated types
-    pub struct VecF32A8 {}
-    impl crate::Vector3D<f32> for VecF32A8 {
-        type Vec2 = F32x2Vec2;
-        type Vec3 = F32x4Vec3;
-        type Vec4 = F32x4Vec4;
-    }
-}
-
-//a Vector3D and Geometry3D for f32/f64 using FArray/FArray2
-//ip Vector3D for f32
-impl Vector3D<f32> for f32 {
-    type Vec2 = FArray<f32, 2>;
-    type Vec3 = FArray<f32, 3>;
-    type Vec4 = FArray<f32, 4>;
-}
-
-//ip Geometry3D for f32
-impl Geometry3D<f32> for f32 {
-    type Vec3 = FArray<f32, 3>;
-    type Vec4 = FArray<f32, 4>;
-    type Mat3 = FArray2<f32, 3, 9>;
-    type Mat4 = FArray2<f32, 4, 16>;
-    type Quat = QArray<f32, FArray<f32, 3>, FArray<f32, 4>>;
-    type Trans = FQArrayTrans<f32>;
-}
-
-//ip Geometry2D for f32
-impl Geometry2D<f32> for f32 {
-    type Vec2 = FArray<f32, 2>;
-    type Mat2 = FArray2<f32, 2, 4>;
-}
-
-//ip Vector3D for f64
-impl Vector3D<f64> for f64 {
-    type Vec2 = FArray<f64, 2>;
-    type Vec3 = FArray<f64, 3>;
-    type Vec4 = FArray<f64, 4>;
-}
-
-//ip Geometry3D for f64
-impl Geometry3D<f64> for f64 {
-    type Vec3 = FArray<f64, 3>;
-    type Vec4 = FArray<f64, 4>;
-    type Mat3 = FArray2<f64, 3, 9>;
-    type Mat4 = FArray2<f64, 4, 16>;
-    type Quat = QArray<f64, FArray<f64, 3>, FArray<f64, 4>>;
-    type Trans = FQArrayTrans<f64>;
-}
-
-//ip Geometry2D for f64
-impl Geometry2D<f64> for f64 {
-    type Vec2 = FArray<f64, 2>;
-    type Mat2 = FArray2<f64, 2, 4>;
-}
-
-//a GLSL-compatible things - bit of a place holder currently
-/// The [glsl] module is a place-holder for types that are compatible with GLSL
-pub mod glsl {
-    /// GLSL 2-component vector of float
-    pub type Vec2 = [f32; 2];
-    /// GLSL 3-component vector of float
-    pub type Vec3 = [f32; 3];
-    /// GLSL 4-component vector of float
-    pub type Vec4 = [f32; 4];
-    /// GLSL 2-component vector of double
-    pub type DVec2 = [f64; 2];
-    /// GLSL 3-component vector of double
-    pub type DVec3 = [f64; 3];
-    /// GLSL 4-component vector of double
-    pub type DVec4 = [f64; 4];
-    /// GLSL 2-component vector of signed integer
-    pub type IVec2 = [i32; 2];
-    /// GLSL 3-component vector of signed integer
-    pub type IVec3 = [i32; 3];
-    /// GLSL 4-component vector of signed integer
-    pub type IVec4 = [i32; 4];
-    /// GLSL 2x2 floating-point matrix
-    pub type Mat2 = [f32; 4];
-    /// GLSL 3x3 floating-point matrix
-    pub type Mat3 = [f32; 9];
-    /// GLSL 4x4 floating-point matrix
-    pub type Mat4 = [f32; 16];
-    /// GLSL 2x2 double-precision floating-point matrix
-    pub type DMat2 = [f64; 4];
-    /// GLSL 3x3double-precision floating-point matrix
-    pub type DMat3 = [f64; 9];
-    /// GLSL 4x4 double-precision floating-point matrix
-    pub type DMat4 = [f64; 16];
 }

@@ -132,13 +132,16 @@ pub trait Vector<F: Float, const D: usize>:
     + std::convert::AsMut<[F]>
     + std::ops::Index<usize, Output = F>
     + std::ops::IndexMut<usize>
+    + std::ops::Deref<Target = [F;D]>
+    + std::convert::From<[F;D]>
+    + std::convert::Into<[F;D]>
     + std::ops::Neg<Output = Self>
     + std::ops::Add<Self, Output = Self>
-    + std::ops::Add<F, Output = Self>
+//    + std::ops::Add<F, Output = Self>
     + std::ops::AddAssign<Self>
     + std::ops::AddAssign<F>
     + std::ops::Sub<Self, Output = Self>
-    + std::ops::Sub<F, Output = Self>
+//    + std::ops::Sub<F, Output = Self>
     + std::ops::SubAssign<Self>
     + std::ops::SubAssign<F>
     + std::ops::Mul<Self, Output = Self>
@@ -150,21 +153,6 @@ pub trait Vector<F: Float, const D: usize>:
     + std::ops::DivAssign<Self>
     + std::ops::DivAssign<F>
 {
-    //fp from_array
-    /// Create a vector from an array of [Float]
-    #[must_use]
-    fn from_array(data: [F; D]) -> Self;
-
-    //fp zero
-    /// Create a vector whose elements are all zero
-    #[must_use]
-    fn zero() -> Self;
-
-    //fp into_array
-    /// Create a vector from an array of [Float]
-    #[must_use]
-    fn into_array(self) -> [F; D];
-
     //mp is_zero
     /// Return true if the vector is all zeros
     fn is_zero(&self) -> bool;
@@ -247,6 +235,114 @@ pub trait Vector<F: Float, const D: usize>:
         let y1 = c * dy + s * dx;
         self[c0] = x1 + pivot[c0];
         self[c1] = y1 + pivot[c1];
+        self
+    }
+}
+
+//tt VectorF32
+/// The [VectorF32] trait describes an N-dimensional vector of [Float] type.
+///
+/// Such [Vector]s support basic vector arithmetic using addition and
+/// subtraction, and they provide component-wise multiplication and
+/// division, using the standard operators on two [Vector]s.
+///
+/// They also support basic arithmetic to all components of the
+/// [Vector] for addition, subtraction, multiplication and division by
+/// a scalar [Float] value type that they are comprised of. Hence a
+/// `v:Vector<F>` may be scaled by a `s:F` using `v * s`.
+///
+/// The [Vector] can be indexed only by a `usize`; that is individual
+/// components of the vector can be accessed, but ranges may not.
+pub trait VectorF32<const D: usize>:
+    Clone
+    + Copy
+    + std::fmt::Debug
+    + std::fmt::Display
+    + std::default::Default
+    + std::convert::AsRef<[f32; D]>
+    + std::convert::AsMut<[f32; D]>
+    + std::convert::AsRef<[f32]>
+    + std::convert::AsMut<[f32]>
+    + std::ops::Index<usize, Output = f32>
+    + std::ops::IndexMut<usize>
+    + std::ops::Deref<Target = [f32;D]>
+    + std::ops::Neg<Output = Self>
+    + std::ops::Add<Self, Output = Self>
+    + for <'a> std::ops::Add<&'a Self, Output = Self>
+    + std::ops::Add<[f32; D], Output = Self>
+    + for <'a> std::ops::Add<&'a [f32; D], Output = Self>
+//    + std::ops::Add<f32, Output = Self>
+    + std::ops::AddAssign<Self>
+    + std::ops::AddAssign<f32>
+    + std::ops::Sub<Self, Output = Self>
+//    + std::ops::Sub<f32, Output = Self>
+    + std::ops::SubAssign<Self>
+    + std::ops::SubAssign<f32>
+    + std::ops::Mul<Self, Output = Self>
+    + std::ops::Mul<f32, Output = Self>
+    + std::ops::MulAssign<Self>
+    + std::ops::MulAssign<f32>
+    + std::ops::Div<Self, Output = Self>
+    + std::ops::Div<f32, Output = Self>
+    + std::ops::DivAssign<Self>
+    + std::ops::DivAssign<f32>
+{
+    //mp is_zero
+    /// Return true if the vector is all zeros
+    fn is_zero(&self) -> bool;
+
+    //mp reduce_sum
+    /// Sum all of the components of the vector
+    fn reduce_sum(&self) -> f32;
+
+    //mp mix
+    /// Create a linear combination of this [Vector] and another using parameter `t` from zero to one
+    #[must_use]
+    fn mix(self, other: &Self, t: f32) -> Self;
+
+    //mp dot
+    /// Return the dot product of two vectors
+    fn dot<A: AsRef<[f32; D]>>(&self, other: A) -> f32;
+
+    //mp length_sq
+    /// Return the square of the length of the vector
+    #[inline]
+    fn length_sq(&self) -> f32 {
+        self.dot(self)
+    }
+
+    //mp length
+    /// Return the length of the vector
+    #[inline]
+    fn length(&self) -> f32 {
+        self.length_sq().sqrt()
+    }
+
+    //mp distance_sq
+    /// Return the square of the distance between this vector and another
+    #[inline]
+    fn distance_sq(&self, other: &Self) -> f32 {
+        (*self - *other).length_sq()
+    }
+
+    //mp distance
+    /// Return the distance between this vector and another
+    #[inline]
+    fn distance(&self, other: &Self) -> f32 {
+        self.distance_sq(other).sqrt()
+    }
+
+    //mp normalize
+    /// Normalize the vector; if its length is close to zero, then set it to be zero
+    #[inline]
+    #[must_use]
+    fn normalize(mut self) -> Self {
+        let l = self.length();
+        if l < 1E-4 { // <f32 as Float>::epsilon() {
+            self = Self::default()
+        } else {
+            self /= l
+        }
         self
     }
 }
@@ -338,13 +434,14 @@ pub trait Vector3<F: Float>: Vector<F, 3> {
     /// Cross product of two 3-element vectors
     #[must_use]
     fn cross_product(&self, other: &Self) -> Self {
-        Self::from_array(vector::cross_product3(self.as_ref(), other.as_ref()))
+        vector::cross_product3(self.as_ref(), other.as_ref()).into()
     }
+
     /// Get a point on a sphere uniformly distributed for a point
     /// where x in [0,1) and y in [0,1)
     #[must_use]
     fn uniform_dist_sphere3(x: [F; 2], map: bool) -> Self {
-        Self::from_array(vector::uniform_dist_sphere3(x, map))
+        (vector::uniform_dist_sphere3(x, map)).into()
     }
 }
 
@@ -534,7 +631,7 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
     /// Find the axis and angle of rotation for a (non-unit) quaternion
     fn as_axis_angle(&self) -> (V3, F) {
         let (axis, angle) = quat::as_axis_angle(self.as_ref());
-        (V3::from_array(axis), angle)
+        (axis.into(), angle)
     }
 
     //mp set_zero
@@ -591,7 +688,7 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
     #[must_use]
     fn apply3(self, other: &V3) -> V3 {
         let data = quat::apply3(self.as_ref(), other.as_ref());
-        V3::from_array(data)
+        data.into()
     }
 
     //fp apply4
@@ -599,7 +696,7 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
     #[must_use]
     fn apply4(self, other: &V4) -> V4 {
         let data = quat::apply4(self.as_ref(), other.as_ref());
-        V4::from_array(data)
+        data.into()
     }
 
     //zz All done
