@@ -15,9 +15,10 @@ pub struct FQArrayTrans<F: Float + Serialize>
 where
     FArray<F, 3>: Vector<F, 3>,
     FArray<F, 4>: Vector<F, 4>,
+    QArray<F>: Quaternion<F>,
 {
     /// Quaternion of the rotation
-    quat: QArray<F, FArray<F, 3>, FArray<F, 4>>,
+    quat: QArray<F>,
     /// Translation and scaling
     trans_scale: FArray<F, 4>,
 }
@@ -27,6 +28,7 @@ impl<F: Float + Serialize> std::default::Default for FQArrayTrans<F>
 where
     FArray<F, 3>: Vector<F, 3>,
     FArray<F, 4>: Vector<F, 4>,
+    QArray<F>: Quaternion<F>,
 {
     fn default() -> Self {
         Self {
@@ -42,6 +44,7 @@ where
     F: Float + Serialize,
     FArray<F, 3>: Vector<F, 3>,
     FArray<F, 4>: Vector<F, 4>,
+    QArray<F>: Quaternion<F>,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
@@ -57,22 +60,17 @@ where
 }
 
 //ip FQArrayTrans
-impl<F: Float + Serialize>
-    Transform<
-        F,
-        FArray<F, 3>,
-        FArray<F, 4>,
-        FArray2<F, 4, 16>,
-        QArray<F, FArray<F, 3>, FArray<F, 4>>,
-    > for FQArrayTrans<F>
+impl<F: Float + Serialize> Transform<F, FArray<F, 3>, FArray<F, 4>, FArray2<F, 4, 16>, QArray<F>>
+    for FQArrayTrans<F>
 where
     FArray<F, 3>: Vector<F, 3>,
     FArray<F, 4>: Vector<F, 4>,
+    QArray<F>: Quaternion<F>,
 {
     //fp of_trs
     /// Create an [FQArrayTrans] from a Vector3 translation, Quat
     /// rotation and Float scaling
-    fn of_trs(t: FArray<F, 3>, r: QArray<F, FArray<F, 3>, FArray<F, 4>>, s: F) -> Self {
+    fn of_trs(t: FArray<F, 3>, r: QArray<F>, s: F) -> Self {
         Self {
             quat: r,
             trans_scale: [t[0], t[1], t[2], s].into(),
@@ -98,7 +96,7 @@ where
 
     //mp rotation
     /// Get the rotation of the transformation
-    fn rotation(&self) -> QArray<F, FArray<F, 3>, FArray<F, 4>> {
+    fn rotation(&self) -> QArray<F> {
         self.quat
     }
 
@@ -110,14 +108,14 @@ where
             Self::default()
         } else {
             let scale = F::one() / scale;
-            let trans = [
+            let trans: FArray<F, 3> = [
                 self.trans_scale[0],
                 self.trans_scale[1],
                 self.trans_scale[2],
             ]
             .into();
             let iquat = self.quat.conjugate();
-            let trans = -(iquat.apply3(&trans)) * scale;
+            let trans = -(iquat.apply3(trans)) * scale;
             Self::of_trs(trans, iquat, scale)
         }
     }

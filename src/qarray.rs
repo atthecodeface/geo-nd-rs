@@ -1,19 +1,20 @@
 //a Imports
-use std::marker::PhantomData;
+use std::ops::Deref;
 
+use num_traits::{One, Zero};
 use serde::{Deserialize, Serialize};
 
 use super::{quat, vector};
-use super::{Float, Quaternion, SqMatrix, Vector};
+use super::{Float, Quaternion, SqMatrix, Vector, Vector3, Vector4};
 
 //a Macros
 //mi binary_op!
 macro_rules! binary_op {
     { op_self, $trait_op:ident, $op:ident, $binop:tt, $trait_assign_op:ident, $assign_op:ident, $assign_binop:tt } => {
-        impl <F, V3, V4> std::ops::$trait_op<Self> for QArray<F, V3, V4>
+        impl <F, V4> std::ops::$trait_op<Self> for QArray<F, V4>
         where
             F:Float,
-            V3:Vector<F,3>, V4:Vector<F,4>,    {
+            V4:Vector<F,4>,    {
             type Output = Self;
             fn $op(self, other: Self) -> Self {
                 let mut data = [F::zero();4];
@@ -23,20 +24,20 @@ macro_rules! binary_op {
                 Self::from_array(data)
             }
         }
-        impl <F, V3, V4> std::ops::$trait_assign_op<Self> for QArray<F, V3, V4>
+        impl <F, V4> std::ops::$trait_assign_op<Self> for QArray<F, V4>
         where
             F:Float,
-            V3:Vector<F,3>, V4:Vector<F,4>,    {
+            V4:Vector<F,4>,    {
             fn $assign_op(&mut self, other: Self) {
                 for i in 0..4 {self.data[i] $assign_binop other.data[i];}
             }
         }
     };
     { op_f, $trait_op:ident, $op:ident, $binop:tt, $trait_assign_op:ident, $assign_op:ident, $assign_binop:tt } => {
-        impl <F, V3, V4> std::ops::$trait_op<F> for QArray<F, V3, V4>
+        impl <F, V4> std::ops::$trait_op<F> for QArray<F, V4>
         where
             F:Float,
-            V3:Vector<F,3>, V4:Vector<F,4>,    {
+            V4:Vector<F,4>,    {
             type Output = Self;
             fn $op(self, other: F) -> Self {
                 let mut data = [F::zero();4];
@@ -46,10 +47,10 @@ macro_rules! binary_op {
                 Self::from_array(data)
             }
         }
-        impl <F, V3, V4> std::ops::$trait_assign_op<F> for QArray<F, V3, V4>
+        impl <F, V4> std::ops::$trait_assign_op<F> for QArray<F, V4>
         where
             F:Float,
-            V3:Vector<F,3>, V4:Vector<F,4>,    {
+            V4:Vector<F,4>,    {
             fn $assign_op(&mut self, other: F) {
                 for i in 0..4 {self.data[i] $assign_binop other;}
             }
@@ -67,317 +68,499 @@ macro_rules! binary_op {
 ///
 /// It provides implementations of the traits required for a [Vector]
 /// trait, hence it can be used for a [Vector] of any size `D`.
-#[derive(Clone, Copy, Debug)]
-pub struct QArray<F, V3, V4>
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct QArray<F>
 where
     F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
 {
-    data: V4,
-    f: PhantomData<F>,
-    v3: PhantomData<V3>,
+    /// Data is stored i,j,k,r - so that the vector can be used [F;3] without alignment issues
+    data: [F; 4],
 }
 
-//ip Serialize for FArray
-impl<F, V3, V4> Serialize for QArray<F, V3, V4>
-where
-    F: Float + serde::Serialize,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4> + serde::Serialize,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.data.serialize(serializer)
-    }
-}
+//a Macros to implement the traits
+//mi qarray_basic_traits!
+macro_rules! qarray_basic_traits {
+    { $f:ty, $ty:ty } => {
 
-//ip Deserialize for FArray
-impl<'de, F, V3, V4> Deserialize<'de> for QArray<F, V3, V4>
-where
-    F: Float + serde::Deserialize<'de>,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4> + serde::Deserialize<'de>,
-{
-    fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
-    where
-        DE: serde::Deserializer<'de>,
-    {
-        let data: V4 = V4::deserialize(deserializer)?;
-        Ok(Self::of_vector(data))
-    }
-}
+        //ip Default for Qarray
+        impl std::default::Default for $ty {
+            fn default() -> Self {
+                [<$f>::zero(),
+                 <$f>::zero(),
+                 <$f>::zero(),
+                 <$f>::one(),
+                 ].into()
+            }
+        }
 
-//ip QArray
-impl<F, V3, V4> QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    /// Create a quaternion directly from a 4-element vecto
-    #[inline]
-    pub fn of_vector(data: V4) -> Self {
-        Self {
-            data,
-            f: PhantomData,
-            v3: PhantomData,
+        //ip Display for Qarray
+        impl std::fmt::Display for $ty {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                vector::fmt(f, &self.data)
+            }
         }
     }
 }
-impl<F, V3, V4> std::convert::AsRef<[F; 4]> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn as_ref(&self) -> &[F; 4] {
-        self.data.as_ref()
-    }
-}
-impl<F, V3, V4> std::convert::AsMut<[F; 4]> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn as_mut(&mut self) -> &mut [F; 4] {
-        self.data.as_mut()
-    }
-}
 
-impl<F, V3, V4> std::convert::AsRef<[F]> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn as_ref(&self) -> &[F] {
-        self.data.as_ref()
-    }
-}
-impl<F, V3, V4> std::convert::AsMut<[F]> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn as_mut(&mut self) -> &mut [F] {
-        self.data.as_mut()
-    }
-}
+//mi qarray_ref_traits!
+macro_rules! qarray_ref_traits {
+    { $f:ty, $ty:ty } => {
 
-impl<F, V3, V4> std::ops::Index<usize> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    type Output = F;
-    fn index(&self, index: usize) -> &F {
-        let slice: &[_] = self.as_ref();
-        &slice[index]
-    }
-}
-
-impl<F, V3, V4> std::ops::IndexMut<usize> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn index_mut(&mut self, index: usize) -> &mut F {
-        let slice: &mut [_] = self.as_mut();
-        &mut slice[index]
-    }
-}
-
-binary_op! { Add, add, +, AddAssign, add_assign, += }
-binary_op! { Sub, sub, -, SubAssign, sub_assign, -= }
-binary_op! { op_f, Mul, mul, *, MulAssign, mul_assign, *= }
-binary_op! { op_f, Div, div, /, DivAssign, div_assign, /= }
-
-//ip Neg for QArray<F>
-impl<F, V3, V4> std::ops::Neg for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    type Output = Self;
-    fn neg(mut self) -> Self::Output {
-        let data: &mut [F; 4] = self.as_mut();
-        for d in data.iter_mut() {
-            *d = -*d;
+        impl std::ops::Deref for $ty {
+            type Target = [$f; 4];
+            fn deref(&self) -> &[$f; 4] {
+                &self.data
+            }
         }
-        self
+        impl std::ops::DerefMut for $ty {
+            fn deref_mut(&mut self) -> &mut [$f; 4] {
+                &mut self.data
+            }
+        }
+
+        impl std::convert::AsRef<[$f; 4]> for $ty
+        {
+            fn as_ref(&self) -> &[$f; 4] {
+                &self.data
+            }
+        }
+        impl std::convert::AsMut<[$f; 4]> for $ty
+        {
+            fn as_mut(&mut self) -> &mut [$f; 4] {
+                &mut self.data
+            }
+        }
+
+        impl std::ops::Index<usize> for $ty {
+            type Output = $f;
+            fn index(&self, index: usize) -> &$f {
+                &self.data[index]
+            }
+        }
+        impl std::ops::IndexMut<usize> for $ty {
+            fn index_mut(&mut self, index: usize) -> &mut $f {
+                &mut self.data[index]
+            }
+        }
     }
 }
 
-//ip Default for QArray<F>
-impl<F, V3, V4> std::default::Default for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn default() -> Self {
-        Self::of_vector(V4::default())
+//mi qarray_convert_traits
+macro_rules! qarray_convert_traits {
+    { $f:ty, $ty:ty } => {
+
+        impl std::convert::From<[$f; 4]> for $ty {
+            fn from(data:[$f; 4]) -> $ty {
+                Self { data }
+            }
+        }
+        impl <'a> std::convert::From<&'a [$f; 4]> for $ty {
+            fn from(data:&'a [$f; 4]) -> $ty {
+                Self { data:*data }
+            }
+        }
+
+        impl <'a> std::convert::TryFrom<&'a [$f]> for $ty {
+            type Error = std::array::TryFromSliceError;
+            fn try_from(data:&'a [$f]) -> Result<$ty, Self::Error> {
+                let data :[$f; 4] = <[$f; 4]>::try_from(data)?;
+                Ok(data.into())
+            }
+        }
+
+        impl <'a> std::convert::TryFrom<Vec<$f>> for $ty {
+            type Error = Vec<$f>;
+            fn try_from(data:Vec<$f>) -> Result<$ty, Self::Error> {
+                let data: [$f; 4] = <[$f; 4]>::try_from(data)?;
+                Ok(data.into())
+            }
+        }
+
+        impl std::convert::From<$ty> for [$f; 4]  {
+            fn from(s: $ty) -> [$f; 4]  {
+                s.data
+            }
+        }
+        impl <'a> std::convert::From<&'a $ty> for &'a [$f; 4]  {
+            fn from(s: &'a $ty) -> &'a [$f; 4]  {
+                &s.data
+            }
+        }
+        impl <'a> std::convert::From<&'a $ty> for [$f; 4]  {
+            fn from(s: &'a $ty) -> [$f; 4]  {
+                s.data
+            }
+        }
+
     }
 }
 
-//ip Display for QArray<F>
-impl<F, V3, V4> std::fmt::Display for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        std::fmt::Display::fmt(&self.data, f)
+//mi qarray_unary_traits!
+macro_rules! qarray_unary_traits {
+    { $f:ty, $ty:ty } => {
+
+        //ip Neg
+        impl std::ops::Neg for $ty {
+            type Output = Self;
+            fn neg(mut self) -> Self::Output {
+                for d in self.data.iter_mut() {
+                    *d = -*d;
+                }
+                self
+            }
+        }
+
+        //ip Neg
+        impl<'a> std::ops::Neg for &'a $ty {
+            type Output = $ty;
+            fn neg(self) -> Self::Output {
+                let mut r = <$ty>::default();
+                for i in 0..4 {
+                    r.data[i] = -self.data[i];
+                }
+                r
+            }
+        }
     }
 }
 
-//ip std::ops::Mul<Self> for QArray<F>
-impl<F, V3, V4> std::ops::Mul<Self> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    type Output = Self;
-    fn mul(self, other: Self) -> Self {
-        let data = quat::multiply(self.data.as_ref(), other.data.as_ref());
-        Self::of_vector(data.into())
+//mi qarray_add_sub_traits
+macro_rules! qarray_add_sub_traits {
+    { $f:ty, $ty:ty,
+      $trait_op:ident, $fn_op:ident, $op:tt,
+      $trait_assign_op:ident, $fn_assign_op:ident, $op_assign:tt  } => {
+
+        // Add/Sub of  &Self  for Self
+        impl <'a> std::ops::$trait_op<&'a $ty> for $ty {
+            type Output = $ty;
+            fn $fn_op(mut self, other: &'a $ty) -> $ty {
+                for i in 0..4 {
+                    self.data[i] $op_assign other[i];
+                }
+                self
+            }
+        }
+
+        // Add/Sub of  Deref to [F; D]  for Self (Covers Self + Self)
+        impl<D: std::ops::Deref<Target = [$f; 4]>> std::ops::$trait_op<D> for $ty {
+            type Output = $ty;
+            fn $fn_op(mut self, other: D) -> $ty {
+                for i in 0..4 {
+                    self.data[i] $op_assign other[i];
+                }
+                self
+            }
+        }
+
+        // Add/Sub of &Self for &Self
+        impl <'a> std::ops::$trait_op<&'a $ty> for &'a $ty {
+            type Output = $ty;
+            fn $fn_op(self, other: &'a $ty) -> $ty {
+                *self + other
+            }
+        }
+
+        // Add/Sub of  Deref to [F; D]  for &Self (Covers &Self + Self)
+        impl<'a, D: std::ops::Deref<Target = [$f; 4]>> std::ops::$trait_op<D> for &'a $ty {
+            type Output = $ty;
+            fn $fn_op(self, other: D) -> $ty {
+                *self + other
+            }
+        }
+
+        impl <'a> std::ops::$trait_assign_op<&'a $ty> for $ty {
+            fn $fn_assign_op(&mut self, other: &'a $ty)  {
+                for i in 0..4 {
+                    self.data[i] $op_assign other[i];
+                }
+            }
+        }
+
+        impl<D: std::ops::Deref<Target = [$f; 4]>> std::ops::$trait_assign_op<D> for $ty {
+            fn $fn_assign_op(&mut self, other: D) {
+                for i in 0..4 {
+                    self.data[i] $op_assign other[i];
+                }
+            }
+        }
+
+        impl <'a> std::ops::$trait_assign_op<&'a $ty> for &mut $ty {
+            fn $fn_assign_op(&mut self, other: &'a $ty)  {
+                for i in 0..4 {
+                    self.data[i] $op_assign other[i];
+                }
+            }
+        }
+
+        impl<D: std::ops::Deref<Target = [$f; 4]>> std::ops::$trait_assign_op<D> for &mut $ty {
+            fn $fn_assign_op(&mut self, other: D) {
+                for i in 0..4 {
+                    self.data[i] $op_assign other[i];
+                }
+            }
+        }
     }
 }
 
-//ip std::ops::MulAssign<Self> for QArray<F>
-impl<F, V3, V4> std::ops::MulAssign<Self> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn mul_assign(&mut self, other: Self) {
-        let data = quat::multiply(self.data.as_ref(), other.data.as_ref());
-        *(self.data.as_mut()) = data;
+//mi qarray_mul_div_traits
+macro_rules! qarray_mul_div_traits {
+    { $f:ty, $ty:ty } => {
+        // Mul of  Self for Self
+        impl std::ops::Mul for $ty {
+            type Output = $ty;
+            fn mul(mut self, other: $ty) -> $ty {
+                quat::multiply(self.deref(), other.deref()).into()
+            }
+        }
+
+        // Mul of &[F; 4] for Self
+        impl <'a> std::ops::Mul<&'a [$f; 4]> for $ty {
+            type Output = $ty;
+            fn mul(self, other: &'a [$f; 4]) -> $ty {
+                quat::multiply(self.deref(), other).into()
+            }
+        }
+
+        // Mul of &Self for Self
+        impl <'a> std::ops::Mul<&'a $ty> for $ty {
+            type Output = $ty;
+            fn mul(self, other: &'a $ty) -> $ty {
+                (&self) * other
+            }
+        }
+
+        // Mul of &Self for &Self
+        impl <'a> std::ops::Mul<&'a $ty> for &'a $ty {
+            type Output = $ty;
+            fn mul(self, other: &'a $ty) -> $ty {
+                *self * other
+            }
+        }
+
+        // Mul of &[F; D] for &Self (Covers &Self + Self)
+        impl<'a> std::ops::Mul<&'a [$f; 4]> for &'a $ty {
+            type Output = $ty;
+            fn mul(self, other: &'a[$f; 4]) -> $ty {
+                *self * other
+            }
+        }
+
+
+        impl <'a> std::ops::MulAssign<&'a $ty> for $ty {
+            fn mul_assign(&mut self, other: &'a $ty)  {
+                *self = self.deref() * other;
+            }
+        }
+
+        // MulAssign of &[F; 4] for Self
+        impl <'a> std::ops::MulAssign<&'a [$f; 4]> for $ty {
+            fn mul_assign(&mut self, other: &'a [$f; 4]) {
+                *self = self.deref() * other;
+            }
+        }
+
+        impl std::ops::MulAssign for $ty {
+            fn mul_assign(&mut self, other: Self) {
+                *self = self.deref() * other.deref();
+            }
+        }
+
+
+
+        // Div of  Self for Self
+        impl std::ops::Div for $ty {
+            type Output = $ty;
+            fn div(self, other: $ty) -> $ty {
+                quat::divide(self.deref(), other.deref()).into()
+            }
+        }
+
+        // Div of &[F; 4] for Self
+        impl <'a> std::ops::Div<&'a [$f; 4]> for $ty {
+            type Output = $ty;
+            fn div(self, other: &'a [$f; 4]) -> $ty {
+                quat::divide(self.deref(), other).into()
+            }
+        }
+
+        // Div of  &Self  for Self
+        impl <'a> std::ops::Div<&'a $ty> for $ty {
+            type Output = $ty;
+            fn div(self, other: &'a $ty) -> $ty {
+                (&self) / other
+            }
+        }
+
+        // Div of &Self for &Self
+        impl <'a> std::ops::Div<&'a $ty> for &'a $ty {
+            type Output = $ty;
+            fn div(self, other: &'a $ty) -> $ty {
+                *self / other
+            }
+        }
+
+        // Div of Self for &Self (Covers &Self + Self)
+        impl<'a> std::ops::Div<$ty> for &'a $ty {
+            type Output = $ty;
+            fn div(self, other: $ty) -> $ty {
+                *self / other.deref()
+            }
+        }
+
+        impl <'a> std::ops::DivAssign<&'a $ty> for $ty {
+            fn div_assign(&mut self, other: &'a $ty)  {
+                *self = self.deref() / other;
+            }
+        }
+
+        // DivAssign of &[F; 4] for Self
+        impl <'a> std::ops::DivAssign<&'a [$f; 4]> for $ty {
+            fn div_assign(&mut self, other: &'a [$f; 4]) {
+                *self = *self / other;
+            }
+        }
+
+        impl std::ops::DivAssign<Self> for $ty {
+            fn div_assign(&mut self, other: Self) {
+                *self = *self / other.deref();
+            }
+        }
+
+
+
     }
 }
 
-//ip std::ops::Div<Self> for QArray<F>
-impl<F, V3, V4> std::ops::Div<Self> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    type Output = Self;
-    fn div(self, other: Self) -> Self {
-        let data = quat::divide(self.data.as_ref(), other.data.as_ref());
-        Self::of_vector(data.into())
+//mi qarray_mul_div_f_traits
+macro_rules! qarray_mul_div_f_traits {
+    { $f:ty, $ty:ty,
+      $trait_op:ident, $fn_op:ident, $op:tt,
+      $trait_assign_op:ident, $fn_assign_op:ident, $op_assign:tt  } => {
+
+        // Mul/Div by  $f  for Self
+        impl std::ops::$trait_op<$f> for $ty {
+            type Output = $ty;
+            fn $fn_op(mut self, other: $f) -> $ty {
+                for i in 0..4 {
+                    self.data[i] $op_assign other;
+                }
+                self
+            }
+        }
+
+        impl std::ops::$trait_assign_op<$f> for $ty {
+            fn $fn_assign_op(&mut self, other: $f) {
+                for i in 0..4 {self.data[i] $op_assign other;}
+            }
+        }
+
+        // Mul/Div by  & $f  for Self
+        impl <'a> std::ops::$trait_op<&'a $f> for $ty {
+            type Output = $ty;
+            fn $fn_op(mut self, other: &'a $f) -> $ty {
+                for i in 0..4 {
+                    self.data[i] $op_assign other;
+                }
+                self
+            }
+        }
+
+        impl <'a> std::ops::$trait_assign_op<&'a $f> for $ty {
+            fn $fn_assign_op(&mut self, other: &'a $f) {
+                for i in 0..4 {self.data[i] $op_assign other;}
+            }
+        }
     }
 }
 
-//ip std::ops::DivAssign<Self> for QArray<F>
-impl<F, V3, V4> std::ops::DivAssign<Self> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn div_assign(&mut self, other: Self) {
-        let data = quat::divide(self.data.as_ref(), other.data.as_ref());
-        *(self.data.as_mut()) = data;
+//mi qarray_serialize_traits
+macro_rules! qarray_serialize_traits {
+    { $f:ty, $ty:ty } => {
+
+        impl Serialize for $ty {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                self.data.serialize(serializer)
+            }
+        }
+
+        impl<'de> Deserialize<'de> for $ty {
+            fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
+            where
+                DE: serde::Deserializer<'de>,
+            {
+                let array = <[$f; 4]>::deserialize(deserializer)?;
+                Ok(array.into())
+            }
+        }
+
     }
 }
 
-//ip Quaternion<F> for QArray
-impl<F, V3, V4> Quaternion<F, V3, V4> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    #[inline]
-    fn from_array(data: [F; 4]) -> Self {
-        Self::of_vector(data.into())
-    }
-    #[inline]
-    fn into_array(self) -> [F; 4] {
-        self.data.into()
-    }
-    #[inline]
-    fn as_rijk(&self) -> (F, F, F, F) {
-        quat::as_rijk(self.data.as_ref())
-    }
-    #[inline]
-    fn of_rijk(r: F, i: F, j: F, k: F) -> Self {
-        Self::from_array(quat::of_rijk(r, i, j, k))
-    }
-    #[inline]
-    fn unit() -> Self {
-        Self::of_rijk(F::one(), F::zero(), F::zero(), F::zero())
-    }
-    #[inline]
-    fn set_zero(&mut self) {
-        self.data = std::default::Default::default();
-    }
-    #[inline]
-    fn mix(self, other: &Self, t: F) -> Self {
-        Self::of_vector(self.data.mix(other.data, t))
-    }
-    #[inline]
-    fn dot(self, other: &Self) -> F {
-        vector::dot(self.as_ref(), other.as_ref())
-    }
-    //fp of_rotation3
-    /// Find the quaternion of a Matrix3 assuming it is purely a rotation
-    #[inline]
-    fn of_rotation3<M>(rotation: &M) -> Self
-    where
-        M: SqMatrix<V3, F, 3, 9>,
-    {
-        Self::from_array(quat::of_rotation(rotation.as_ref()))
-    }
-    #[inline]
-    fn set_rotation3<M>(&self, matrix: &mut M)
-    where
-        M: SqMatrix<V3, F, 3, 9>,
-    {
-        quat::to_rotation3(self.as_ref(), matrix.as_mut())
-    }
-    #[inline]
-    fn set_rotation4<M>(&self, matrix: &mut M)
-    where
-        M: SqMatrix<V4, F, 4, 16>,
-    {
-        quat::to_rotation4(self.as_ref(), matrix.as_mut())
+//mi qarray_quaternion_trait
+macro_rules! qarray_quaternion_trait {
+    { $f:ty,  $ty:ty } => {
+
+        impl Quaternion<$f> for $ty
+        {
+            #[inline]
+            fn as_rijk(&self) -> ($f, $f, $f, $f) {
+                quat::as_rijk(self.deref())
+            }
+
+            #[inline]
+            fn of_rijk(r: $f, i: $f, j: $f, k: $f) -> Self {
+                quat::of_rijk(r, i, j, k).into()
+            }
+
+            //fp of_rotation3
+            /// Find the quaternion of a Matrix3 assuming it is purely a rotation
+            #[inline]
+            fn of_rotation3<M, V3:Vector3<$f>> (rotation:&M) -> Self
+            where
+                M: SqMatrix<V3, $f, 3, 9>,
+            {
+                quat::of_rotation(rotation.as_ref()).into()
+            }
+
+            #[inline]
+            fn set_rotation3<V3: Vector3<$f>, M> (&self, matrix3:&mut M)
+            where M:SqMatrix<V3, $f, 3, 9>
+            {
+                quat::to_rotation3(&self.data, matrix3.as_mut())
+            }
+
+            #[inline]
+            fn set_rotation4<V4: Vector4<$f>, M> (&self, matrix:&mut M)
+            where M:SqMatrix<V4, $f, 4, 16>
+            {
+                quat::to_rotation4(&self.data, matrix.as_mut())
+            }
+        }
     }
 }
 
-//ip From<[F;D]> for QArray
-impl<F, V3, V4> From<[F; 4]> for QArray<F, V3, V4>
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn from(data: [F; 4]) -> Self {
-        Self::from_array(data)
+//mi qarray_traits
+macro_rules! qarray_traits {
+    { $f:ty, $ty:ty } => {
+
+        qarray_basic_traits!{$f, $ty}
+        qarray_ref_traits!{$f, $ty}
+        qarray_convert_traits!{$f, $ty}
+        qarray_serialize_traits!{$f, $ty}
+        qarray_unary_traits!{$f, $ty}
+        qarray_add_sub_traits!{$f, $ty, Add, add, +, AddAssign, add_assign, +=}
+        qarray_add_sub_traits!{$f, $ty, Sub, sub, -, SubAssign, sub_assign, -=}
+        qarray_mul_div_f_traits!{$f, $ty, Mul, mul, *, MulAssign, mul_assign, *=}
+        qarray_mul_div_f_traits!{$f, $ty, Div, div, /, DivAssign, div_assign, /=}
+        qarray_mul_div_traits!{$f, $ty}
+
+        qarray_quaternion_trait!{$f, $ty}
     }
 }
-//ip From<FArray> for [F;D]
-impl<F, V3, V4> From<QArray<F, V3, V4>> for [F; 4]
-where
-    F: Float,
-    V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-{
-    fn from(q: QArray<F, V3, V4>) -> [F; 4] {
-        let v: &[F; 4] = q.data.as_ref();
-        *v
-    }
-}
+
+//mi Invoke qarray_traits!
+qarray_traits! { f32, QArray<f32>}
+qarray_traits! { f64, QArray<f64>}

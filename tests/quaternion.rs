@@ -62,7 +62,7 @@ fn test() {
     let ra = std::f32::consts::PI / 2.;
     let rsqrt2 = (0.5_f32).sqrt();
 
-    let q = Quat::unit();
+    let q = Quat::default();
     assert_eq!(q.length(), 1.);
     assert_eq!(q.length_sq(), 1.);
     assert_eq!(quat::as_rijk(q.as_ref()), (1., 0., 0., 0.));
@@ -75,27 +75,27 @@ fn test() {
     assert_eq!(quat::as_rijk(q.as_ref()), (0., 1., 0., 0.));
     assert_eq!(q.as_rijk(), (0., 1., 0., 0.));
     assert_eq!(q.conjugate().as_rijk(), (0., -1., 0., 0.));
-    assert!(vec3_eq(q.apply3(&x).as_ref(), &[1., 0., 0.]));
-    assert!(vec3_eq(q.apply3(&y).as_ref(), &[0., -1., 0.]));
-    assert!(vec3_eq(q.apply3(&z).as_ref(), &[0., 0., -1.]));
+    assert!(vec3_eq(q.apply3(x).as_ref(), &[1., 0., 0.]));
+    assert!(vec3_eq(q.apply3(y).as_ref(), &[0., -1., 0.]));
+    assert!(vec3_eq(q.apply3(z).as_ref(), &[0., 0., -1.]));
 
     let q = Quat::of_rijk(0., 0., 1., 0.);
     assert_eq!(q.length(), 1.);
     assert_eq!(q.length_sq(), 1.);
     assert_eq!(q.as_rijk(), (0., 0., 1., 0.));
     assert_eq!(q.conjugate().as_rijk(), (0., 0., -1., 0.));
-    assert!(vec3_eq(q.apply3(&x).as_ref(), &[-1., 0., 0.]));
-    assert!(vec3_eq(q.apply3(&y).as_ref(), &[0., 1., 0.]));
-    assert!(vec3_eq(q.apply3(&z).as_ref(), &[0., 0., -1.]));
+    assert!(vec3_eq(q.apply3(x).as_ref(), &[-1., 0., 0.]));
+    assert!(vec3_eq(q.apply3(y).as_ref(), &[0., 1., 0.]));
+    assert!(vec3_eq(q.apply3(z).as_ref(), &[0., 0., -1.]));
 
     let q = Quat::of_rijk(0., 0., 0., 1.);
     assert_eq!(q.length(), 1.);
     assert_eq!(q.length_sq(), 1.);
     assert_eq!(q.as_rijk(), (0., 0., 0., 1.));
     assert_eq!(q.conjugate().as_rijk(), (0., 0., 0., -1.));
-    assert!(vec3_eq(q.apply3(&x).as_ref(), &[-1., 0., 0.]));
-    assert!(vec3_eq(q.apply3(&y).as_ref(), &[0., -1., 0.]));
-    assert!(vec3_eq(q.apply3(&z).as_ref(), &[0., 0., 1.]));
+    assert!(vec3_eq(q.apply3(x).as_ref(), &[-1., 0., 0.]));
+    assert!(vec3_eq(q.apply3(y).as_ref(), &[0., -1., 0.]));
+    assert!(vec3_eq(q.apply3(z).as_ref(), &[0., 0., 1.]));
 
     let q = Quat::of_rijk(1., 1., 1., 1.);
     assert_eq!(q.length(), 2.);
@@ -103,68 +103,68 @@ fn test() {
     assert_eq!(q.as_rijk(), (1., 1., 1., 1.));
     assert_eq!(q.conjugate().as_rijk(), (1., -1., -1., -1.));
 
-    assert_eq!(Quat::of_axis_angle(&x, 0.).as_rijk(), (1., 0., 0., 0.));
-    assert_eq!(Quat::of_axis_angle(&y, 0.).as_rijk(), (1., 0., 0., 0.));
-    assert_eq!(Quat::of_axis_angle(&z, 0.).as_rijk(), (1., 0., 0., 0.));
-    assert_eq!(Quat::of_axis_angle(&xy, 0.).as_rijk(), (1., 0., 0., 0.));
-    assert_eq!(Quat::of_axis_angle(&yz, 0.).as_rijk(), (1., 0., 0., 0.));
-    assert_eq!(Quat::of_axis_angle(&xz, 0.).as_rijk(), (1., 0., 0., 0.));
+    assert_eq!(Quat::of_axis_angle(x, 0.).as_rijk(), (1., 0., 0., 0.));
+    assert_eq!(Quat::of_axis_angle(y, 0.).as_rijk(), (1., 0., 0., 0.));
+    assert_eq!(Quat::of_axis_angle(z, 0.).as_rijk(), (1., 0., 0., 0.));
+    assert_eq!(Quat::of_axis_angle(xy, 0.).as_rijk(), (1., 0., 0., 0.));
+    assert_eq!(Quat::of_axis_angle(yz, 0.).as_rijk(), (1., 0., 0., 0.));
+    assert_eq!(Quat::of_axis_angle(xz, 0.).as_rijk(), (1., 0., 0., 0.));
 
     assert!(quat_eq_rijk(
-        &Quat::of_axis_angle(&x, ra),
+        &Quat::of_axis_angle(x, ra),
         (rsqrt2, rsqrt2, 0., 0.)
     ));
     assert!(quat_eq_rijk(
-        &Quat::of_axis_angle(&x, 2. * ra),
+        &Quat::of_axis_angle(x, 2. * ra),
         (0., 1., 0., 0.)
     ));
 
     assert!(quat_eq_rijk(
-        &Quat::of_axis_angle(&y, ra),
+        &Quat::of_axis_angle(y, ra),
         (rsqrt2, 0., rsqrt2, 0.)
     ));
     assert!(quat_eq_rijk(
-        &Quat::of_axis_angle(&y, 2. * ra),
+        &Quat::of_axis_angle(y, 2. * ra),
         (0., 0., 1., 0.)
     ));
 
     assert!(quat_eq_rijk(
-        &Quat::of_axis_angle(&z, ra),
+        &Quat::of_axis_angle(z, ra),
         (rsqrt2, 0., 0., rsqrt2)
     ));
     assert!(quat_eq_rijk(
-        &Quat::of_axis_angle(&z, 2. * ra),
+        &Quat::of_axis_angle(z, 2. * ra),
         (0., 0., 0., 1.)
     ));
 
     assert!(quat_eq_rijk(
-        &Quat::of_axis_angle(&xy, ra),
+        &Quat::of_axis_angle(xy, ra),
         (rsqrt2, 0.5, 0.5, 0.)
     ));
     assert!(quat_eq_rijk(
-        &Quat::of_axis_angle(&yz, ra),
+        &Quat::of_axis_angle(yz, ra),
         (rsqrt2, 0., 0.5, 0.5)
     ));
     assert!(quat_eq_rijk(
-        &Quat::of_axis_angle(&xz, ra),
+        &Quat::of_axis_angle(xz, ra),
         (rsqrt2, 0.5, 0., 0.5)
     ));
 
-    let x90 = Quat::of_axis_angle(&x, ra);
-    let y90 = Quat::of_axis_angle(&y, ra);
-    let z90 = Quat::of_axis_angle(&z, ra);
+    let x90 = Quat::of_axis_angle(x, ra);
+    let y90 = Quat::of_axis_angle(y, ra);
+    let z90 = Quat::of_axis_angle(z, ra);
 
-    assert!(vec3_eq(x90.apply3(&x).as_ref(), &[1., 0., 0.]));
-    assert!(vec3_eq(x90.apply3(&y).as_ref(), &[0., 0., 1.]));
-    assert!(vec3_eq(x90.apply3(&z).as_ref(), &[0., -1., 0.]));
+    assert!(vec3_eq(x90.apply3(x).as_ref(), &[1., 0., 0.]));
+    assert!(vec3_eq(x90.apply3(y).as_ref(), &[0., 0., 1.]));
+    assert!(vec3_eq(x90.apply3(z).as_ref(), &[0., -1., 0.]));
 
-    assert!(vec3_eq(y90.apply3(&x).as_ref(), &[0., 0., -1.]));
-    assert!(vec3_eq(y90.apply3(&y).as_ref(), &[0., 1., 0.]));
-    assert!(vec3_eq(y90.apply3(&z).as_ref(), &[1., 0., 0.]));
+    assert!(vec3_eq(y90.apply3(x).as_ref(), &[0., 0., -1.]));
+    assert!(vec3_eq(y90.apply3(y).as_ref(), &[0., 1., 0.]));
+    assert!(vec3_eq(y90.apply3(z).as_ref(), &[1., 0., 0.]));
 
-    assert!(vec3_eq(z90.apply3(&x).as_ref(), &[0., 1., 0.]));
-    assert!(vec3_eq(z90.apply3(&y).as_ref(), &[-1., 0., 0.]));
-    assert!(vec3_eq(z90.apply3(&z).as_ref(), &[0., 0., 1.]));
+    assert!(vec3_eq(z90.apply3(x).as_ref(), &[0., 1., 0.]));
+    assert!(vec3_eq(z90.apply3(y).as_ref(), &[-1., 0., 0.]));
+    assert!(vec3_eq(z90.apply3(z).as_ref(), &[0., 0., 1.]));
 
     let t1 = x90 * y90;
     let t2 = z90 * x90;
@@ -173,9 +173,9 @@ fn test() {
     assert!(quat_eq_rijk(&t2, (0.5, 0.5, 0.5, 0.5)));
     assert!(quat_eq_rijk(&t3, (0.5, 0.5, 0.5, 0.5)));
 
-    assert!(vec3_eq(t1.apply3(&x).as_ref(), &[0., 1., 0.]));
-    assert!(vec3_eq(t1.apply3(&y).as_ref(), &[0., 0., 1.]));
-    assert!(vec3_eq(t1.apply3(&z).as_ref(), &[1., 0., 0.]));
+    assert!(vec3_eq(t1.apply3(x).as_ref(), &[0., 1., 0.]));
+    assert!(vec3_eq(t1.apply3(y).as_ref(), &[0., 0., 1.]));
+    assert!(vec3_eq(t1.apply3(z).as_ref(), &[1., 0., 0.]));
 
     let t1 = x90 / y90;
     let t2 = z90 / x90;
@@ -184,9 +184,9 @@ fn test() {
     assert!(quat_eq_rijk(&t2, (0.5, -0.5, -0.5, 0.5)));
     assert!(quat_eq_rijk(&t3, (0.5, -0.5, 0.5, -0.5)));
 
-    assert!(vec3_eq(t1.apply3(&x).as_ref(), &[0., -1., 0.]));
-    assert!(vec3_eq(t1.apply3(&y).as_ref(), &[0., 0., 1.]));
-    assert!(vec3_eq(t1.apply3(&z).as_ref(), &[-1., 0., 0.]));
+    assert!(vec3_eq(t1.apply3(x).as_ref(), &[0., -1., 0.]));
+    assert!(vec3_eq(t1.apply3(y).as_ref(), &[0., 0., 1.]));
+    assert!(vec3_eq(t1.apply3(z).as_ref(), &[-1., 0., 0.]));
 
     let t1 = y90 * x90;
     let t2 = x90 * z90;
@@ -195,9 +195,9 @@ fn test() {
     assert!(quat_eq_rijk(&t2, (0.5, 0.5, -0.5, 0.5)));
     assert!(quat_eq_rijk(&t3, (0.5, -0.5, 0.5, 0.5)));
 
-    assert!(vec3_eq(t1.apply3(&x).as_ref(), &[0., 0., -1.]));
-    assert!(vec3_eq(t1.apply3(&y).as_ref(), &[1., 0., 0.]));
-    assert!(vec3_eq(t1.apply3(&z).as_ref(), &[0., -1., 0.]));
+    assert!(vec3_eq(t1.apply3(x).as_ref(), &[0., 0., -1.]));
+    assert!(vec3_eq(t1.apply3(y).as_ref(), &[1., 0., 0.]));
+    assert!(vec3_eq(t1.apply3(z).as_ref(), &[0., -1., 0.]));
 
     let t1 = y90 / x90;
     let t2 = x90 / z90;
@@ -206,12 +206,12 @@ fn test() {
     assert!(quat_eq_rijk(&t2, (0.5, 0.5, 0.5, -0.5)));
     assert!(quat_eq_rijk(&t3, (0.5, 0.5, -0.5, 0.5)));
 
-    assert!(vec3_eq(t1.apply3(&x).as_ref(), &[0., 0., -1.]));
-    assert!(vec3_eq(t1.apply3(&y).as_ref(), &[-1., 0., 0.]));
-    assert!(vec3_eq(t1.apply3(&z).as_ref(), &[0., 1., 0.]));
+    assert!(vec3_eq(t1.apply3(x).as_ref(), &[0., 0., -1.]));
+    assert!(vec3_eq(t1.apply3(y).as_ref(), &[-1., 0., 0.]));
+    assert!(vec3_eq(t1.apply3(z).as_ref(), &[0., 1., 0.]));
 
     for axis in [&x, &y, &z, &xy, &yz, &xz, &xyz] {
-        let t = QArray::of_axis_angle(axis, ra / 3.); // 12 of these makes 360
+        let t = QArray::of_axis_angle(*axis, ra / 3.); // 12 of these makes 360
         let t2 = t * t; // 6 of these
         let t4 = t2 * t2; // 3 of these
         let t12 = t4 * t4 * t4;
@@ -297,11 +297,11 @@ fn test_matrix() {
     let q2 = Quat::of_rotation3(&m);
     assert!(quat_eq(&q, &q2));
 
-    let tx1 = q2.apply3(&x);
+    let tx1 = q2.apply3(x);
     let tx2 = m.transform(&x);
     assert!(vec3_eq(tx1.as_ref(), tx2.as_ref()));
 
-    let tx1 = q2.apply3(&xyz);
+    let tx1 = q2.apply3(xyz);
     let tx2 = m.transform(&xyz);
     assert!(vec3_eq(tx1.as_ref(), tx2.as_ref()));
 }
@@ -321,30 +321,30 @@ fn test_look_at() {
     let _xyz = xyz.normalize();
 
     let q = Quat::look_at(&z, &y);
-    let t = q.apply3(&z);
+    let t = q.apply3(z);
     assert!(vec3_eq(t.as_ref(), &[0., 0., -1.]));
-    let t = q.apply3(&y);
+    let t = q.apply3(y);
     assert!(vec3_eq(t.as_ref(), &[0., 1., 0.]));
 
     let q = Quat::look_at(&xy, &z);
-    let t = q.apply3(&xy);
+    let t = q.apply3(xy);
     assert!(vec3_eq(t.as_ref(), &[0., 0., -1.]));
-    let t = q.apply3(&z);
+    let t = q.apply3(z);
     assert!(vec3_eq(t.as_ref(), &[0., 1., 0.]));
 
     let q = Quat::look_at(&xy, &yz);
-    let t = q.apply3(&xy);
+    let t = q.apply3(xy);
     assert!(vec3_eq(t.as_ref(), &[0., 0., -1.]));
 
     let q = Quat::look_at(&xy, &y);
-    let t = q.apply3(&xy);
+    let t = q.apply3(xy);
     assert!(vec3_eq(t.as_ref(), &[0., 0., -1.]));
-    let t = q.apply3(&z);
+    let t = q.apply3(z);
     assert!(vec3_eq(t.as_ref(), &[1., 0., 0.]));
 
     let q = Quat::look_at(&xy, &x);
-    let t = q.apply3(&xy);
+    let t = q.apply3(xy);
     assert!(vec3_eq(t.as_ref(), &[0., 0., -1.]));
-    let t = q.apply3(&z);
+    let t = q.apply3(z);
     assert!(vec3_eq(t.as_ref(), &[-1., 0., 0.]));
 }

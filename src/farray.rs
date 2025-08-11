@@ -18,7 +18,7 @@ pub struct FArray<F: Float, const D: usize> {
     data: [F; D],
 }
 
-//a All stuff 2
+//a Macros to implement the traits
 //mi farray_basic_traits!
 macro_rules! farray_basic_traits {
     { $f:ty,  $e:expr, $ty:ty } => {

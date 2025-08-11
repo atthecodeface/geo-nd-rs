@@ -105,7 +105,7 @@ impl Float for f64 {
     }
 }
 
-//a Vector, SqMatrix, Quaternion
+//a Vector, Vector3, Vector4
 //tt Vector
 /// The [Vector] trait describes an N-dimensional vector of [Float] type.
 ///
@@ -212,7 +212,6 @@ pub trait Vector<F: Float, const D: usize>:
     + std::ops::Neg<Output = Self>
 
     + std::ops::Add<Self, Output = Self>
-
     + for <'a> std::ops::Add<&'a [F;D], Output = Self>
     + for <'a> std::ops::Add<&'a Self, Output = Self>
     + std::ops::AddAssign<Self>
@@ -345,6 +344,40 @@ pub trait Vector<F: Float, const D: usize>:
     }
 }
 
+//tt Vector2
+/// The [Vector2] trait describes a 3-dimensional vector of [Float]
+///
+pub trait Vector2<F: Float>: Vector<F, 2> {}
+impl<F, V> Vector2<F> for V
+where
+    F: Float,
+    V: Vector<F, 2>,
+{
+}
+
+//tt Vector3
+/// The [Vector3] trait describes a 3-dimensional vector of [Float]
+///
+pub trait Vector3<F: Float>: Vector<F, 3> {}
+impl<F, V> Vector3<F> for V
+where
+    F: Float,
+    V: Vector<F, 3>,
+{
+}
+
+//tt Vector4
+/// The [Vector4] trait describes a 3-dimensional vector of [Float]
+///
+pub trait Vector4<F: Float>: Vector<F, 4> {}
+impl<F, V> Vector4<F> for V
+where
+    F: Float,
+    V: Vector<F, 4>,
+{
+}
+
+//a SqMatrix
 //tt SqMatrix
 /// The [SqMatrix] trait describes an N-dimensional square matrix of [Float] type that operates on a [Vector].
 ///
@@ -425,17 +458,6 @@ pub trait SqMatrix<V: Vector<F, D>, F: Float, const D: usize, const D2: usize>:
     fn transform(&self, v: &V) -> V;
 }
 
-//tt Vector3
-/// The [Vector3] trait describes a 3-dimensional vector of [Float]
-///
-pub trait Vector3<F: Float>: Vector<F, 3> {}
-impl<F, V> Vector3<F> for V
-where
-    F: Float,
-    V: Vector<F, 3>,
-{
-}
-
 //tt SqMatrix3
 /// The [SqMatrix3] trait describes a 3-dimensional square matrix of [Float] type that operates on a [Vector].
 ///
@@ -463,6 +485,7 @@ pub trait SqMatrix4<F: Float, V3: Vector<F, 3>, V4: Vector<F, 4>>: SqMatrix<V4, 
     fn translate4(&mut self, by: &V4);
 }
 
+//a Quaternion
 //tt Quaternion
 /// The [Quaternion] trait describes a 4-dimensional vector of [Float] type.
 ///
@@ -476,43 +499,62 @@ pub trait SqMatrix4<F: Float, V3: Vector<F, 3>, V4: Vector<F, 4>>: SqMatrix<V4, 
 ///
 /// The [Quaternion] can be indexed only by a `usize`; that is individual
 /// components of the vector can be accessed, but ranges may not.
-pub trait Quaternion<F, V3, V4> : Clone
+pub trait Quaternion<F: Float> :
+    Clone
     + Copy
     + std::fmt::Debug
     + std::fmt::Display
     + std::default::Default
-    + std::convert::AsRef<[F;4]>
-    + std::convert::AsMut<[F;4]>
-    + std::convert::AsRef<[F]>
-    + std::convert::AsMut<[F]>
+    + PartialEq<Self>
+
+    + std::convert::AsRef<[F; 4]> // Note, [F;4] implements AsRef only for [F] which is an issue
+    + std::convert::AsMut<[F; 4]> // Note, [F;4] implements AsRef only for [F] which is an issue
+    + std::ops::Deref<Target = [F; 4]>
+    + std::ops::DerefMut
     + std::ops::Index<usize, Output = F>
     + std::ops::IndexMut<usize>
+
+    + std::convert::From<[F;4]>
+    + for< 'a> std::convert::From<&'a [F;4]>
+    + for< 'a> std::convert::TryFrom<&'a [F]>
+    + for< 'a> std::convert::TryFrom<Vec<F>>
+    + std::convert::Into<[F;4]>
+
     + std::ops::Neg<Output = Self>
+
     + std::ops::Add<Self, Output = Self>
+    + for <'a> std::ops::Add<&'a [F;4], Output = Self>
+    + for <'a> std::ops::Add<&'a Self, Output = Self>
     + std::ops::AddAssign<Self>
+    + for <'a> std::ops::AddAssign<&'a [F;4]>
+
     + std::ops::Sub<Self, Output = Self>
+    + for <'a> std::ops::Sub<&'a [F; 4], Output = Self>
+    + for <'a> std::ops::Sub<&'a Self, Output = Self>
     + std::ops::SubAssign<Self>
-    // scale
+    + for <'a> std::ops::SubAssign<&'a [F; 4]>
+
     + std::ops::Mul<F, Output = Self>
     + std::ops::MulAssign<F>
     + std::ops::Div<F, Output = Self>
     + std::ops::DivAssign<F>
-    // apply to self
+
     + std::ops::Mul<Self, Output = Self>
+    + for <'a> std::ops::Mul<&'a [F;4], Output = Self>
+    + for <'a> std::ops::Mul<&'a Self, Output = Self>
     + std::ops::MulAssign<Self>
+    + for <'a> std::ops::MulAssign<&'a [F;4]>
+
     + std::ops::Div<Self, Output = Self>
+     + for <'a> std::ops::Div<&'a [F; 4], Output = Self>
+    + for <'a> std::ops::Div<&'a Self, Output = Self>
     + std::ops::DivAssign<Self>
+    + for <'a> std::ops::DivAssign<&'a [F; 4]>
+
     // apply to V3 - cannot support this as we already have F as RHS of Mul - can only have one trait there
     // + std::ops::Mul<V3, Output = V3>
-where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
+    // where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
 {
-    //cp from_array
-    /// Create a quaternion from an array of [Float]
-    ///
-    /// The order must be [i, j, k, r]
-    #[must_use]
-    fn from_array(data:[F;4]) -> Self;
-
     //cp of_rijk
     /// Create from r, i, j, k
     #[must_use]
@@ -527,16 +569,11 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
         Self::of_rijk(r,-i,-j,-k)
     }
 
-    //cp unit
-    /// Create a quaternion whose elements are all zero
-    #[must_use]
-    fn unit() -> Self;
-
     //cp of_axis_angle
     /// Create a unit quaternion for a rotation of an angle about an axis
     #[must_use]
-    fn of_axis_angle(axis:&V3, angle:F) -> Self {
-        Self::from_array(quat::of_axis_angle(axis.as_ref(), angle))
+    fn of_axis_angle<D: std::ops::Deref<Target = [F; 3]>>(axis:D, angle:F) -> Self {
+        quat::of_axis_angle(axis.deref(), angle).into()
     }
 
     //cp rotate_x
@@ -544,7 +581,7 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
     #[inline]
     #[must_use]
     fn rotate_x(self, angle: F) -> Self {
-        Self::from_array(quat::rotate_x(self.as_ref(), angle))
+        quat::rotate_x(self.as_ref(), angle).into()
     }
 
     //cp rotate_y
@@ -552,7 +589,7 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
     #[inline]
     #[must_use]
     fn rotate_y(self, angle: F) -> Self {
-        Self::from_array(quat::rotate_y(self.as_ref(), angle))
+        quat::rotate_y(self.as_ref(), angle).into()
     }
 
     //cp rotate_z
@@ -560,20 +597,20 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
     #[inline]
     #[must_use]
     fn rotate_z(self, angle: F) -> Self {
-        Self::from_array(quat::rotate_z(self.as_ref(), angle))
+        quat::rotate_z(self.as_ref(), angle).into()
     }
 
     //cp of_rotation3
     /// Find the unit quaternion of a Matrix3 assuming it is purely a rotation
     #[must_use]
-    fn of_rotation3<M> (rotation:&M) -> Self
+    fn of_rotation3<M, V3:Vector3<F>> (rotation:&M) -> Self
     where M:SqMatrix<V3, F, 3, 9>;
 
     //cp look_at
     /// Create a quaternion that maps a unit V3 of dirn to (0,0,-1) and a unit V3 of up (if perpendicular to dirn) to (0,1,0)
     #[must_use]
-    fn look_at(dirn:&V3, up:&V3) -> Self {
-        Self::from_array(quat::look_at(dirn.as_ref(), up.as_ref()))
+    fn look_at<V3:Vector3<F>>(dirn:&V3, up:&V3) -> Self {
+        quat::look_at(dirn.deref(), up.deref()).into()
     }
 
     //cp rotation_of_vec_to_vec
@@ -581,8 +618,8 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
     ///
     /// The vectors must be unit vectors
     #[must_use]
-    fn rotation_of_vec_to_vec(a: &V3, b: &V3) -> Self {
-        Self::from_array(quat::rotation_of_vec_to_vec(a.as_ref(), b.as_ref()))
+    fn rotation_of_vec_to_vec<V3:Vector3<F>>(a: &V3, b: &V3) -> Self {
+        quat::rotation_of_vec_to_vec(a.deref(), b.deref()).into()
     }
 
     //cp weighted_average_pair
@@ -594,7 +631,7 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
     /// Averaging Quaternions by F. Landis Markley
     #[must_use]
     fn weighted_average_pair(&self, w_a: F, qb: &Self, w_b: F) -> Self {
-        Self::from_array(quat::weighted_average_pair(self.as_ref(), w_a, qb.as_ref(), w_b))
+        quat::weighted_average_pair(self.as_ref(), w_a, qb.as_ref(), w_b).into()
     }
 
     //cp weighted_average_many
@@ -605,14 +642,9 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
     /// This is an approximation compared to the Landis Markley paper
     #[must_use]
     fn weighted_average_many<I: Iterator<Item = (F, Self)>>(value_iter:I) -> Self {
-        let value_iter = value_iter.map(|(w,v)| (w,v.into_array()));
-        Self::from_array(quat::weighted_average_many(value_iter))
+        let value_iter = value_iter.map(|(w,v)| (w,v.into()));
+        quat::weighted_average_many(value_iter).into()
     }
-
-    //mp into_array
-    /// Create an array [Float] for the fquaternion in order i, j, k, r
-    #[must_use]
-    fn into_array(self) -> [F;4];
 
     //fp as_rijk
     /// Break out into r, i, j, k
@@ -620,24 +652,33 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
 
     //fp as_axis_angle
     /// Find the axis and angle of rotation for a (non-unit) quaternion
-    fn as_axis_angle(&self) -> (V3, F) {
+    fn as_axis_angle<V: From<[F; 3]>>(&self) -> (V, F) {
         let (axis, angle) = quat::as_axis_angle(self.as_ref());
         (axis.into(), angle)
     }
 
     //mp set_zero
     /// Set the quaternion to be all zeros
-    fn set_zero(&mut self);
+    fn set_zero(&mut self) {
+        *self = [F::zero(); 4].into();
+    }
 
     //mp mix
     /// Create a linear combination of this [Quaternion] and another using parameter `t` from zero to one
     #[must_use]
-    fn mix(self, other:&Self, t:F) -> Self;
+    #[must_use]
+    fn mix<A>(self, other: A, t: F) -> Self
+          where A: std::ops::Deref<Target = [F; 4]>,
+    {
+        vector::mix(self.deref(), other.deref(), t).into()
+    }
 
     //mp dot
     /// Return the dot product of two quaternions; basically used for length
     #[must_use]
-    fn dot(self, other:&Self) -> F;
+    fn dot(self, other:&Self) -> F {
+        vector::dot(self.deref(), other.deref())
+    }
 
     //mp length_sq
     /// Return the square of the length of the quaternion
@@ -666,33 +707,34 @@ where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
 
     //fp set_rotation3
     /// Set a Matrix3 to be the rotation matrix corresponding to the unit quaternion
-    fn set_rotation3<M> (&self, m:&mut M)
+    fn set_rotation3<V3: Vector3<F>, M> (&self, m:&mut M)
     where M:SqMatrix<V3, F, 3, 9>;
 
     //fp set_rotation4
     /// Set a Matrix4 to be the rotation matrix corresponding to the unit quaternion
-    fn set_rotation4<M> (&self, m:&mut M)
+    fn set_rotation4<V4: Vector4<F>, M> (&self, m:&mut M)
     where M:SqMatrix<V4, F, 4, 16>;
 
     //fp apply3
     /// Apply the quaternion to a V3
     #[must_use]
-    fn apply3(self, other: &V3) -> V3 {
-        let data = quat::apply3(self.as_ref(), other.as_ref());
+    fn apply3<V3: std::ops::Deref<Target = [F; 3]> + From<[F; 3]>>(self, other: V3) -> V3 {
+        let data = quat::apply3(self.deref(), other.deref());
         data.into()
     }
 
     //fp apply4
     /// Apply the quaternion to a V4
     #[must_use]
-    fn apply4(self, other: &V4) -> V4 {
-        let data = quat::apply4(self.as_ref(), other.as_ref());
+    fn apply4<V4: std::ops::Deref<Target = [F; 4]> + From<[F; 4]>>(self, other: V4) -> V4 {
+        let data = quat::apply4(self.deref(), other.deref());
         data.into()
     }
 
     //zz All done
 }
 
+//a Transform
 //tt Transform
 /// The [Transform] trait describes a translation, rotation and
 /// scaling for 3D, represented eventually as a Mat4
@@ -733,7 +775,7 @@ where
     V3: Vector<F, 3>,
     V4: Vector<F, 4>,
     M4: SqMatrix4<F, V3, V4>,
-    Q: Quaternion<F, V3, V4>,
+    Q: Quaternion<F>,
 {
     /// Create a transformation that is a translation, rotation and scaling
     fn of_trs(t: V3, r: Q, s: F) -> Self;
@@ -783,7 +825,7 @@ pub trait Geometry3D<Scalar: Float> {
     /// The type of a 3D matrix which allows for translations, that can transform Vec4
     type Mat4: SqMatrix4<Scalar, Self::Vec3, Self::Vec4>;
     /// The quaternion type that provides for rotations in 3D
-    type Quat: Quaternion<Scalar, Self::Vec3, Self::Vec4>;
+    type Quat: Quaternion<Scalar>;
     /// The transform type
     type Trans: Transform<Scalar, Self::Vec3, Self::Vec4, Self::Mat4, Self::Quat>;
     // fn of_transform3/4?

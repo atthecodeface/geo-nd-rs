@@ -270,7 +270,7 @@ use geo_nd::{Quaternion, SqMatrix, Vector};
 pub type Point3D = geo_nd::FArray<f64, 3>;
 pub type Mat3x3 = geo_nd::FArray2<f64, 3, 9>;
 pub type Point4D = geo_nd::FArray<f64, 4>;
-pub type Quat = geo_nd::QArray<f64, Point3D, Point4D>;
+pub type Quat = geo_nd::QArray<f64>;
 
 let x : Point3D = [1., 0., 0.].into();
 let y : Point3D = [0., 1., 0.].into();
@@ -280,19 +280,19 @@ let z : Point3D = [0., 0., 1.].into();
 // [X,0,0] is unchanged
 // [0,1,0] maps to [0,0,1]
 // [0,0,1] maps to [0,-1,0]
-let qx = Quat::unit().rotate_x(90.0_f64.to_radians());
-assert!(z.distance(&qx.apply3(&y)) < 1.0E-8);
-assert!(y.distance(&qx.apply3(&-z)) < 1.0E-8);
-assert!(x.distance(&qx.apply3(&x)) < 1.0E-8);
+let qx = Quat::default().rotate_x(90.0_f64.to_radians());
+assert!(z.distance(&qx.apply3(y)) < 1.0E-8);
+assert!(y.distance(&qx.apply3(-z)) < 1.0E-8);
+assert!(x.distance(&qx.apply3(x)) < 1.0E-8);
 
 // qy rotates around the Y axis by 90 degrees
 // [1,0,0] maps to [0,0,-1]
 // [0,Y,0] is unchanged
 // [0,0,1] maps to [1,0,0]
-let qy = Quat::unit().rotate_y(90.0_f64.to_radians());
-assert!(x.distance(&qy.apply3(&z)) < 1.0E-8);
-assert!(z.distance(&qy.apply3(&-x)) < 1.0E-8);
-assert!(y.distance(&qy.apply3(&y)) < 1.0E-8);
+let qy = Quat::default().rotate_y(90.0_f64.to_radians());
+assert!(x.distance(&qy.apply3(z)) < 1.0E-8);
+assert!(z.distance(&qy.apply3(-x)) < 1.0E-8);
+assert!(y.distance(&qy.apply3(y)) < 1.0E-8);
 
 // qx * qy applies qx to (qy applied to a vector)
 // Hence this chains the qx mapping onto the qy mapping
@@ -303,9 +303,9 @@ assert!(y.distance(&qy.apply3(&y)) < 1.0E-8);
 // This is actually a 120 degree rotation around (1,1,1)
 // (qy * qx is a 120 degree rotation around (1,-1,1))
 let qxy = qx * qy;
-assert!(y.distance(&qxy.apply3(&x)) < 1.0E-8);
-assert!(z.distance(&qxy.apply3(&y)) < 1.0E-8);
-assert!(x.distance(&qxy.apply3(&z)) < 1.0E-8);
+assert!(y.distance(&qxy.apply3(x)) < 1.0E-8);
+assert!(z.distance(&qxy.apply3(y)) < 1.0E-8);
+assert!(x.distance(&qxy.apply3(z)) < 1.0E-8);
 
 let mut m = Mat3x3::default();
 qxy.set_rotation3(&mut m);
@@ -336,7 +336,7 @@ pub use fqarray::FQArrayTrans;
 pub use qarray::QArray;
 pub use traits::{
     Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform,
-    Vector, Vector3, Vector3D,
+    Vector, Vector2, Vector3, Vector3D, Vector4,
 };
 
 /// Vector functions module
@@ -371,7 +371,7 @@ impl Geometry3D<f32> for f32 {
     type Vec4 = FArray<f32, 4>;
     type Mat3 = FArray2<f32, 3, 9>;
     type Mat4 = FArray2<f32, 4, 16>;
-    type Quat = QArray<f32, FArray<f32, 3>, FArray<f32, 4>>;
+    type Quat = QArray<f32>;
     type Trans = FQArrayTrans<f32>;
 }
 
@@ -394,7 +394,7 @@ impl Geometry3D<f64> for f64 {
     type Vec4 = FArray<f64, 4>;
     type Mat3 = FArray2<f64, 3, 9>;
     type Mat4 = FArray2<f64, 4, 16>;
-    type Quat = QArray<f64, FArray<f64, 3>, FArray<f64, 4>>;
+    type Quat = QArray<f64>;
     type Trans = FQArrayTrans<f64>;
 }
 
