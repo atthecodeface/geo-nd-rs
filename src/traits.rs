@@ -120,6 +120,35 @@ impl Float for f64 {
 ///
 /// The [Vector] can be indexed only by a `usize`; that is individual
 /// components of the vector can be accessed, but ranges may not.
+///
+/// Trait discussion...
+///
+/// A [Vector] is effectively a wrapper around [F; D] that is as cheap
+/// as possible, that then supports the relevant vector addition,
+/// subtraction, etc operations
+///
+/// An array [F; D] supports:
+///
+///   Copy, Clone, Debug, Default, Eq, PartialOrd
+///
+///   Index<I> and mut
+///
+///   IntoIterator for T, &T, &mut T
+///
+///   PartialEq of [U;N], [U] (where T PartialEq of U)
+///
+///   TryFrom of [T], Vec<T, A>, Box<[T]> with mut where appropriate
+///
+///   AsRef[T], Borrow[T] (and mut for those three)
+///
+///   Serialize, Deserialize
+///
+/// Note: Hash is not supported as f32/f64 do not support it
+///
+/// Hence A [Vector] should provide:
+///
+///   Copy, Clone, Debug, Default, Eq, PartialOrd
+///
 pub trait Vector<F: Float, const D: usize>:
     Clone
     + Copy
@@ -134,10 +163,13 @@ pub trait Vector<F: Float, const D: usize>:
     + std::ops::IndexMut<usize>
     + std::ops::Deref<Target = [F;D]>
     + std::convert::From<[F;D]>
+    + for< 'a> std::convert::From<&'a [F;D]>
     + std::convert::Into<[F;D]>
     + std::ops::Neg<Output = Self>
     + std::ops::Add<Self, Output = Self>
-//    + std::ops::Add<F, Output = Self>
+    // + std::ops::Add<[F;D], Output = Self>
+    + for<'a> std::ops::Add<&'a [F;D], Output = Self>
+    //    + std::ops::Add<F, Output = Self>
     + std::ops::AddAssign<Self>
     + std::ops::AddAssign<F>
     + std::ops::Sub<Self, Output = Self>
@@ -235,114 +267,6 @@ pub trait Vector<F: Float, const D: usize>:
         let y1 = c * dy + s * dx;
         self[c0] = x1 + pivot[c0];
         self[c1] = y1 + pivot[c1];
-        self
-    }
-}
-
-//tt VectorF32
-/// The [VectorF32] trait describes an N-dimensional vector of [Float] type.
-///
-/// Such [Vector]s support basic vector arithmetic using addition and
-/// subtraction, and they provide component-wise multiplication and
-/// division, using the standard operators on two [Vector]s.
-///
-/// They also support basic arithmetic to all components of the
-/// [Vector] for addition, subtraction, multiplication and division by
-/// a scalar [Float] value type that they are comprised of. Hence a
-/// `v:Vector<F>` may be scaled by a `s:F` using `v * s`.
-///
-/// The [Vector] can be indexed only by a `usize`; that is individual
-/// components of the vector can be accessed, but ranges may not.
-pub trait VectorF32<const D: usize>:
-    Clone
-    + Copy
-    + std::fmt::Debug
-    + std::fmt::Display
-    + std::default::Default
-    + std::convert::AsRef<[f32; D]>
-    + std::convert::AsMut<[f32; D]>
-    + std::convert::AsRef<[f32]>
-    + std::convert::AsMut<[f32]>
-    + std::ops::Index<usize, Output = f32>
-    + std::ops::IndexMut<usize>
-    + std::ops::Deref<Target = [f32;D]>
-    + std::ops::Neg<Output = Self>
-    + std::ops::Add<Self, Output = Self>
-    + for <'a> std::ops::Add<&'a Self, Output = Self>
-    + std::ops::Add<[f32; D], Output = Self>
-    + for <'a> std::ops::Add<&'a [f32; D], Output = Self>
-//    + std::ops::Add<f32, Output = Self>
-    + std::ops::AddAssign<Self>
-    + std::ops::AddAssign<f32>
-    + std::ops::Sub<Self, Output = Self>
-//    + std::ops::Sub<f32, Output = Self>
-    + std::ops::SubAssign<Self>
-    + std::ops::SubAssign<f32>
-    + std::ops::Mul<Self, Output = Self>
-    + std::ops::Mul<f32, Output = Self>
-    + std::ops::MulAssign<Self>
-    + std::ops::MulAssign<f32>
-    + std::ops::Div<Self, Output = Self>
-    + std::ops::Div<f32, Output = Self>
-    + std::ops::DivAssign<Self>
-    + std::ops::DivAssign<f32>
-{
-    //mp is_zero
-    /// Return true if the vector is all zeros
-    fn is_zero(&self) -> bool;
-
-    //mp reduce_sum
-    /// Sum all of the components of the vector
-    fn reduce_sum(&self) -> f32;
-
-    //mp mix
-    /// Create a linear combination of this [Vector] and another using parameter `t` from zero to one
-    #[must_use]
-    fn mix(self, other: &Self, t: f32) -> Self;
-
-    //mp dot
-    /// Return the dot product of two vectors
-    fn dot<A: AsRef<[f32; D]>>(&self, other: A) -> f32;
-
-    //mp length_sq
-    /// Return the square of the length of the vector
-    #[inline]
-    fn length_sq(&self) -> f32 {
-        self.dot(self)
-    }
-
-    //mp length
-    /// Return the length of the vector
-    #[inline]
-    fn length(&self) -> f32 {
-        self.length_sq().sqrt()
-    }
-
-    //mp distance_sq
-    /// Return the square of the distance between this vector and another
-    #[inline]
-    fn distance_sq(&self, other: &Self) -> f32 {
-        (*self - *other).length_sq()
-    }
-
-    //mp distance
-    /// Return the distance between this vector and another
-    #[inline]
-    fn distance(&self, other: &Self) -> f32 {
-        self.distance_sq(other).sqrt()
-    }
-
-    //mp normalize
-    /// Normalize the vector; if its length is close to zero, then set it to be zero
-    #[inline]
-    #[must_use]
-    fn normalize(mut self) -> Self {
-        let l = self.length();
-        if l < 1E-4 { // <f32 as Float>::epsilon() {
-            self = Self::default()
-        } else {
-            self /= l
-        }
         self
     }
 }
@@ -753,6 +677,7 @@ where
     /// Get the rotation of the transfirnatuib
     fn rotation(&self) -> Q;
     /// Get the inverse transformation
+    #[must_use]
     fn inverse(&self) -> Self;
     /// Invert the transformation
     fn invert(&mut self);

@@ -105,7 +105,9 @@ macro_rules! binary_with_f_op {
 ///
 /// It provides implementations of the traits required for a [Vector]
 /// trait, hence it can be used for a [Vector] of any size `D`.
-#[derive(Clone, Copy, Debug)]
+///
+/// Default must be provided separately as it is only implemented for [F;D] up to D=32
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct FArray<F: Float, const D: usize> {
     data: [F; D],
 }
@@ -219,6 +221,11 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
                 Self { data }
             }
         }
+        impl <'a> std::convert::From<&'a [$ty; $e]> for FArray<$ty, $e> {
+            fn from(data:&'a [$ty; $e]) -> FArray<$ty, $e> {
+                Self { data:*data }
+            }
+        }
         impl std::convert::From<FArray<$ty, $e>> for [$ty; $e]  {
             fn from(s: FArray<$ty, $e>) -> [$ty; $e]  {
                 s.data
@@ -227,6 +234,11 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
         impl <'a> std::convert::From<&'a FArray<$ty, $e>> for &'a [$ty; $e]  {
             fn from(s: &'a FArray<$ty, $e>) -> &'a [$ty; $e]  {
                 &s.data
+            }
+        }
+        impl <'a> std::convert::From<&'a FArray<$ty, $e>> for [$ty; $e]  {
+            fn from(s: &'a FArray<$ty, $e>) -> [$ty; $e]  {
+                s.data
             }
         }
 
@@ -252,6 +264,14 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
         // conflicts with
         //         impl std::ops::Add<[$ty; $e]> for FArray<$ty, $e> {
         //
+        //
+        // If we implement
+        //         impl<A: std::ops::Deref<Target = [$ty; $e]>> std::ops::Add<A> for FArray<$ty, $e> {
+        // and
+        //         impl std::ops::Add<Deref<Target = [$ty; $e]>> for FArray<$ty, $e> {
+        // and
+        //         impl std::ops::Add<[$ty; $e]> for FArray<$ty, $e> {
+        // then it conflicts because upstream they *could* implement Deref<Target = [$ty; $e]> for [$ty; $e] (theoretically...)
 
         /*
         impl std::ops::Add for FArray<$ty, $e> {
@@ -269,7 +289,6 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
         }
 
          */
-
         impl<A: std::ops::Deref<Target = [$ty; $e]>> std::ops::Add<A> for FArray<$ty, $e> {
             type Output = Self;
             fn add(self, other: A) -> Self {
@@ -291,7 +310,6 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
                 Self { data }
             }
         }
-
         /*
         impl<A: std::convert::AsRef<[$ty; $e]>> std::ops::Add<A> for FArray<$ty, $e> {
             type Output = Self;

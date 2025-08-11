@@ -222,9 +222,9 @@ fn test() {
 fn test_matrix() {
     let rsqrt2 = (0.5_f32).sqrt();
 
-    let x = Vec3::from_array([1., 0., 0.]);
-    let y = Vec3::from_array([0., 1., 0.]);
-    let z = Vec3::from_array([0., 0., 1.]);
+    let x: Vec3 = [1., 0., 0.].into();
+    let y: Vec3 = [0., 1., 0.].into();
+    let z: Vec3 = [0., 0., 1.].into();
 
     let xy = x + y;
     let yz = z + y;
@@ -307,9 +307,9 @@ fn test_matrix() {
 }
 #[test]
 fn test_look_at() {
-    let x = Vec3::from_array([1., 0., 0.]);
-    let y = Vec3::from_array([0., 1., 0.]);
-    let z = Vec3::from_array([0., 0., 1.]);
+    let x: Vec3 = [1., 0., 0.].into();
+    let y: Vec3 = [0., 1., 0.].into();
+    let z: Vec3 = [0., 0., 1.].into();
 
     let xy = x + y;
     let yz = z + y;

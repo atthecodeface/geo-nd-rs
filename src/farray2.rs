@@ -176,7 +176,10 @@ impl<F: Float, const D: usize, const D2: usize> From<[F; D2]> for FArray2<F, D, 
     }
 }
 //ip SqMatrix<F,2,4> for FArray2
-impl<F: Float> SqMatrix<FArray<F, 2>, F, 2, 4> for FArray2<F, 2, 4> {
+impl<F: Float> SqMatrix<FArray<F, 2>, F, 2, 4> for FArray2<F, 2, 4>
+where
+    FArray<F, 2>: Vector<F, 2>,
+{
     fn from_array(data: [F; 4]) -> Self {
         Self { data }
     }
@@ -207,15 +210,15 @@ impl<F: Float> SqMatrix<FArray<F, 2>, F, 2, 4> for FArray2<F, 2, 4> {
         Self::from_array(matrix::inverse2(&self.data))
     }
     fn transform(&self, v: &FArray<F, 2>) -> FArray<F, 2> {
-        FArray::from_array(matrix::multiply::<F, 4, 2, 2, 2, 2, 1>(
-            &self.data,
-            v.as_ref(),
-        ))
+        matrix::multiply::<F, 4, 2, 2, 2, 2, 1>(&self.data, v.as_ref()).into()
     }
 }
 
 //ip SqMatrix<F,3,9> for FArray2
-impl<F: Float> SqMatrix<FArray<F, 3>, F, 3, 9> for FArray2<F, 3, 9> {
+impl<F: Float> SqMatrix<FArray<F, 3>, F, 3, 9> for FArray2<F, 3, 9>
+where
+    FArray<F, 3>: Vector<F, 3>,
+{
     fn from_array(data: [F; 9]) -> Self {
         Self { data }
     }
@@ -257,18 +260,18 @@ impl<F: Float> SqMatrix<FArray<F, 3>, F, 3, 9> for FArray2<F, 3, 9> {
         Self::from_array(matrix::inverse3(&self.data))
     }
     fn transform(&self, v: &FArray<F, 3>) -> FArray<F, 3> {
-        FArray::from_array(matrix::multiply::<F, 9, 3, 3, 3, 3, 1>(
-            &self.data,
-            v.as_ref(),
-        ))
+        matrix::multiply::<F, 9, 3, 3, 3, 3, 1>(&self.data, v.as_ref()).into()
     }
 }
 
 //ip SqMatrix3<F> for FArray2
-impl<F: Float> SqMatrix3<FArray<F, 3>, F> for FArray2<F, 3, 9> {}
+impl<F: Float> SqMatrix3<FArray<F, 3>, F> for FArray2<F, 3, 9> where FArray<F, 3>: Vector<F, 3> {}
 
 //ip SqMatrix<F,4,16> for FArray2
-impl<F: Float> SqMatrix<FArray<F, 4>, F, 4, 16> for FArray2<F, 4, 16> {
+impl<F: Float> SqMatrix<FArray<F, 4>, F, 4, 16> for FArray2<F, 4, 16>
+where
+    FArray<F, 4>: Vector<F, 4>,
+{
     fn from_array(data: [F; 16]) -> Self {
         Self { data }
     }
@@ -317,15 +320,16 @@ impl<F: Float> SqMatrix<FArray<F, 4>, F, 4, 16> for FArray2<F, 4, 16> {
         Self::from_array(matrix::inverse4(&self.data))
     }
     fn transform(&self, v: &FArray<F, 4>) -> FArray<F, 4> {
-        FArray::from_array(matrix::multiply::<F, 16, 4, 4, 4, 4, 1>(
-            &self.data,
-            v.as_ref(),
-        ))
+        matrix::multiply::<F, 16, 4, 4, 4, 4, 1>(&self.data, v.as_ref()).into()
     }
 }
 
 //ip SqMatrix4<F> for FArray2
-impl<F: Float> SqMatrix4<F, FArray<F, 3>, FArray<F, 4>> for FArray2<F, 4, 16> {
+impl<F: Float> SqMatrix4<F, FArray<F, 3>, FArray<F, 4>> for FArray2<F, 4, 16>
+where
+    FArray<F, 3>: Vector<F, 3>,
+    FArray<F, 4>: Vector<F, 4>,
+{
     fn perspective(fov: F, aspect: F, near: F, far: F) -> Self {
         Self::from_array(matrix::perspective4(fov, aspect, near, far))
     }

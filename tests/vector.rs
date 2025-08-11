@@ -126,7 +126,7 @@ where
     }
 
     fn test_vec4() {
-        let zero = V4::zero();
+        let zero = V4::default();
         let ones = [1.0, 1., 1., 1.].into();
         let b = [3., 4., 12., 84.].into();
         Self::test_vecn_len_dist(zero, ones, b, 85. * 85., 134. + 83. * 83.);
@@ -137,7 +137,7 @@ where
     }
 
     fn test_vec3() {
-        let zero = V3::zero();
+        let zero = V3::default();
         let ones = [1., 1., 1.].into();
         let b = [3., 4., 12.].into();
         Self::test_vecn_len_dist(zero, ones, b, 169., 134.);
@@ -147,7 +147,7 @@ where
     }
 
     fn test_vec2() {
-        let zero = V2::zero();
+        let zero = V2::default();
         let ones = [1., 1.].into();
         let b = [3., 4.].into();
         Self::test_vecn_len_dist(zero, ones, b, 25., 13.);

@@ -224,7 +224,7 @@ where
     V4: Vector<F, 4>,
 {
     fn default() -> Self {
-        Self::of_vector(V4::zero())
+        Self::of_vector(V4::default())
     }
 }
 
@@ -250,7 +250,7 @@ where
     type Output = Self;
     fn mul(self, other: Self) -> Self {
         let data = quat::multiply(self.data.as_ref(), other.data.as_ref());
-        Self::of_vector(V4::from_array(data))
+        Self::of_vector(data.into())
     }
 }
 
@@ -277,7 +277,7 @@ where
     type Output = Self;
     fn div(self, other: Self) -> Self {
         let data = quat::divide(self.data.as_ref(), other.data.as_ref());
-        Self::of_vector(V4::from_array(data))
+        Self::of_vector(data.into())
     }
 }
 
@@ -303,11 +303,11 @@ where
 {
     #[inline]
     fn from_array(data: [F; 4]) -> Self {
-        Self::of_vector(V4::from_array(data))
+        Self::of_vector(data.into())
     }
     #[inline]
     fn into_array(self) -> [F; 4] {
-        self.data.into_array()
+        self.data.into()
     }
     #[inline]
     fn as_rijk(&self) -> (F, F, F, F) {
