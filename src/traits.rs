@@ -127,9 +127,9 @@ impl Float for f64 {
 /// as possible, that then supports the relevant vector addition,
 /// subtraction, etc operations
 ///
-/// An array [F; D] supports:
+/// An array [f32/f64; D] supports:
 ///
-///   Copy, Clone, Debug, Default, Eq, PartialOrd
+///   Copy, Clone, Debug, Default, PartialEq, PartialOrd
 ///
 ///   Index<I> and mut
 ///
@@ -147,7 +147,17 @@ impl Float for f64 {
 ///
 /// Hence A [Vector] should provide:
 ///
-///   Copy, Clone, Debug, Default, Eq, PartialOrd
+///   Copy, Clone, Debug, Default, PartialEq
+///
+///   Deref<Target = [F; D]>, DerefMut
+///
+///   From for &[F], [F;D] &[F;D]
+///
+///   Into [F;D] (deref provides equivalent of &[F; D])
+///
+///   TryFrom<&[F]>
+///
+/// Not PartialOrd, as vectors dont't have an ordering
 ///
 pub trait Vector<F: Float, const D: usize>:
     Clone
@@ -155,10 +165,11 @@ pub trait Vector<F: Float, const D: usize>:
     + std::fmt::Debug
     + std::fmt::Display
     + std::default::Default
+    + PartialEq<Self>
     + std::convert::AsRef<[F; D]>
     + std::convert::AsMut<[F; D]>
-    + std::convert::AsRef<[F]>
-    + std::convert::AsMut<[F]>
+//    + std::convert::AsRef<[F]>
+//    + std::convert::AsMut<[F]>
     + std::ops::Deref<Target = [F;D]>
     + std::ops::DerefMut
     + std::ops::Index<usize, Output = F>

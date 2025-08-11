@@ -127,29 +127,6 @@ impl<F: Float + serde::Serialize, const D: usize> Serialize for FArray<F, D> {
     }
 }
 
-//ip Deserialize for FArray
-impl<'de, F: Float + serde::Deserialize<'de>, const D: usize> Deserialize<'de> for FArray<F, D> {
-    fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
-    where
-        DE: serde::Deserializer<'de>,
-    {
-        let array = Vec::<F>::deserialize(deserializer)?;
-        if array.len() != D {
-            return Err(serde::de::Error::invalid_length(array.len(), &"<D> floats"));
-        }
-        let mut data = Self::default();
-        for (i, d) in array.into_iter().enumerate() {
-            data[i] = d;
-        }
-        Ok(data)
-    }
-}
-
-//ip FArray
-index_ops! { FArray }
-ref_op! { FArray, [F;D] }
-ref_op! { FArray, [F] }
-
 binary_not_f_op! { FArray, Add, add, +, AddAssign, add_assign, += }
 binary_not_f_op! { FArray, Sub, sub, -, SubAssign, sub_assign, -= }
 binary_with_f_op! { FArray, Mul, mul, *, MulAssign, mul_assign, *= }
@@ -159,8 +136,7 @@ binary_with_f_op! { FArray, Div, div, /, DivAssign, div_assign, /= }
 impl<F: Float, const D: usize> std::ops::Neg for FArray<F, D> {
     type Output = Self;
     fn neg(mut self) -> Self::Output {
-        let data: &mut [F; D] = self.as_mut();
-        for d in data.iter_mut() {
+        for d in self.data.iter_mut() {
             *d = -*d;
         }
         self
@@ -190,74 +166,100 @@ impl Vector3<f64> for FArray<f64, 3> {}
 //a All stuff 2
 //mi farray_traits!
 macro_rules! farray_traits {
-    { $ty:ty,  $e:expr } => {
+    { $f:ty,  $e:expr, $ty:ty } => {
 
-impl Vector<$ty, $e> for FArray<$ty, $e> {
+impl Vector<$f, $e> for $ty {
     fn is_zero(&self) -> bool {
         vector::is_zero(&self.data)
     }
     fn set_zero(&mut self) {
         vector::set_zero(&mut self.data)
     }
-    fn mix(self, other: &Self, t: $ty) -> Self {
+    fn mix(self, other: &Self, t: $f) -> Self {
         Self {
             data: vector::mix(&self.data, &other.data, t),
         }
     }
-    fn reduce_sum(&self) -> $ty {
-        let mut r = <$ty>::default();
+    fn reduce_sum(&self) -> $f {
+        let mut r = <$f>::default();
         for d in self.data {
             r += d
         }
         r
     }
-    fn dot(&self, other: &Self) -> $ty {
+    fn dot(&self, other: &Self) -> $f {
         vector::dot(&self.data, &other.data)
     }
 }
 
-        impl std::ops::Deref for FArray<$ty, $e> {
-            type Target = [$ty; $e];
-            fn deref(&self) -> &[$ty; $e] {
+        impl std::ops::Deref for $ty {
+            type Target = [$f; $e];
+            fn deref(&self) -> &[$f; $e] {
                 &self.data
             }
         }
-        impl std::ops::DerefMut for FArray<$ty, $e> {
-            fn deref_mut(&mut self) -> &mut [$ty; $e] {
+        impl std::ops::DerefMut for $ty {
+            fn deref_mut(&mut self) -> &mut [$f; $e] {
                 &mut self.data
             }
         }
 
-        impl std::convert::From<[$ty; $e]> for FArray<$ty, $e> {
-            fn from(data:[$ty; $e]) -> FArray<$ty, $e> {
+        impl std::convert::AsRef<[$f; $e]> for $ty
+        {
+            fn as_ref(&self) -> &[$f; $e] {
+                &self.data
+            }
+        }
+        impl std::convert::AsMut<[$f; $e]> for $ty
+        {
+            fn as_mut(&mut self) -> &mut [$f; $e] {
+                &mut self.data
+            }
+        }
+
+        impl std::ops::Index<usize> for $ty {
+            type Output = $f;
+            fn index(&self, index: usize) -> &$f {
+                &self.data[index]
+            }
+        }
+        impl std::ops::IndexMut<usize> for $ty {
+            fn index_mut(&mut self, index: usize) -> &mut $f {
+                &mut self.data[index]
+            }
+        }
+
+
+        impl std::convert::From<[$f; $e]> for $ty {
+            fn from(data:[$f; $e]) -> $ty {
                 Self { data }
             }
         }
-        impl <'a> std::convert::From<&'a [$ty; $e]> for FArray<$ty, $e> {
-            fn from(data:&'a [$ty; $e]) -> FArray<$ty, $e> {
+        impl <'a> std::convert::From<&'a [$f; $e]> for $ty {
+            fn from(data:&'a [$f; $e]) -> $ty {
                 Self { data:*data }
             }
         }
-        impl <'a> std::convert::TryFrom<&'a [$ty]> for FArray<$ty, $e> {
+        impl <'a> std::convert::TryFrom<&'a [$f]> for $ty {
             type Error = std::array::TryFromSliceError;
-            fn try_from(data:&'a [$ty]) -> Result<FArray<$ty, $e>, Self::Error> {
-                let data :[$ty; $e] = <[$ty; $e]>::try_from(data)?;
+            fn try_from(data:&'a [$f]) -> Result<$ty, Self::Error> {
+                let data :[$f; $e] = <[$f; $e]>::try_from(data)?;
                 Ok(data.into())
             }
         }
 
-        impl std::convert::From<FArray<$ty, $e>> for [$ty; $e]  {
-            fn from(s: FArray<$ty, $e>) -> [$ty; $e]  {
+        impl std::convert::From<$ty> for [$f; $e]  {
+            fn from(s: $ty) -> [$f; $e]  {
                 s.data
             }
         }
-        impl <'a> std::convert::From<&'a FArray<$ty, $e>> for &'a [$ty; $e]  {
-            fn from(s: &'a FArray<$ty, $e>) -> &'a [$ty; $e]  {
+        impl <'a> std::convert::From<&'a $ty> for &'a [$f; $e]  {
+            fn from(s: &'a $ty) -> &'a [$f; $e]  {
                 &s.data
             }
         }
-        impl <'a> std::convert::From<&'a FArray<$ty, $e>> for [$ty; $e]  {
-            fn from(s: &'a FArray<$ty, $e>) -> [$ty; $e]  {
+        impl <'a> std::convert::From<&'a $ty> for [$f; $e]  {
+            fn from(s: &'a $ty) -> [$f; $e]  {
                 s.data
             }
         }
@@ -269,33 +271,33 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
         // then AsRef<[]> conflicts with Add<&[]
         //
         // If we implement
-        //         impl<A: std::ops::Deref<Target = [$ty; $e]>> std::ops::Add<A> for FArray<$ty, $e> {
+        //         impl<A: std::ops::Deref<Target = [$f; $e]>> std::ops::Add<A> for $ty {
         // conflicts with
-        //         impl std::ops::Add<&[$ty; $e]> for FArray<$ty, $e> {
+        //         impl std::ops::Add<&[$f; $e]> for $ty {
         //
         // If we implement
-        //         impl<A: std::ops::Deref<Target = [$ty; $e]>> std::ops::Add<A> for FArray<$ty, $e> {
+        //         impl<A: std::ops::Deref<Target = [$f; $e]>> std::ops::Add<A> for $ty {
         // conflicts with
-        //         impl std::ops::Add<[$ty; $e]> for FArray<$ty, $e> {
+        //         impl std::ops::Add<[$f; $e]> for $ty {
         //
         //
         // If we implement
-        //         impl<A: std::ops::Deref<Target = [$ty; $e]>> std::ops::Add<A> for FArray<$ty, $e> {
+        //         impl<A: std::ops::Deref<Target = [$f; $e]>> std::ops::Add<A> for $ty {
         // and
-        //         impl std::ops::Add<Deref<Target = [$ty; $e]>> for FArray<$ty, $e> {
+        //         impl std::ops::Add<Deref<Target = [$f; $e]>> for $ty {
         // and
-        //         impl std::ops::Add<[$ty; $e]> for FArray<$ty, $e> {
-        // then it conflicts because upstream they *could* implement Deref<Target = [$ty; $e]> for [$ty; $e] (theoretically...)
+        //         impl std::ops::Add<[$f; $e]> for $ty {
+        // then it conflicts because upstream they *could* implement Deref<Target = [$f; $e]> for [$f; $e] (theoretically...)
 
         /*
-        impl std::ops::Add for FArray<$ty, $e> {
+        impl std::ops::Add for $ty {
             type Output = Self;
             fn add(self, other: Self) -> Self {
                 self + &other
             }
         }
 
-        impl std::ops::Sub for FArray<$ty, $e> {
+        impl std::ops::Sub for $ty {
             type Output = Self;
             fn sub(self, other: Self) -> Self {
                 self - &other
@@ -303,7 +305,7 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
         }
 
          */
-        impl<A: std::ops::Deref<Target = [$ty; $e]>> std::ops::Add<A> for FArray<$ty, $e> {
+        impl<A: std::ops::Deref<Target = [$f; $e]>> std::ops::Add<A> for $ty {
             type Output = Self;
             fn add(self, other: A) -> Self {
                 let mut data = [0.0; $e];
@@ -314,7 +316,7 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
             }
         }
 
-        impl<A: std::ops::Deref<Target = [$ty; $e]>> std::ops::Sub<A> for FArray<$ty, $e> {
+        impl<A: std::ops::Deref<Target = [$f; $e]>> std::ops::Sub<A> for $ty {
             type Output = Self;
             fn sub(self, other: A) -> Self {
                 let mut data = [0.0; $e];
@@ -325,7 +327,7 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
             }
         }
         /*
-        impl<A: std::convert::AsRef<[$ty; $e]>> std::ops::Add<A> for FArray<$ty, $e> {
+        impl<A: std::convert::AsRef<[$f; $e]>> std::ops::Add<A> for $ty {
             type Output = Self;
             fn add(self, other: A) -> Self {
                 let mut data = [0.0; $e];
@@ -337,7 +339,7 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
             }
         }
 
-        impl<A: std::convert::AsRef<[$ty; $e]>> std::ops::Sub<A> for FArray<$ty, $e> {
+        impl<A: std::convert::AsRef<[$f; $e]>> std::ops::Sub<A> for $ty {
             type Output = Self;
             fn sub(self, other: A) -> Self {
                 let mut data = [0.0; $e];
@@ -351,9 +353,9 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
          */
 
         /*
-        impl std::ops::Add<[$ty; $e]> for FArray<$ty, $e> {
+        impl std::ops::Add<[$f; $e]> for $ty {
             type Output = Self;
-            fn add(self, other: [$ty; $e]) -> Self {
+            fn add(self, other: [$f; $e]) -> Self {
                 let mut data = [F::zero(); $e];
                 let other = other.as_ref();
                 for i in 0..$e {
@@ -363,9 +365,9 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
             }
         }
 
-        impl std::ops::Sub<[$ty; $e]> for FArray<$ty, $e> {
+        impl std::ops::Sub<[$f; $e]> for $ty {
             type Output = Self;
-            fn sub(self, other: [$ty; $e]) -> Self {
+            fn sub(self, other: [$f; $e]) -> Self {
                 let mut data = [F::zero(); $e];
                 let other = other.as_ref();
                 for i in 0..$e {
@@ -375,13 +377,31 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
             }
     }
         */
+
+
+        impl<'de> Deserialize<'de> for $ty {
+            fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
+            where
+                DE: serde::Deserializer<'de>,
+            {
+                let array = Vec::<$f>::deserialize(deserializer)?;
+                if array.len() != $e {
+                    return Err(serde::de::Error::invalid_length(array.len(), &"<D> floats"));
+                }
+                let mut data = Self::default();
+                for (i, d) in array.into_iter().enumerate() {
+                    data[i] = d;
+                }
+                Ok(data)
+            }
+        }
     }
 }
 
 //mi farray_traits!
-farray_traits! { f32, 2 }
-farray_traits! { f32, 3 }
-farray_traits! { f32, 4 }
-farray_traits! { f64, 2 }
-farray_traits! { f64, 3 }
-farray_traits! { f64, 4 }
+farray_traits! { f32, 2, FArray<f32,2> }
+farray_traits! { f32, 3, FArray<f32,3> }
+farray_traits! { f32, 4, FArray<f32,4> }
+farray_traits! { f64, 2, FArray<f64,2> }
+farray_traits! { f64, 3, FArray<f64,3> }
+farray_traits! { f64, 4, FArray<f64,4> }

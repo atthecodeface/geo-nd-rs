@@ -10,7 +10,7 @@ use crate::{Float, QArray, Quaternion, SqMatrix, Transform, Vector};
 /// translates it)
 ///
 /// This should probably mirror the QArray in using an F, V3 and V4.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug)] //, Serialize, Deserialize)]
 pub struct FQArrayTrans<F: Float + Serialize>
 where
     FArray<F, 3>: Vector<F, 3>,
