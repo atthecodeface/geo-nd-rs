@@ -19,7 +19,7 @@ type Quat = <f32 as Geometry3D<f32>>::Quat;
 /// as the compiler will otherwise assume they can be specified and
 /// therefore may not have such a trait, even though as associated
 /// types of V they must.
-fn vec3_eq(v: &[f32; 3], v2: &[f32; 3]) -> bool {
+fn vec3_eq(v: &FArray<f32, 3>, v2: &[f32; 3]) -> bool {
     let d2 = vector::distance_sq(v, v2);
     if d2 < f32::frac(1, 1000) {
         true

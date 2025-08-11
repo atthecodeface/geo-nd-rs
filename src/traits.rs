@@ -247,10 +247,9 @@ pub trait Vector<F: Float, const D: usize>:
 
     //mp dot
     /// Return the dot product of two vectors
-    fn dot<A>(&self, other: &A) -> F
-          where A: std::ops::Deref<Target = [F; D]>,
+    fn dot(&self, other: &[F; D]) -> F
     {
-        vector::dot(self.deref(), other.deref())
+        vector::dot(self.deref(), other)
     }
 
     /// Return the dot product of two vectors
@@ -279,14 +278,14 @@ pub trait Vector<F: Float, const D: usize>:
     //mp distance_sq
     /// Return the square of the distance between this vector and another
     #[inline]
-    fn distance_sq(&self, other: &Self) -> F {
-        (*self - *other).length_sq()
+    fn distance_sq(&self, other: &[F; D]) -> F {
+        (*self - other).length_sq()
     }
 
     //mp distance
     /// Return the distance between this vector and another
     #[inline]
-    fn distance(&self, other: &Self) -> F {
+    fn distance(&self, other: &[F; D]) -> F {
         self.distance_sq(other).sqrt()
     }
 
@@ -328,11 +327,53 @@ pub trait Vector<F: Float, const D: usize>:
     //cp cross_product - where D = 3
     /// Cross product of two 3-element vectors
     #[must_use]
-    fn cross_product<A>(&self, other: A) -> Self
-    where Self: AsRef<[F; 3]>, // This actually just enforces D=3
-          A: Into<[F; 3]>,
-          Self: From<[F; 3]> {
-        vector::cross_product3(self.as_ref(), &other.into()).into()
+    fn cross_product(&self, other: &[F; 3]) -> Self
+    where Self: From<[F; 3]>,
+          Self: AsRef<[F; 3]> // so that it knows as_ref() returns &[F;3], i.e. D is 3
+    {
+        vector::cross_product3(self.as_ref(), other).into()
+    }
+
+    //fp apply_q3
+    /// Apply a quaternion to a V3
+    ///
+    /// This can either take other as &[F;3] and produce [F; 3], or
+    ///  &D where D:Deref<Target =[F; 3]> and D:From<[F; 3]
+    ///
+    /// If it takes the former then it can operate on [F;3] and
+    /// anything that is Deref<Target=[F;3]>, but it needs its result
+    /// cast into the correct vector
+    ///
+    /// If it tkes the latter then it cannot operate on [F;3], but its
+    /// result need not be cast
+    #[must_use]
+    fn apply_q3<Q>(&self, q: &Q) -> Self
+    where Q: Quaternion<F>,
+          Self: From<[F; 3]>,
+          Self: AsRef<[F; 3]> // so that it knows as_ref() returns &[F;3], i.e. D is 3
+    {
+        quat::apply3(q.deref(), self.as_ref()).into()
+    }
+
+    //fp apply_q4
+    /// Apply a quaternion to a V4
+    ///
+    /// This can either take other as &[F;3] and produce [F; 3], or
+    ///  &D where D:Deref<Target =[F; 3]> and D:From<[F; 3]
+    ///
+    /// If it takes the former then it can operate on [F;3] and
+    /// anything that is Deref<Target=[F;3]>, but it needs its result
+    /// cast into the correct vector
+    ///
+    /// If it tkes the latter then it cannot operate on [F;3], but its
+    /// result need not be cast
+    #[must_use]
+    fn apply_q4<Q>(&self, q: &Q) -> Self
+    where Q: Quaternion<F>,
+          Self: From<[F; 4]>,
+          Self: AsRef<[F; 4]> // so that it knows as_ref() returns &[F;3], i.e. D is 3
+    {
+        quat::apply4(q.deref(), self.as_ref()).into()
     }
 
     /// Get a point on a sphere uniformly distributed for a point
@@ -641,8 +682,8 @@ pub trait Quaternion<F: Float> :
     ///
     /// This is an approximation compared to the Landis Markley paper
     #[must_use]
-    fn weighted_average_many<I: Iterator<Item = (F, Self)>>(value_iter:I) -> Self {
-        let value_iter = value_iter.map(|(w,v)| (w,v.into()));
+    fn weighted_average_many<A:Into<[F; 4]>, I: Iterator<Item = (F, A)>>(value_iter:I) -> Self {
+        let value_iter = value_iter.map(|(w,v)| (w, v.into()));
         quat::weighted_average_many(value_iter).into()
     }
 
@@ -716,15 +757,27 @@ pub trait Quaternion<F: Float> :
 
     //fp apply3
     /// Apply the quaternion to a V3
+    ///
+    /// This can either take other as &[F;3] and produce [F; 3], or
+    ///  &D where D:Deref<Target =[F; 3]> and D:From<[F; 3]
+    ///
+    /// If it takes the former then it can operate on [F;3] and
+    /// anything that is Deref<Target=[F;3]>, but it needs its result
+    /// cast into the correct vector
+    ///
+    /// If it tkes the latter then it cannot operate on [F;3], but its
+    /// result need not be cast
     #[must_use]
-    fn apply3(self, other: &[F; 3]) -> [F; 3] {
-        quat::apply3(self.deref(), other)
+    fn apply3<A>(&self, other: &A) -> A
+    where A: std::ops::Deref<Target = [F; 3]>,
+          A: From<[F; 3]> {
+        quat::apply3(self.deref(), other.deref()).into()
     }
 
     //fp apply4
     /// Apply the quaternion to a V4
     #[must_use]
-    fn apply4(self, other: &[F; 4]) -> [F; 4] {
+    fn apply4(&self, other: &[F; 4]) -> [F; 4] {
         quat::apply4(self.deref(), other)
     }
 

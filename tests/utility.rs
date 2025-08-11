@@ -1,5 +1,5 @@
 //a Imports
-use geo_nd::{Geometry3D, Vector};
+use geo_nd::Vector;
 
 //a Utility tests for vector3
 type Vector2 = geo_nd::FArray<f32, 2>;
@@ -83,6 +83,7 @@ fn utility_convert() -> Result<(), String> {
 
     let v: Vec<_> = TFT_3.into();
     pt3 = <_>::try_from(v).unwrap();
+    let _ = pt3;
 
     Ok(())
 }
@@ -109,8 +110,8 @@ fn utility_indext() -> Result<(), String> {
 #[test]
 fn utility_add() -> Result<(), String> {
     // From [f32; D]
-    let mut pt_a: Vector3;
-    let mut pt_b: Vector3;
+    let pt_a: Vector3;
+    let pt_b: Vector3;
 
     // From &[f32; 3]
     pt_a = ZERO_3.into();
@@ -141,11 +142,9 @@ fn utility_add() -> Result<(), String> {
 #[test]
 fn utility_mul() -> Result<(), String> {
     // From [f32; D]
-    let mut pt_a: Vector3;
-    let mut pt_b: Vector3;
+    let pt_b: Vector3;
 
     // From &[f32; 3]
-    pt_a = ZERO_3.into();
     pt_b = TFT_3.into();
 
     let n = pt_b * 2.0;
@@ -161,8 +160,8 @@ fn utility_mul() -> Result<(), String> {
 #[test]
 fn utility_neg() -> Result<(), String> {
     // From [f32; D]
-    let mut pt_a: Vector3;
-    let mut pt_b: Vector3;
+    let pt_a: Vector3;
+    let pt_b: Vector3;
 
     // From &[f32; 3]
     pt_a = ZERO_3.into();
@@ -181,8 +180,8 @@ fn utility_neg() -> Result<(), String> {
 #[test]
 fn utility_vec3() -> Result<(), String> {
     // From [f32; D]
-    let mut pt_a: Vector3;
-    let mut pt_b: Vector3;
+    let pt_a: Vector3;
+    let pt_b: Vector3;
 
     // From &[f32; 3]
     pt_a = TFT_3.into();
@@ -190,7 +189,7 @@ fn utility_vec3() -> Result<(), String> {
 
     let n = pt_a.cross_product(&pt_b);
     assert_eq!(n[0], 0.0);
-    let n = pt_a.cross_product(pt_b);
+    let n = pt_a.cross_product(&pt_b);
     assert_eq!(n[0], 0.0);
 
     // let n = pt_a.cross_product([1., 2., 3.]);

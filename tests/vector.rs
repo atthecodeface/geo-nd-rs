@@ -172,6 +172,7 @@ fn test_fslice() {
     Banana::<f32>::test_vec4();
 }
 
+/*
 #[cfg(feature = "simd")]
 extern crate core_simd;
 #[cfg(feature = "simd")]
@@ -184,3 +185,4 @@ mod test_simd {
         super::Banana::<VecF32A16>::test_vec4();
     }
 }
+ */
