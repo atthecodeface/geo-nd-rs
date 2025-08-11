@@ -327,7 +327,7 @@ where
     }
     #[inline]
     fn mix(self, other: &Self, t: F) -> Self {
-        Self::of_vector(self.data.mix(&other.data, t))
+        Self::of_vector(self.data.mix(other.data, t))
     }
     #[inline]
     fn dot(self, other: &Self) -> F {

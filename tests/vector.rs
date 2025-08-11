@@ -68,7 +68,10 @@ where
         assert_eq!((v + zero).length(), v_len, "Length of v + zero is 13");
         assert_eq!((v - zero).length(), v_len, "Length of v + zero is 13");
         assert_eq!((v * 2.).length(), 2. * v_len, "Length of v*2 is 26");
-        assert_eq!((v * ones).length(), v_len, "Length of v*ones is 13");
+
+        // No item-by-item multiplication
+
+        // assert_eq!((v * ones).length(), v_len, "Length of v*ones is 13");
         assert_eq!(
             (v.distance_sq(&ones)),
             v_o_dist2,
@@ -106,11 +109,17 @@ where
         assert_eq!((v * 0.)[n], 0., "v*[0.] has coordinate N of 0");
         assert_eq!((v * 1.)[n], vn, "v*[1.] has coordinate N of vn");
         let mut d = v;
-        d *= ones;
+
+        // No item-by-item multiplication
+        // d *= ones;
         assert_eq!(d[n], vn);
+
         d += ones;
         assert_eq!(d[n], vn + 1.);
-        d /= ones;
+
+        // No item-by-item division
+        // d /= ones;
+
         assert_eq!(d[n], vn + 1.);
         d -= ones;
         assert_eq!(d[n], vn);

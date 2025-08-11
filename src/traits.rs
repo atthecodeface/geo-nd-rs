@@ -161,16 +161,33 @@ impl Float for f64 {
 ///
 /// Not PartialOrd, as vectors dont't have an ordering
 ///
-/// Addition/Subtraction
+/// Addition/Subtraction/Multiplication/Division
 ///
-/// Add/Sub with Rhs of Self, &Self, Deref<Target = &[F;D]> are
-///    *required* for utility; we cannot *required* the last of these, as
+/// Add/Sub with Rhs of Self, &Self, Deref<Target = [F;D]> are
+///    *required* for utility; we cannot *require* the last of these, as
 ///    Rust has no syntax for that.
 ///
+/// Mul/Div with Rhs of F, &F are *required* for utility; previous
+///    versions supported Self to do item-by-item operations, which
+///    has been removed This is in part because it would need to work
+///    for Deref<Target = [F;D]>, but f32/f64 do not implement Deref,
+///    and they might in the future do so which breaks the F and &F
+///    operation.
+///
 /// Not AsRef/Mut of [F], as [F; D] implement that, and Vector gets it through Deref
-//    + std::convert::AsRef<[F]> // Note AsRef<[F]> is implemented through Deref to [F; D]
-//    + std::convert::AsMut<[F]> // Note AsMut<[F]> is implemented through DerefMut to [F; D]
-// + std::ops::Add<[F;D], Output = Self> // if required, then it blocks Add<Deref<Target = [F;D]>>
+//
+//
+//    + std::convert::AsRef<[F]>
+//
+// Note AsRef<[F]> is implemented through Deref to [F; D]
+//
+//    + std::convert::AsMut<[F]>
+//
+// Note AsMut<[F]> is implemented through DerefMut to [F; D]
+//
+// + std::ops::Add<[F;D], Output = Self>
+//
+// if required, then it blocks Add<Deref<Target = [F;D]>>
 pub trait Vector<F: Float, const D: usize>:
     Clone
     + Copy
@@ -178,6 +195,7 @@ pub trait Vector<F: Float, const D: usize>:
     + std::fmt::Display
     + std::default::Default
     + PartialEq<Self>
+
     + std::convert::AsRef<[F; D]> // Note, [F;D] implements AsRef only for [F] which is an issue
     + std::convert::AsMut<[F; D]> // Note, [F;D] implements AsRef only for [F] which is an issue
     + std::ops::Deref<Target = [F;D]>
@@ -188,6 +206,7 @@ pub trait Vector<F: Float, const D: usize>:
     + std::convert::From<[F;D]>
     + for< 'a> std::convert::From<&'a [F;D]>
     + for< 'a> std::convert::TryFrom<&'a [F]>
+    + for< 'a> std::convert::TryFrom<Vec<F>>
     + std::convert::Into<[F;D]>
 
     + std::ops::Neg<Output = Self>
@@ -205,33 +224,44 @@ pub trait Vector<F: Float, const D: usize>:
     + std::ops::SubAssign<Self>
     + for <'a> std::ops::SubAssign<&'a [F;D]>
 
-    + std::ops::Mul<Self, Output = Self>
     + std::ops::Mul<F, Output = Self>
-    + std::ops::MulAssign<Self>
     + std::ops::MulAssign<F>
-    + std::ops::Div<Self, Output = Self>
     + std::ops::Div<F, Output = Self>
-    + std::ops::DivAssign<Self>
     + std::ops::DivAssign<F>
 
     // + where for <'a>  &'a Self : std::ops::Add<&'a Self, Output = Self>
 {
     //mp is_zero
     /// Return true if the vector is all zeros
-    fn is_zero(&self) -> bool;
-
-    //mp reduce_sum
-    /// Sum all of the components of the vector
-    fn reduce_sum(&self) -> F;
+    fn is_zero(&self) -> bool {
+        !self.deref().iter().any(|f| !f.is_zero())
+    }
 
     //mp mix
     /// Create a linear combination of this [Vector] and another using parameter `t` from zero to one
     #[must_use]
-    fn mix(self, other: &Self, t: F) -> Self;
+    fn mix<A>(self, other: A, t: F) -> Self
+          where A: std::ops::Deref<Target = [F; D]>,
+    {
+        vector::mix(self.deref(), other.deref(), t).into()
+    }
 
     //mp dot
     /// Return the dot product of two vectors
-    fn dot(&self, other: &Self) -> F;
+    fn dot<A>(&self, other: &A) -> F
+          where A: std::ops::Deref<Target = [F; D]>,
+    {
+        vector::dot(self.deref(), other.deref())
+    }
+
+    /// Return the dot product of two vectors
+    fn reduce_sum(&self) -> F {
+        let mut r = F::zero();
+        for d in self.deref() {
+            r += *d
+        }
+        r
+    }
 
     //mp length_sq
     /// Return the square of the length of the vector
@@ -274,7 +304,6 @@ pub trait Vector<F: Float, const D: usize>:
         }
         self
     }
-    // clamp
 
     //cp rotate_around
     /// Rotate a vector within a plane around a
@@ -295,6 +324,24 @@ pub trait Vector<F: Float, const D: usize>:
         self[c0] = x1 + pivot[c0];
         self[c1] = y1 + pivot[c1];
         self
+    }
+
+    //cp cross_product - where D = 3
+    /// Cross product of two 3-element vectors
+    #[must_use]
+    fn cross_product<A>(&self, other: A) -> Self
+    where Self: AsRef<[F; 3]>, // This actually just enforces D=3
+          A: Into<[F; 3]>,
+          Self: From<[F; 3]> {
+        vector::cross_product3(self.as_ref(), &other.into()).into()
+    }
+
+    /// Get a point on a sphere uniformly distributed for a point
+    /// where x in [0,1) and y in [0,1)
+    #[must_use]
+    fn uniform_dist_sphere3(x: [F; 2], map: bool) -> Self
+    where Self: From<[F; 3]> {
+        (vector::uniform_dist_sphere3(x, map)).into()
     }
 }
 
@@ -381,19 +428,12 @@ pub trait SqMatrix<V: Vector<F, D>, F: Float, const D: usize, const D2: usize>:
 //tt Vector3
 /// The [Vector3] trait describes a 3-dimensional vector of [Float]
 ///
-pub trait Vector3<F: Float>: Vector<F, 3> {
-    /// Cross product of two 3-element vectors
-    #[must_use]
-    fn cross_product(&self, other: &Self) -> Self {
-        vector::cross_product3(self.as_ref(), other.as_ref()).into()
-    }
-
-    /// Get a point on a sphere uniformly distributed for a point
-    /// where x in [0,1) and y in [0,1)
-    #[must_use]
-    fn uniform_dist_sphere3(x: [F; 2], map: bool) -> Self {
-        (vector::uniform_dist_sphere3(x, map)).into()
-    }
+pub trait Vector3<F: Float>: Vector<F, 3> {}
+impl<F, V> Vector3<F> for V
+where
+    F: Float,
+    V: Vector<F, 3>,
+{
 }
 
 //tt SqMatrix3
