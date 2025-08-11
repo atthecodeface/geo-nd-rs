@@ -50,16 +50,6 @@ macro_rules! binary_not_f_op {
             }
     }
         */
-        impl <F:Float, const D:usize> std::ops::$trait_assign_op<Self> for $t<F, D> {
-            fn $assign_op(&mut self, other: Self) {
-                for i in 0..D {self.data[i] $assign_binop other.data[i];}
-            }
-        }
-        impl <F:Float, const D:usize> std::ops::$trait_assign_op<F> for $t<F, D> {
-            fn $assign_op(&mut self, other: F) {
-                for i in 0..D {self.data[i] $assign_binop other;}
-            }
-        }
     }
 }
 
@@ -112,23 +102,6 @@ pub struct FArray<F: Float, const D: usize> {
     data: [F; D],
 }
 
-//ip Serialize for FArray
-impl<F: Float + serde::Serialize, const D: usize> Serialize for FArray<F, D> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeTuple;
-        let mut seq = serializer.serialize_tuple(D)?;
-        for e in self.data.iter() {
-            seq.serialize_element(e)?;
-        }
-        seq.end()
-    }
-}
-
-binary_not_f_op! { FArray, Add, add, +, AddAssign, add_assign, += }
-binary_not_f_op! { FArray, Sub, sub, -, SubAssign, sub_assign, -= }
 binary_with_f_op! { FArray, Mul, mul, *, MulAssign, mul_assign, *= }
 binary_with_f_op! { FArray, Div, div, /, DivAssign, div_assign, /= }
 
@@ -165,7 +138,7 @@ impl Vector3<f64> for FArray<f64, 3> {}
 
 //a All stuff 2
 //mi farray_traits!
-macro_rules! farray_traits {
+macro_rules! farray_ref_traits {
     { $f:ty,  $e:expr, $ty:ty } => {
 
 impl Vector<$f, $e> for $ty {
@@ -228,7 +201,11 @@ impl Vector<$f, $e> for $ty {
                 &mut self.data[index]
             }
         }
+    }
+}
 
+macro_rules! farray_convert_traits {
+    { $f:ty,  $e:expr, $ty:ty } => {
 
         impl std::convert::From<[$f; $e]> for $ty {
             fn from(data:[$f; $e]) -> $ty {
@@ -264,135 +241,75 @@ impl Vector<$f, $e> for $ty {
             }
         }
 
-
-
-        // If we implement Deref< Target = []>, AsRef<[]>, Add<&[],
-        //
-        // then AsRef<[]> conflicts with Add<&[]
-        //
-        // If we implement
-        //         impl<A: std::ops::Deref<Target = [$f; $e]>> std::ops::Add<A> for $ty {
-        // conflicts with
-        //         impl std::ops::Add<&[$f; $e]> for $ty {
-        //
-        // If we implement
-        //         impl<A: std::ops::Deref<Target = [$f; $e]>> std::ops::Add<A> for $ty {
-        // conflicts with
-        //         impl std::ops::Add<[$f; $e]> for $ty {
-        //
-        //
-        // If we implement
-        //         impl<A: std::ops::Deref<Target = [$f; $e]>> std::ops::Add<A> for $ty {
-        // and
-        //         impl std::ops::Add<Deref<Target = [$f; $e]>> for $ty {
-        // and
-        //         impl std::ops::Add<[$f; $e]> for $ty {
-        // then it conflicts because upstream they *could* implement Deref<Target = [$f; $e]> for [$f; $e] (theoretically...)
-
-        /*
-        impl std::ops::Add for $ty {
-            type Output = Self;
-            fn add(self, other: Self) -> Self {
-                self + &other
-            }
-        }
-
-        impl std::ops::Sub for $ty {
-            type Output = Self;
-            fn sub(self, other: Self) -> Self {
-                self - &other
-            }
-        }
-
-         */
-        impl<A: std::ops::Deref<Target = [$f; $e]>> std::ops::Add<A> for $ty {
-            type Output = Self;
-            fn add(self, other: A) -> Self {
-                let mut data = [0.0; $e];
-                for i in 0..$e {
-                    data[i] = self.data[i] + other[i];
-                }
-                Self { data }
-            }
-        }
-
-        impl<A: std::ops::Deref<Target = [$f; $e]>> std::ops::Sub<A> for $ty {
-            type Output = Self;
-            fn sub(self, other: A) -> Self {
-                let mut data = [0.0; $e];
-                for i in 0..$e {
-                    data[i] = self.data[i] - other[i];
-                }
-                Self { data }
-            }
-        }
-        /*
-        impl<A: std::convert::AsRef<[$f; $e]>> std::ops::Add<A> for $ty {
-            type Output = Self;
-            fn add(self, other: A) -> Self {
-                let mut data = [0.0; $e];
-                let other = other.as_ref();
-                for i in 0..$e {
-                    data[i] = self.data[i] + other[i];
-                }
-                Self { data }
-            }
-        }
-
-        impl<A: std::convert::AsRef<[$f; $e]>> std::ops::Sub<A> for $ty {
-            type Output = Self;
-            fn sub(self, other: A) -> Self {
-                let mut data = [0.0; $e];
-                let other = other.as_ref();
-                for i in 0..$e {
-                    data[i] = self.data[i] - other[i];
-                }
-                Self { data }
-            }
-        }
-         */
-
-        /*
-        impl std::ops::Add<[$f; $e]> for $ty {
-            type Output = Self;
-            fn add(self, other: [$f; $e]) -> Self {
-                let mut data = [F::zero(); $e];
-                let other = other.as_ref();
-                for i in 0..$e {
-                    data[i] = self.data[i] + other[i];
-                }
-                Self { data }
-            }
-        }
-
-        impl std::ops::Sub<[$f; $e]> for $ty {
-            type Output = Self;
-            fn sub(self, other: [$f; $e]) -> Self {
-                let mut data = [F::zero(); $e];
-                let other = other.as_ref();
-                for i in 0..$e {
-                    data[i] = self.data[i] - other[i];
-                }
-                Self { data }
-            }
     }
-        */
+}
 
+macro_rules! farray_add_sub_traits {
+    { $f:ty, $e:expr, $ty:ty,
+      $trait_op:ident, $fn_op:ident, $op:tt,
+      $trait_assign_op:ident, $fn_assign_op:ident, $op_assign:tt  } => {
+
+        impl <'a> std::ops::$trait_op<&'a $ty> for $ty {
+            type Output = Self;
+            fn $fn_op(self, other: &'a $ty) -> Self {
+                let mut data = [0.0; $e];
+                for i in 0..$e {
+                    data[i] = self.data[i] $op other[i];
+                }
+                Self { data }
+            }
+        }
+        impl<D: std::ops::Deref<Target = [$f; $e]>> std::ops::$trait_op<D> for $ty {
+            type Output = Self;
+            fn $fn_op(self, other: D) -> Self {
+                let mut data = [0.0; $e];
+                for i in 0..$e {
+                    data[i] = self.data[i] $op other[i];
+                }
+                Self { data }
+            }
+        }
+        impl <'a> std::ops::$trait_assign_op<&'a $ty> for $ty {
+            fn $fn_assign_op(&mut self, other: &'a $ty)  {
+                for i in 0..$e {
+                    self.data[i] $op_assign other[i];
+                }
+            }
+        }
+        impl<D: std::ops::Deref<Target = [$f; $e]>> std::ops::$trait_assign_op<D> for $ty {
+            fn $fn_assign_op(&mut self, other: D) {
+                for i in 0..$e {
+                    self.data[i] $op_assign other[i];
+                }
+            }
+        }
+    }
+}
+
+macro_rules! farray_traits {
+    { $f:ty,  $e:expr, $ty:ty } => {
+
+        farray_ref_traits!{$f, $e, $ty}
+        farray_convert_traits!{$f, $e, $ty}
+        farray_add_sub_traits!{$f, $e, $ty, Add, add, +, AddAssign, add_assign, +=}
+        farray_add_sub_traits!{$f, $e, $ty, Sub, sub, -, SubAssign, sub_assign, -=}
+
+        impl Serialize for $ty {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                self.data.serialize(serializer)
+            }
+        }
 
         impl<'de> Deserialize<'de> for $ty {
             fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
             where
                 DE: serde::Deserializer<'de>,
             {
-                let array = Vec::<$f>::deserialize(deserializer)?;
-                if array.len() != $e {
-                    return Err(serde::de::Error::invalid_length(array.len(), &"<D> floats"));
-                }
-                let mut data = Self::default();
-                for (i, d) in array.into_iter().enumerate() {
-                    data[i] = d;
-                }
-                Ok(data)
+                let array = <[$f; $e]>::deserialize(deserializer)?;
+                Ok(array.into())
             }
         }
     }

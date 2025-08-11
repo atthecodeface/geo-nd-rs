@@ -119,10 +119,10 @@ where
         d -= v;
         d /= 5.;
         assert_eq!(d[n], vn);
-        d += 2.;
-        assert_eq!(d[n], vn + 2.);
-        d -= 3.;
-        assert_eq!(d[n], vn - 1.);
+        //        d += 2.;
+        //        assert_eq!(d[n], vn + 2.);
+        //        d -= 3.;
+        //        assert_eq!(d[n], vn - 1.);
     }
 
     fn test_vec4() {

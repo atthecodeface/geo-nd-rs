@@ -157,8 +157,20 @@ impl Float for f64 {
 ///
 ///   TryFrom<&[F]>
 ///
+///   Serialize, Deserialize
+///
 /// Not PartialOrd, as vectors dont't have an ordering
 ///
+/// Addition/Subtraction
+///
+/// Add/Sub with Rhs of Self, &Self, Deref<Target = &[F;D]> are
+///    *required* for utility; we cannot *required* the last of these, as
+///    Rust has no syntax for that.
+///
+/// Not AsRef/Mut of [F], as [F; D] implement that, and Vector gets it through Deref
+//    + std::convert::AsRef<[F]> // Note AsRef<[F]> is implemented through Deref to [F; D]
+//    + std::convert::AsMut<[F]> // Note AsMut<[F]> is implemented through DerefMut to [F; D]
+// + std::ops::Add<[F;D], Output = Self> // if required, then it blocks Add<Deref<Target = [F;D]>>
 pub trait Vector<F: Float, const D: usize>:
     Clone
     + Copy
@@ -166,28 +178,32 @@ pub trait Vector<F: Float, const D: usize>:
     + std::fmt::Display
     + std::default::Default
     + PartialEq<Self>
-    + std::convert::AsRef<[F; D]>
-    + std::convert::AsMut<[F; D]>
-//    + std::convert::AsRef<[F]>
-//    + std::convert::AsMut<[F]>
+    + std::convert::AsRef<[F; D]> // Note, [F;D] implements AsRef only for [F] which is an issue
+    + std::convert::AsMut<[F; D]> // Note, [F;D] implements AsRef only for [F] which is an issue
     + std::ops::Deref<Target = [F;D]>
     + std::ops::DerefMut
     + std::ops::Index<usize, Output = F>
     + std::ops::IndexMut<usize>
+
     + std::convert::From<[F;D]>
     + for< 'a> std::convert::From<&'a [F;D]>
     + for< 'a> std::convert::TryFrom<&'a [F]>
     + std::convert::Into<[F;D]>
+
     + std::ops::Neg<Output = Self>
+
     + std::ops::Add<Self, Output = Self>
-    + for<'a> std::ops::Add<&'a [F;D], Output = Self>
-    // + std::ops::Add<[F;D], Output = Self>
-    // + std::ops::Add<F, Output = Self>
+    + for <'a> std::ops::Add<&'a [F;D], Output = Self>
+    + for <'a> std::ops::Add<&'a Self, Output = Self>
     + std::ops::AddAssign<Self>
-    + std::ops::AddAssign<F>
+    + for <'a> std::ops::AddAssign<&'a [F;D]>
+
     + std::ops::Sub<Self, Output = Self>
+    + for <'a> std::ops::Sub<&'a [F;D], Output = Self>
+    + for <'a> std::ops::Sub<&'a Self, Output = Self>
     + std::ops::SubAssign<Self>
-    + std::ops::SubAssign<F>
+    + for <'a> std::ops::SubAssign<&'a [F;D]>
+
     + std::ops::Mul<Self, Output = Self>
     + std::ops::Mul<F, Output = Self>
     + std::ops::MulAssign<Self>
