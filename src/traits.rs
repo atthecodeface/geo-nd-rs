@@ -137,7 +137,7 @@ impl Float for f64 {
 ///
 ///   PartialEq of [U;N], [U] (where T PartialEq of U)
 ///
-///   TryFrom of &[T], Vec<T, A>, Box<[T]> with mut where appropriate
+///   TryFrom of &[T], Vec<T, A>, Box<[T]> with mut where appropriate; some times for &[F; D] too
 ///
 ///   AsRef[T], Borrow[T] (and mut for those three)
 ///
@@ -160,6 +160,7 @@ pub trait Vector<F: Float, const D: usize>:
     + std::convert::AsRef<[F]>
     + std::convert::AsMut<[F]>
     + std::ops::Deref<Target = [F;D]>
+    + std::ops::DerefMut
     + std::ops::Index<usize, Output = F>
     + std::ops::IndexMut<usize>
     + std::convert::From<[F;D]>
@@ -168,13 +169,12 @@ pub trait Vector<F: Float, const D: usize>:
     + std::convert::Into<[F;D]>
     + std::ops::Neg<Output = Self>
     + std::ops::Add<Self, Output = Self>
-    // + std::ops::Add<[F;D], Output = Self>
     + for<'a> std::ops::Add<&'a [F;D], Output = Self>
-    //    + std::ops::Add<F, Output = Self>
+    // + std::ops::Add<[F;D], Output = Self>
+    // + std::ops::Add<F, Output = Self>
     + std::ops::AddAssign<Self>
     + std::ops::AddAssign<F>
     + std::ops::Sub<Self, Output = Self>
-//    + std::ops::Sub<F, Output = Self>
     + std::ops::SubAssign<Self>
     + std::ops::SubAssign<F>
     + std::ops::Mul<Self, Output = Self>

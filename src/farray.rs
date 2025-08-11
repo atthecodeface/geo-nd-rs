@@ -216,6 +216,18 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
     }
 }
 
+        impl std::ops::Deref for FArray<$ty, $e> {
+            type Target = [$ty; $e];
+            fn deref(&self) -> &[$ty; $e] {
+                &self.data
+            }
+        }
+        impl std::ops::DerefMut for FArray<$ty, $e> {
+            fn deref_mut(&mut self) -> &mut [$ty; $e] {
+                &mut self.data
+            }
+        }
+
         impl std::convert::From<[$ty; $e]> for FArray<$ty, $e> {
             fn from(data:[$ty; $e]) -> FArray<$ty, $e> {
                 Self { data }
@@ -250,12 +262,6 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
             }
         }
 
-        impl std::ops::Deref for FArray<$ty, $e> {
-            type Target = [$ty; $e];
-            fn deref(&self) -> &[$ty; $e] {
-                &self.data
-            }
-        }
 
 
         // If we implement Deref< Target = []>, AsRef<[]>, Add<&[],
