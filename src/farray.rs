@@ -226,6 +226,14 @@ impl Vector<$ty, $e> for FArray<$ty, $e> {
                 Self { data:*data }
             }
         }
+        impl <'a> std::convert::TryFrom<&'a [$ty]> for FArray<$ty, $e> {
+            type Error = std::array::TryFromSliceError;
+            fn try_from(data:&'a [$ty]) -> Result<FArray<$ty, $e>, Self::Error> {
+                let data :[$ty; $e] = <[$ty; $e]>::try_from(data)?;
+                Ok(data.into())
+            }
+        }
+
         impl std::convert::From<FArray<$ty, $e>> for [$ty; $e]  {
             fn from(s: FArray<$ty, $e>) -> [$ty; $e]  {
                 s.data

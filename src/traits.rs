@@ -137,7 +137,7 @@ impl Float for f64 {
 ///
 ///   PartialEq of [U;N], [U] (where T PartialEq of U)
 ///
-///   TryFrom of [T], Vec<T, A>, Box<[T]> with mut where appropriate
+///   TryFrom of &[T], Vec<T, A>, Box<[T]> with mut where appropriate
 ///
 ///   AsRef[T], Borrow[T] (and mut for those three)
 ///
@@ -159,11 +159,12 @@ pub trait Vector<F: Float, const D: usize>:
     + std::convert::AsMut<[F; D]>
     + std::convert::AsRef<[F]>
     + std::convert::AsMut<[F]>
+    + std::ops::Deref<Target = [F;D]>
     + std::ops::Index<usize, Output = F>
     + std::ops::IndexMut<usize>
-    + std::ops::Deref<Target = [F;D]>
     + std::convert::From<[F;D]>
     + for< 'a> std::convert::From<&'a [F;D]>
+    + for< 'a> std::convert::TryFrom<&'a [F]>
     + std::convert::Into<[F;D]>
     + std::ops::Neg<Output = Self>
     + std::ops::Add<Self, Output = Self>
