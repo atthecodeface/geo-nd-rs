@@ -141,30 +141,6 @@ impl Vector3<f64> for FArray<f64, 3> {}
 macro_rules! farray_ref_traits {
     { $f:ty,  $e:expr, $ty:ty } => {
 
-impl Vector<$f, $e> for $ty {
-    fn is_zero(&self) -> bool {
-        vector::is_zero(&self.data)
-    }
-    fn set_zero(&mut self) {
-        vector::set_zero(&mut self.data)
-    }
-    fn mix(self, other: &Self, t: $f) -> Self {
-        Self {
-            data: vector::mix(&self.data, &other.data, t),
-        }
-    }
-    fn reduce_sum(&self) -> $f {
-        let mut r = <$f>::default();
-        for d in self.data {
-            r += d
-        }
-        r
-    }
-    fn dot(&self, other: &Self) -> $f {
-        vector::dot(&self.data, &other.data)
-    }
-}
-
         impl std::ops::Deref for $ty {
             type Target = [$f; $e];
             fn deref(&self) -> &[$f; $e] {
@@ -250,25 +226,39 @@ macro_rules! farray_add_sub_traits {
       $trait_assign_op:ident, $fn_assign_op:ident, $op_assign:tt  } => {
 
         impl <'a> std::ops::$trait_op<&'a $ty> for $ty {
-            type Output = Self;
-            fn $fn_op(self, other: &'a $ty) -> Self {
-                let mut data = [0.0; $e];
+            type Output = $ty;
+            fn $fn_op(mut self, other: &'a $ty) -> $ty {
                 for i in 0..$e {
-                    data[i] = self.data[i] $op other[i];
+                    self.data[i] $op_assign other[i];
                 }
-                Self { data }
+                self
             }
         }
+
         impl<D: std::ops::Deref<Target = [$f; $e]>> std::ops::$trait_op<D> for $ty {
-            type Output = Self;
-            fn $fn_op(self, other: D) -> Self {
-                let mut data = [0.0; $e];
+            type Output = $ty;
+            fn $fn_op(mut self, other: D) -> $ty {
                 for i in 0..$e {
-                    data[i] = self.data[i] $op other[i];
+                    self.data[i] $op_assign other[i];
                 }
-                Self { data }
+                self
             }
         }
+
+        impl <'a> std::ops::$trait_op<&'a $ty> for &'a $ty {
+            type Output = $ty;
+            fn $fn_op(self, other: &'a $ty) -> $ty {
+                *self + other
+            }
+        }
+
+        impl<'a, D: std::ops::Deref<Target = [$f; $e]>> std::ops::$trait_op<D> for &'a $ty {
+            type Output = $ty;
+            fn $fn_op(self, other: D) -> $ty {
+                *self + other
+            }
+        }
+
         impl <'a> std::ops::$trait_assign_op<&'a $ty> for $ty {
             fn $fn_assign_op(&mut self, other: &'a $ty)  {
                 for i in 0..$e {
@@ -276,6 +266,7 @@ macro_rules! farray_add_sub_traits {
                 }
             }
         }
+
         impl<D: std::ops::Deref<Target = [$f; $e]>> std::ops::$trait_assign_op<D> for $ty {
             fn $fn_assign_op(&mut self, other: D) {
                 for i in 0..$e {
@@ -312,6 +303,28 @@ macro_rules! farray_traits {
                 Ok(array.into())
             }
         }
+
+        impl Vector<$f, $e> for $ty {
+            fn is_zero(&self) -> bool {
+                !self.data.iter().any(|f| *f!=0.0)
+            }
+            fn mix(self, other: &Self, t: $f) -> Self {
+                Self {
+                    data: vector::mix(&self.data, &other.data, t),
+                }
+            }
+            fn reduce_sum(&self) -> $f {
+                let mut r = <$f>::default();
+                for d in self.data {
+                    r += d
+                }
+                r
+            }
+            fn dot(&self, other: &Self) -> $f {
+                vector::dot(&self.data, &other.data)
+            }
+        }
+
     }
 }
 

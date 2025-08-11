@@ -323,7 +323,7 @@ where
     }
     #[inline]
     fn set_zero(&mut self) {
-        self.data.set_zero();
+        self.data = std::default::Default::default();
     }
     #[inline]
     fn mix(self, other: &Self, t: F) -> Self {

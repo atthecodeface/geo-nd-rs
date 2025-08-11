@@ -193,6 +193,7 @@ pub trait Vector<F: Float, const D: usize>:
     + std::ops::Neg<Output = Self>
 
     + std::ops::Add<Self, Output = Self>
+
     + for <'a> std::ops::Add<&'a [F;D], Output = Self>
     + for <'a> std::ops::Add<&'a Self, Output = Self>
     + std::ops::AddAssign<Self>
@@ -212,14 +213,12 @@ pub trait Vector<F: Float, const D: usize>:
     + std::ops::Div<F, Output = Self>
     + std::ops::DivAssign<Self>
     + std::ops::DivAssign<F>
+
+    // + where for <'a>  &'a Self : std::ops::Add<&'a Self, Output = Self>
 {
     //mp is_zero
     /// Return true if the vector is all zeros
     fn is_zero(&self) -> bool;
-
-    //mp set_zero
-    /// Set the vector to be all zeros
-    fn set_zero(&mut self);
 
     //mp reduce_sum
     /// Sum all of the components of the vector
@@ -269,7 +268,7 @@ pub trait Vector<F: Float, const D: usize>:
     fn normalize(mut self) -> Self {
         let l = self.length();
         if l < F::epsilon() {
-            self.set_zero()
+            self = Self::default()
         } else {
             self /= l
         }
