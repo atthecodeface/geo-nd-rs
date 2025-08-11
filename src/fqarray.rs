@@ -1,5 +1,5 @@
 //a Imports
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::{FArray, FArray2};
 use crate::{Float, QArray, Quaternion, SqMatrix, Transform, Vector};

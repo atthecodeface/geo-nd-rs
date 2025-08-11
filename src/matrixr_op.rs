@@ -192,11 +192,11 @@ pub fn fmt<V: Num, const C: usize>(f: &mut std::fmt::Formatter, v: &[V]) -> std:
     let mut c = 0;
     for (i, value) in v.iter().enumerate() {
         if i == 0 {
-            write!(f, "[{}", value)?;
+            write!(f, "[{value}")?;
         } else if c == 0 {
-            write!(f, " {}", value)?;
+            write!(f, " {value}")?;
         } else {
-            write!(f, ",{}", value)?;
+            write!(f, ",{value}")?;
         }
         c += 1;
         if c == C {

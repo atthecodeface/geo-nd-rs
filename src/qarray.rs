@@ -5,62 +5,7 @@ use num_traits::{One, Zero};
 use serde::{Deserialize, Serialize};
 
 use super::{quat, vector};
-use super::{Float, Quaternion, SqMatrix, Vector, Vector3, Vector4};
-
-//a Macros
-//mi binary_op!
-macro_rules! binary_op {
-    { op_self, $trait_op:ident, $op:ident, $binop:tt, $trait_assign_op:ident, $assign_op:ident, $assign_binop:tt } => {
-        impl <F, V4> std::ops::$trait_op<Self> for QArray<F, V4>
-        where
-            F:Float,
-            V4:Vector<F,4>,    {
-            type Output = Self;
-            fn $op(self, other: Self) -> Self {
-                let mut data = [F::zero();4];
-                for i in 0..4 {
-                    data[i] = self.data[i] $binop other.data[i];
-                }
-                Self::from_array(data)
-            }
-        }
-        impl <F, V4> std::ops::$trait_assign_op<Self> for QArray<F, V4>
-        where
-            F:Float,
-            V4:Vector<F,4>,    {
-            fn $assign_op(&mut self, other: Self) {
-                for i in 0..4 {self.data[i] $assign_binop other.data[i];}
-            }
-        }
-    };
-    { op_f, $trait_op:ident, $op:ident, $binop:tt, $trait_assign_op:ident, $assign_op:ident, $assign_binop:tt } => {
-        impl <F, V4> std::ops::$trait_op<F> for QArray<F, V4>
-        where
-            F:Float,
-            V4:Vector<F,4>,    {
-            type Output = Self;
-            fn $op(self, other: F) -> Self {
-                let mut data = [F::zero();4];
-                for i in 0..4 {
-                    data[i] = self.data[i] $binop other;
-                }
-                Self::from_array(data)
-            }
-        }
-        impl <F, V4> std::ops::$trait_assign_op<F> for QArray<F, V4>
-        where
-            F:Float,
-            V4:Vector<F,4>,    {
-            fn $assign_op(&mut self, other: F) {
-                for i in 0..4 {self.data[i] $assign_binop other;}
-            }
-        }
-    };
-    { $trait_op:ident, $op:ident, $binop:tt, $trait_assign_op:ident, $assign_op:ident, $assign_binop:tt } => {
-        binary_op! { op_self, $trait_op, $op, $binop, $trait_assign_op, $assign_op, $assign_binop }
-        binary_op! { op_f,    $trait_op, $op, $binop, $trait_assign_op, $assign_op, $assign_binop }
-    };
-}
+use super::{Float, Quaternion, SqMatrix, Vector3, Vector4};
 
 //a QArray
 //tp QArray
@@ -256,7 +201,7 @@ macro_rules! qarray_add_sub_traits {
         impl <'a> std::ops::$trait_op<&'a $ty> for &'a $ty {
             type Output = $ty;
             fn $fn_op(self, other: &'a $ty) -> $ty {
-                *self + other
+                *self $op other
             }
         }
 
@@ -264,7 +209,7 @@ macro_rules! qarray_add_sub_traits {
         impl<'a, D: std::ops::Deref<Target = [$f; 4]>> std::ops::$trait_op<D> for &'a $ty {
             type Output = $ty;
             fn $fn_op(self, other: D) -> $ty {
-                *self + other
+                *self $op other
             }
         }
 
@@ -308,7 +253,7 @@ macro_rules! qarray_mul_div_traits {
         // Mul of  Self for Self
         impl std::ops::Mul for $ty {
             type Output = $ty;
-            fn mul(mut self, other: $ty) -> $ty {
+            fn mul(self, other: $ty) -> $ty {
                 quat::multiply(self.deref(), other.deref()).into()
             }
         }

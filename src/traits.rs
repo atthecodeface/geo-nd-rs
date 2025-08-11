@@ -666,7 +666,6 @@ pub trait Quaternion<F: Float> :
     //mp mix
     /// Create a linear combination of this [Quaternion] and another using parameter `t` from zero to one
     #[must_use]
-    #[must_use]
     fn mix<A>(self, other: A, t: F) -> Self
           where A: std::ops::Deref<Target = [F; 4]>,
     {

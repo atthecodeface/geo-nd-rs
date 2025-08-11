@@ -1,3 +1,7 @@
+# Release 0.6.0 (2025-08-15)
+
+- Completely rejig the traits to make them more useful
+
 # Release 0.5.2 (2024-08-04)
 
 - Fix scaling of matrix by F

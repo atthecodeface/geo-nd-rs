@@ -22,14 +22,14 @@ use crate::vector_op as vector;
 use crate::{Float, Num};
 
 //a Notes on matrices of quaternions
-/// 1 - 2*j2 - 2*k2           2*i*j - 2*k*r        2*i*k + 2*j*r
-///     2*i*j + 2*k*r     1 - 2*i2 - 2*k2          2*j*k - 2*i*r
-///     2*i*k - 2*j*r         2*j*k + 2*i*r    1 - 2*i2 - 2*j2
-///
-/// m[0] + m[4] + m[9] = 3 - 4(i^2+j^2+k^2) = 3 - 4(1-r^2) = 4r^2 - 1
-/// m[7] - m[5] = 4*i*r ( if <0 then i<0 )
-/// m[2] - m[6] = 4*j*r ( if <0 then j<0 )
-/// m[3] - m[1] = 4*k*r ( if <0 then k<0 )
+// 1 - 2*j2 - 2*k2           2*i*j - 2*k*r        2*i*k + 2*j*r
+//     2*i*j + 2*k*r     1 - 2*i2 - 2*k2          2*j*k - 2*i*r
+//     2*i*k - 2*j*r         2*j*k + 2*i*r    1 - 2*i2 - 2*j2
+//
+// m[0] + m[4] + m[9] = 3 - 4(i^2+j^2+k^2) = 3 - 4(1-r^2) = 4r^2 - 1
+// m[7] - m[5] = 4*i*r ( if <0 then i<0 )
+// m[2] - m[6] = 4*j*r ( if <0 then j<0 )
+// m[3] - m[1] = 4*k*r ( if <0 then k<0 )
 
 //a Constructors and destructors
 //fp new

@@ -2,7 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::vector;
-use super::{Float, Vector, Vector3};
+use super::{Float, Vector};
 
 //a Macros
 //a FArray
@@ -195,7 +195,7 @@ macro_rules! farray_add_sub_traits {
         impl <'a> std::ops::$trait_op<&'a $ty> for &'a $ty {
             type Output = $ty;
             fn $fn_op(self, other: &'a $ty) -> $ty {
-                *self + other
+                *self $op other
             }
         }
 
@@ -203,7 +203,7 @@ macro_rules! farray_add_sub_traits {
         impl<'a, D: std::ops::Deref<Target = [$f; $e]>> std::ops::$trait_op<D> for &'a $ty {
             type Output = $ty;
             fn $fn_op(self, other: D) -> $ty {
-                *self + other
+                *self $op other
             }
         }
 
