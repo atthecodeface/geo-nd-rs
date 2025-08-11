@@ -108,14 +108,14 @@ where
             Self::default()
         } else {
             let scale = F::one() / scale;
-            let trans: FArray<F, 3> = [
+            let trans = [
                 self.trans_scale[0],
                 self.trans_scale[1],
                 self.trans_scale[2],
-            ]
-            .into();
+            ];
             let iquat = self.quat.conjugate();
-            let trans = -(iquat.apply3(trans)) * scale;
+            let trans: FArray<F, 3> = iquat.apply3(&trans).into();
+            let trans = trans * -scale;
             Self::of_trs(trans, iquat, scale)
         }
     }

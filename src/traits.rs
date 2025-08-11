@@ -572,8 +572,8 @@ pub trait Quaternion<F: Float> :
     //cp of_axis_angle
     /// Create a unit quaternion for a rotation of an angle about an axis
     #[must_use]
-    fn of_axis_angle<D: std::ops::Deref<Target = [F; 3]>>(axis:D, angle:F) -> Self {
-        quat::of_axis_angle(axis.deref(), angle).into()
+    fn of_axis_angle(axis:&[F; 3], angle:F) -> Self {
+        quat::of_axis_angle(axis, angle).into()
     }
 
     //cp rotate_x
@@ -609,8 +609,8 @@ pub trait Quaternion<F: Float> :
     //cp look_at
     /// Create a quaternion that maps a unit V3 of dirn to (0,0,-1) and a unit V3 of up (if perpendicular to dirn) to (0,1,0)
     #[must_use]
-    fn look_at<V3:Vector3<F>>(dirn:&V3, up:&V3) -> Self {
-        quat::look_at(dirn.deref(), up.deref()).into()
+    fn look_at(dirn:&[F; 3], up:&[F; 3]) -> Self {
+        quat::look_at(dirn, up).into()
     }
 
     //cp rotation_of_vec_to_vec
@@ -618,8 +618,8 @@ pub trait Quaternion<F: Float> :
     ///
     /// The vectors must be unit vectors
     #[must_use]
-    fn rotation_of_vec_to_vec<V3:Vector3<F>>(a: &V3, b: &V3) -> Self {
-        quat::rotation_of_vec_to_vec(a.deref(), b.deref()).into()
+    fn rotation_of_vec_to_vec(a: &[F; 3], b: &[F; 3]) -> Self {
+        quat::rotation_of_vec_to_vec(a, b).into()
     }
 
     //cp weighted_average_pair
@@ -717,17 +717,15 @@ pub trait Quaternion<F: Float> :
     //fp apply3
     /// Apply the quaternion to a V3
     #[must_use]
-    fn apply3<V3: std::ops::Deref<Target = [F; 3]> + From<[F; 3]>>(self, other: V3) -> V3 {
-        let data = quat::apply3(self.deref(), other.deref());
-        data.into()
+    fn apply3(self, other: &[F; 3]) -> [F; 3] {
+        quat::apply3(self.deref(), other)
     }
 
     //fp apply4
     /// Apply the quaternion to a V4
     #[must_use]
-    fn apply4<V4: std::ops::Deref<Target = [F; 4]> + From<[F; 4]>>(self, other: V4) -> V4 {
-        let data = quat::apply4(self.deref(), other.deref());
-        data.into()
+    fn apply4(self, other: &[F; 4]) -> [F; 4] {
+        quat::apply4(self.deref(), other)
     }
 
     //zz All done
