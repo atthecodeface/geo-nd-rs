@@ -5,7 +5,7 @@ use num_traits::{ConstOne, ConstZero};
 use serde::{Deserialize, Serialize};
 
 use super::{quat, vector};
-use super::{Float, Quaternion, SqMatrix3, SqMatrix4};
+use super::{Float, Quaternion, SqMatrix3, SqMatrix4, Vector};
 
 //a QArray
 //tp QArray
@@ -59,14 +59,6 @@ macro_rules! qarray_mul_div_traits {
             }
         }
 
-        // Mul of &[F; 4] for Self
-        impl <'a> std::ops::Mul<&'a [$f; 4]> for $ty {
-            type Output = $ty;
-            fn mul(self, other: &'a [$f; 4]) -> $ty {
-                quat::multiply(self.deref(), other).into()
-            }
-        }
-
         // Mul of &Self for Self
         impl <'a> std::ops::Mul<&'a $ty> for $ty {
             type Output = $ty;
@@ -83,14 +75,13 @@ macro_rules! qarray_mul_div_traits {
             }
         }
 
-        // Mul of &[F; D] for &Self (Covers &Self + Self)
-        impl<'a> std::ops::Mul<&'a [$f; 4]> for &'a $ty {
+        // Mul of &Self for &Self
+        impl<'a> std::ops::Mul<$ty> for &'a $ty {
             type Output = $ty;
-            fn mul(self, other: &'a[$f; 4]) -> $ty {
+            fn mul(self, other: $ty) -> $ty {
                 *self * other
             }
         }
-
 
         impl <'a> std::ops::MulAssign<&'a $ty> for $ty {
             fn mul_assign(&mut self, other: &'a $ty)  {
@@ -98,19 +89,29 @@ macro_rules! qarray_mul_div_traits {
             }
         }
 
-        // MulAssign of &[F; 4] for Self
-        impl <'a> std::ops::MulAssign<&'a [$f; 4]> for $ty {
-            fn mul_assign(&mut self, other: &'a [$f; 4]) {
+        impl std::ops::MulAssign for $ty {
+            fn mul_assign(&mut self, other: Self) {
                 *self = self.deref() * other;
             }
         }
 
-        impl std::ops::MulAssign for $ty {
-            fn mul_assign(&mut self, other: Self) {
-                *self = self.deref() * other.deref();
+        // Mul of &V for &Self
+        impl<'a, V:Vector<$f, 3>> std::ops::Mul<&'a V> for &'a $ty
+         {
+            type Output = V;
+            fn mul(self, other: &'a V) -> V {
+                quat::apply3(&self.data, other.as_ref()).into()
             }
         }
 
+        // Mul of &V for Self
+        impl<'a, V:Vector<$f, 3>> std::ops::Mul<&'a V> for $ty
+         {
+            type Output = V;
+            fn mul(self, other: &'a V) -> V {
+                quat::apply3(&self.data, other.as_ref()).into()
+            }
+        }
 
 
         // Div of  Self for Self

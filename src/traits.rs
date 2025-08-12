@@ -65,7 +65,7 @@ pub trait Float: Num + num_traits::Float + num_traits::FloatConst + From<f32> {}
 
 impl<T> Float for T where T: Num + num_traits::Float + num_traits::FloatConst + From<f32> {}
 
-//a Array traits
+//a Array and Quat traits
 //tp ArrayBasic
 pub trait ArrayBasic:
     Clone + Copy + std::fmt::Debug + std::fmt::Display + std::default::Default + PartialEq<Self>
@@ -159,7 +159,25 @@ impl<T, F, const D: usize> ArrayAddSubNeg<F, D> for T where
 {
 }
 
-//tp ArrayMulDiv
+//tp ArrayScale
+pub trait ArrayScale<F>:
+    std::ops::Mul<F, Output = Self>
+    + std::ops::MulAssign<F>
+    + std::ops::Div<F, Output = Self>
+    + std::ops::DivAssign<F>
+{
+}
+
+//ip ArrayScale
+impl<T, F> ArrayScale<F> for T where
+    T: std::ops::Mul<F, Output = Self>
+        + std::ops::MulAssign<F>
+        + std::ops::Div<F, Output = Self>
+        + std::ops::DivAssign<F>
+{
+}
+
+//tp ArrayMulDiv - not used yet
 pub trait ArrayMulDiv<F, const D: usize>:
     Sized
     + std::ops::Mul<Self, Output = Self>
@@ -191,21 +209,31 @@ impl<T, F, const D: usize> ArrayMulDiv<F, D> for T where
 {
 }
 
-//tp ArrayScale
-pub trait ArrayScale<F>:
-    std::ops::Mul<F, Output = Self>
-    + std::ops::MulAssign<F>
-    + std::ops::Div<F, Output = Self>
-    + std::ops::DivAssign<F>
+//tp QuatMulDiv
+// Neat trick
+//
+// pub trait RefCanBeMultipliedBy<T> {}
+// impl<X, T> RefCanBeMultipliedBy<T> for X where for<'a> &'a X: std::ops::Mul<T, Output = X> {}
+pub trait QuatMulDiv<F, const D: usize>:
+    Sized
+    + std::ops::Mul<Self, Output = Self>
+    + for<'a> std::ops::Mul<&'a Self, Output = Self>
+    + std::ops::MulAssign<Self>
+    + std::ops::Div<Self, Output = Self>
+    + for<'a> std::ops::Div<&'a Self, Output = Self>
+    + std::ops::DivAssign<Self>
 {
 }
 
-//ip ArrayScale
-impl<T, F> ArrayScale<F> for T where
-    T: std::ops::Mul<F, Output = Self>
-        + std::ops::MulAssign<F>
-        + std::ops::Div<F, Output = Self>
-        + std::ops::DivAssign<F>
+//ip QuatMulDiv
+impl<T, F, const D: usize> QuatMulDiv<F, D> for T where
+    T: Sized
+        + std::ops::Mul<Self, Output = Self>
+        + for<'a> std::ops::Mul<&'a Self, Output = Self>
+        + std::ops::MulAssign<Self>
+        + std::ops::Div<Self, Output = Self>
+        + for<'a> std::ops::Div<&'a Self, Output = Self>
+        + std::ops::DivAssign<Self>
 {
 }
 
@@ -225,73 +253,6 @@ impl<T, F> ArrayScale<F> for T where
 /// The [Vector] can be indexed only by a `usize`; that is individual
 /// components of the vector can be accessed, but ranges may not.
 ///
-/// Trait discussion...
-///
-/// A [Vector] is effectively a wrapper around [F; D] that is as cheap
-/// as possible, that then supports the relevant vector addition,
-/// subtraction, etc operations
-///
-/// An array [f32/f64; D] supports:
-///
-///   Copy, Clone, Debug, Default, PartialEq, PartialOrd
-///
-///   Index<I> and mut
-///
-///   IntoIterator for T, &T, &mut T
-///
-///   PartialEq of [U;N], [U] (where T PartialEq of U)
-///
-///   TryFrom of &[T], Vec<T, A>, Box<[T]> with mut where appropriate; some times for &[F; D] too
-///
-///   AsRef[T], Borrow[T] (and mut for those three)
-///
-///   Serialize, Deserialize
-///
-/// Note: Hash is not supported as f32/f64 do not support it
-///
-/// Hence A [Vector] should provide:
-///
-///   Copy, Clone, Debug, Default, PartialEq
-///
-///   Deref<Target = [F; D]>, DerefMut
-///
-///   From for &[F], [F;D] &[F;D]
-///
-///   Into [F;D] (deref provides equivalent of &[F; D])
-///
-///   TryFrom<&[F]>
-///
-///   Serialize, Deserialize
-///
-/// Not PartialOrd, as vectors dont't have an ordering
-///
-/// Addition/Subtraction/Multiplication/Division
-///
-/// Add/Sub with Rhs of Self, &Self, Deref<Target = [F;D]> are
-///    *required* for utility; we cannot *require* the last of these, as
-///    Rust has no syntax for that.
-///
-/// Mul/Div with Rhs of F, &F are *required* for utility; previous
-///    versions supported Self to do item-by-item operations, which
-///    has been removed This is in part because it would need to work
-///    for Deref<Target = [F;D]>, but f32/f64 do not implement Deref,
-///    and they might in the future do so which breaks the F and &F
-///    operation.
-///
-/// Not AsRef/Mut of [F], as [F; D] implement that, and Vector gets it through Deref
-//
-//
-//    + std::convert::AsRef<[F]>
-//
-// Note AsRef<[F]> is implemented through Deref to [F; D]
-//
-//    + std::convert::AsMut<[F]>
-//
-// Note AsMut<[F]> is implemented through DerefMut to [F; D]
-//
-// + std::ops::Add<[F;D], Output = Self>
-//
-// if required, then it blocks Add<Deref<Target = [F;D]>>
 pub trait Vector<F: Float, const D: usize>:
     ArrayBasic
     + ArrayRef<F, D>
@@ -641,7 +602,7 @@ pub trait Quaternion<F: Float>:
     + ArrayIndex<F>
     + ArrayConvert<F, 4>
     + ArrayAddSubNeg<F, 4>
-    + ArrayMulDiv<F, 4>
+    + QuatMulDiv<F, 4>
     + ArrayScale<F>
 {
     //cp of_rijk

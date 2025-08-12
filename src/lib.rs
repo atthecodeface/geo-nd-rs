@@ -186,18 +186,14 @@ vectors.
 Quaternions are a mathematical means for describing a 3 dimensional rotation around
 the origin.
 
-Types that provide [Quaternion] have associated 3-element and
-4-element vectors types that must provide the [Vector] trait.
-
 Types that provide [Quaternion] can be
-manipulated with negation, addition, subtraction, and multiplicaton, and can be
+manipulated with negation, addition, subtraction, multiplicaton, and division, and can be
 scaled with multiplication and division by their 'float'.
 
 They also support [Copy], [std::default::Default], [std::fmt::Debug], and [std::fmt::Display],
 [serde::Serialize], [serde::Deserialize].
 
-They provide AsRef for float arrays of length 4 and slices for fast
-import and export from memory structures. Currently the mapping of the
+They Deref to their float arrays of length 4. The mapping of the
 arrays is (i, j, k, r).
 
 ### Constructors
@@ -210,7 +206,7 @@ Types providing the [Quaternion] trait can be constructed from:
 
 * the conjugate of another quaternion, i.e. (r,-i,-j,-k)
 
-* a rotation around a [Vector<3>] axis by an angle (in radians)
+* a rotation around a `[F; 3]` axis by an angle (in radians)
 
 * a rotation around one of the axes applied to another quaternion
 
@@ -231,7 +227,7 @@ Types providing the [Quaternion] trait can be constructed from:
 The trait provides many application methods for quaternions, perhaps
 the most important being [Quaternion::apply3] and
 [Quaternion::apply4], which allow the quaternion to be applied to a
-3-elemet or 4-element vector (the latter being common in graphics,
+3-element or 4-element vector (the latter being common in graphics,
 where the fourth element is usually 1 for a point, and 0 for a vector
 translation).
 

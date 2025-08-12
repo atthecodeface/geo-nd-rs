@@ -1,5 +1,5 @@
 //a Imports
-use geo_nd::Vector;
+use geo_nd::{Quaternion, Vector};
 use serde_test::{assert_tokens, Token};
 
 //a Utility tests for vector3
@@ -12,9 +12,11 @@ type Quat = geo_nd::QArray<f32>;
 pub const ZERO_2: [f32; 2] = [0.0; 2];
 pub const TF_2: [f32; 2] = [3.0, 4.0];
 pub const ZERO_3: [f32; 3] = [0.0; 3];
+pub const ONE_3: [f32; 3] = [1.0; 3];
 pub const TFT_3: [f32; 3] = [3.0, 4.0, 12.0];
 pub const ZERO_4: [f32; 4] = [0.0; 4];
 pub const ONE_4: [f32; 4] = [1.0; 4];
+pub const TFTO_4: [f32; 4] = [3.0, 4.0, 12.0, 1.0];
 
 pub const REF_ZERO_2: &[f32; 2] = &[0.0; 2];
 pub const REF_ZERO_3: &[f32; 3] = &[0.0; 3];
@@ -196,6 +198,49 @@ fn utility_vec3() -> Result<(), String> {
 
     // let n = pt_a.cross_product([1., 2., 3.]);
     // let n = pt_a.cross_product(&[1., 2., 3.]);
+
+    Ok(())
+}
+
+//f utility_quat_vec3
+#[test]
+fn utility_quat_vec3() -> Result<(), String> {
+    // From [f32; D]
+    let pt_a: Vector3;
+    let pt_b: Vector3;
+
+    // From &[f32; 3]
+    pt_a = TFT_3.into();
+    pt_b = ONE_3.into();
+
+    assert_eq!(pt_a[0], 3.0);
+    assert_eq!(pt_a[1], 4.0);
+    assert_eq!(pt_a[2], 12.0);
+
+    let rot_x90 = Quat::default().rotate_x(std::f32::consts::PI / 2.0);
+    let mut p = rot_x90 * &pt_a;
+    eprintln!("{p}");
+    assert!((p[0] - 3.0).abs() < 1E-4);
+    assert!((p[1] - -12.0).abs() < 1E-4);
+    assert!((p[2] - 4.0).abs() < 1E-4);
+
+    p = (&rot_x90) * &p;
+    eprintln!("{p}");
+    assert!((p[0] - 3.0).abs() < 1E-4);
+    assert!((p[1] - -4.0).abs() < 1E-4);
+    assert!((p[2] - -12.0).abs() < 1E-4);
+
+    p = rot_x90 * &p;
+    eprintln!("{p}");
+    assert!((p[0] - 3.0).abs() < 1E-4);
+    assert!((p[1] - 12.0).abs() < 1E-4);
+    assert!((p[2] - -4.0).abs() < 1E-4);
+
+    p = (&rot_x90) * &p;
+    eprintln!("{p}");
+    assert!((p[0] - 3.0).abs() < 1E-4);
+    assert!((p[1] - 4.0).abs() < 1E-4);
+    assert!((p[2] - 12.0).abs() < 1E-4);
 
     Ok(())
 }
