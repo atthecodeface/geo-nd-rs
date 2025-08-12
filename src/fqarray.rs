@@ -1,8 +1,8 @@
 //a Imports
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-use crate::{FArray, FArray2};
-use crate::{Float, QArray, Quaternion, SqMatrix, SqMatrix4, Transform, Vector};
+use crate::FArray;
+use crate::{Float, QArray, Quaternion, SqMatrix4, Transform, Vector};
 
 //tp FQArrayTrans
 /// A transformation that is a translation . scaling . rotation
@@ -101,7 +101,7 @@ macro_rules! fqarray_transform_trait {
             //cp inverse
             /// Get a transformation that is the inverse of this
             fn inverse(&self) -> Self {
-                use num_traits::{Float, One, Zero};
+                use num_traits::{Float, One};
                 let scale = self.trans_scale[3];
                 if scale.abs() < <$f>::epsilon() {
                     Self::default()

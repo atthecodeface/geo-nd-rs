@@ -1,6 +1,6 @@
 //a Imports
 use geo_nd::{quat, vector};
-use geo_nd::{FArray, Float, Geometry3D, QArray, Quaternion, SqMatrix, Vector};
+use geo_nd::{FArray, Geometry3D, QArray, Quaternion, SqMatrix, Vector};
 
 //a Test type
 //ti Banana

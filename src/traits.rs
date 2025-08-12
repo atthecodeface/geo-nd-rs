@@ -1,5 +1,16 @@
 //a Imports
-use crate::{quat, vector};
+use crate::{matrix, quat, vector};
+
+//a IsSquared
+//tp IsSquared
+/// This trait, with `D2 = D^2`, should be implemented for [();D] to
+/// indicate that `D2` is indeed `D*D`
+///
+/// This permits the `SqMatrix` trait to only be implemented for actually square matrices
+pub trait IsSquared<const D: usize, const D2: usize> {}
+impl IsSquared<2, 4> for [(); 2] {}
+impl IsSquared<3, 9> for [(); 3] {}
+impl IsSquared<4, 16> for [(); 4] {}
 
 //a Num and Float traits
 //tp Num
@@ -440,7 +451,7 @@ pub trait Vector<F: Float, const D: usize>:
     where
         [(); D]: IsSquared<D, D2>,
     {
-        *self = crate::matrix::multiply::<F, D2, D, D, D, D, 1>(m, self.deref()).into();
+        *self = matrix::multiply::<F, D2, D, D, D, D, 1>(m, self.deref()).into();
         self
     }
 
@@ -503,10 +514,6 @@ where
 /// [SqMatrix] for addition, subtraction, multiplication and division by
 /// a scalar [Float] value type that they are comprised of. Hence a
 /// `m:SqMatrix<F>` may be scaled by a `s:F` using `m * s`.
-pub trait IsSquared<const D: usize, const D2: usize> {}
-impl IsSquared<2, 4> for [(); 2] {}
-impl IsSquared<3, 9> for [(); 3] {}
-impl IsSquared<4, 16> for [(); 4] {}
 pub trait SqMatrix<F: Float, const D: usize, const D2: usize>:
     ArrayBasic
     + ArrayRef<F, D2>
@@ -517,18 +524,20 @@ pub trait SqMatrix<F: Float, const D: usize, const D2: usize>:
     + std::ops::Mul<Output = Self>
     + std::ops::MulAssign
 {
+    /// Create an identity matrix
     fn identity() -> Self {
-        let mut s = Self::default();
-        for i in 0..D {
-            s[i * (D + 1)] = F::one();
-        }
-        s
+        matrix::identity::<F, D2, D>().into()
     }
+
+    /// Return true if the matrix is zero
     fn is_zero(&self) -> bool {
         vector::is_zero(self.deref())
     }
-    fn set_zero(&mut self) {
-        vector::set_zero(self.deref_mut())
+
+    /// Set the matrix to zero
+    fn set_zero(&mut self) -> &mut Self {
+        vector::set_zero(self.deref_mut());
+        self
     }
 
     //mp transpose
@@ -579,12 +588,12 @@ where
 pub trait SqMatrix4<F: Float>: SqMatrix<F, 4, 16> {
     /// Generate a perspective matrix
     fn perspective(fov: F, aspect: F, near: F, far: F) -> Self {
-        crate::matrix::perspective4(fov, aspect, near, far).into()
+        matrix::perspective4(fov, aspect, near, far).into()
     }
 
     /// Generate a matrix that represents a 'look at a vector'
     fn look_at(eye: &[F; 3], center: &[F; 3], up: &[F; 3]) -> Self {
-        crate::matrix::look_at4(eye, center, up).into()
+        matrix::look_at4(eye, center, up).into()
     }
 
     /// Translate the matrix by a Vec3

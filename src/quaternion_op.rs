@@ -350,7 +350,7 @@ pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
     let zero = V::zero();
     let one = V::one();
     let two = one + one;
-    let almost_half: V = 0.49999999_f32.into();
+    let almost_half: V = 0.499999_f32.into();
     let halfpi = V::PI() / two;
     let i = q[0];
     let j = q[1];

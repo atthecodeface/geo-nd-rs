@@ -21,8 +21,8 @@ This library provides for N-dimensional geometrical objects,
 particularly *Vector*s, *Matrix*, *Quaternion* operations.
 
 The underlying numeric type that must be supported for these
-operations is either a type supporting [Num] - which includes integers
-- or in most circumstances [Float]. Particularly the latter is
+operations is either a type supporting [Num] - which includes integers - or
+in most circumstances [Float]. Particularly the latter is
 provided by f32 anf f64.
 
 It provides libraries that provide functions that implement vector,
@@ -439,8 +439,8 @@ pub use farray2::FArray2;
 pub use fqarray::FQArrayTrans;
 pub use qarray::QArray;
 pub use traits::{
-    Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform,
-    Vector, Vector2, Vector3, Vector3D, Vector4,
+    Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix2, SqMatrix3, SqMatrix4,
+    Transform, Vector, Vector2, Vector3, Vector3D, Vector4,
 };
 
 /// Vector functions module

@@ -2,96 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{matrix, vector, FArray};
-use crate::{Float, SqMatrix, SqMatrix3, SqMatrix4, Vector};
-
-//a Macros
-//mi index_ops!
-macro_rules! index_ops {
-    { $t:ident } => {
-        impl <F:Float, const D:usize, const D2:usize> std::ops::Index<usize> for $t <F, D, D2> {
-            type Output = F;
-            fn index(&self, index: usize) -> &F {
-                let slice: &[_] = self.as_ref();
-                &slice[index]
-            }
-        }
-        impl <F:Float, const D:usize, const D2:usize> std::ops::IndexMut<usize> for $t <F, D, D2> {
-            fn index_mut(&mut self, index: usize) -> &mut F {
-                let slice: &mut [_] = self.as_mut();
-                &mut slice[index]
-            }
-        }
-    }
-}
-
-//mi ref_op!
-macro_rules! ref_op {
-    { $t:ident, $t_as:ty } => {
-        impl <F:Float, const D:usize, const D2:usize> std::convert::AsRef<$t_as> for $t <F, D, D2> {
-            fn as_ref(&self) -> &$t_as {&self.data}
-        }
-        impl <F:Float, const D:usize, const D2:usize> std::convert::AsMut<$t_as> for $t <F, D, D2> {
-            fn as_mut(&mut self) -> &mut $t_as {&mut self.data}
-        }
-    }
-}
-
-//mi binary_op!
-macro_rules! binary_op {
-    { $t:ident, $trait_op:ident, $op:ident, $binop:tt, $trait_assign_op:ident, $assign_op:ident, $assign_binop:tt } => {
-        impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_op<Self> for $t<F, D, D2> {
-            type Output = Self;
-            fn $op(self, other: Self) -> Self {
-                let mut data = [F::zero();D2];
-                for i in 0..D2 {
-                    data[i] = self.data[i] $binop other.data[i];
-                }
-                Self { data }
-            }
-        }
-        impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_assign_op<Self> for $t<F, D, D2> {
-            fn $assign_op(&mut self, other: Self) {
-                for i in 0..D2 {self.data[i] $assign_binop other.data[i];}
-            }
-        }
-        impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_op<F> for $t<F, D, D2> {
-            type Output = Self;
-            fn $op(self, other: F) -> Self {
-                let mut data = [F::zero();D2];
-                for i in 0..D2 {
-                    data[i] = self.data[i] $binop other;
-                }
-                Self { data }
-            }
-        }
-        impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_assign_op<F> for $t<F, D, D2> {
-            fn $assign_op(&mut self, other: F) {
-                for i in 0..D2 {self.data[i] $assign_binop other;}
-            }
-        }
-    }
-}
-
-//mi binary_op_by_f!
-macro_rules! binary_op_by_f {
-    { $t:ident, $trait_op:ident, $op:ident, $binop:tt, $trait_assign_op:ident, $assign_op:ident, $assign_binop:tt } => {
-        impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_op<F> for $t<F, D, D2> {
-            type Output = Self;
-            fn $op(self, other: F) -> Self {
-                let mut data = [F::zero();D2];
-                for i in 0..D2 {
-                    data[i] = self.data[i] $binop other;
-                }
-                Self { data }
-            }
-        }
-        impl <F:Float, const D:usize, const D2:usize> std::ops::$trait_assign_op<F> for $t<F, D, D2> {
-            fn $assign_op(&mut self, other: F) {
-                for i in 0..D2 {self.data[i] $assign_binop other;}
-            }
-        }
-    }
-}
+use crate::{Float, SqMatrix, Vector};
 
 //a FArray2
 //tp FArray2
@@ -104,6 +15,7 @@ pub struct FArray2<F: Float, const D: usize, const D2: usize> {
     data: [F; D2],
 }
 
+//a Macros
 //mi farray2_basic_traits!
 macro_rules! farray2_basic_traits {
     { $f:ty,  $d:expr,  $d2:expr, $ty:ty } => {
@@ -174,7 +86,6 @@ macro_rules! farray2_sqmatrix_trait {
     }
 }
 
-//a New
 //mi farray2_traits
 macro_rules! farray2_traits {
     { $f:ty,  $d:expr,  $d2:expr, $ty:ty, $det_fn:expr, $inv_fn:expr } => {
@@ -195,6 +106,7 @@ macro_rules! farray2_traits {
     }
 }
 
+//a Use macros
 farray2_traits! {f32,2,4,FArray2<f32,2,4>, matrix::determinant2, matrix::inverse2}
 farray2_traits! {f32,3,9,FArray2<f32,3,9>, matrix::determinant3, matrix::inverse3}
 farray2_traits! {f32,4,16,FArray2<f32,4,16>, matrix::determinant4, matrix::inverse4}
