@@ -105,14 +105,17 @@ pub fn transpose<V: Float, const RC: usize, const R: usize, const C: usize>(m: [
 
 //mp multiply
 /// Multiply two matrices
+///
+/// The first matrix is R by X, the second ix X by C, so the result is
+/// R by C
 pub fn multiply<
     V: Float,
-    const RX: usize,
-    const XC: usize,
-    const RC: usize,
-    const R: usize,
-    const X: usize,
-    const C: usize,
+    const RX: usize, // Total elements in first matrix
+    const XC: usize, // Total elements in second matrix
+    const RC: usize, // Total elements in result
+    const R: usize,  // Number of rows in first matrix
+    const X: usize,  // Number of cols in first matrix, rows in second matrix
+    const C: usize,  // Number of cols in second matrix
 >(
     a: &[V; RX],
     b: &[V; XC],

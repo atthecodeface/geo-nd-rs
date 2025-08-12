@@ -406,7 +406,7 @@ pub trait Vector<F: Float, const D: usize>:
     fn apply_q3<Q>(&self, q: &Q) -> Self
     where
         Q: Quaternion<F>,
-        Self: From<[F; 3]>,
+        Self: From<[F; 3]>,  // Enforce D = 3
         Self: AsRef<[F; 3]>, // so that it knows as_ref() returns &[F;3], i.e. D is 3
     {
         quat::apply3(q.deref(), self.as_ref()).into()
@@ -434,6 +434,17 @@ pub trait Vector<F: Float, const D: usize>:
         quat::apply4(q.deref(), self.as_ref()).into()
     }
 
+    //mp transformed_by_m
+    /// Multiply the vector by the matrix to transform it
+    fn transformed_by_m<const D2: usize>(&mut self, m: &[F; D2]) -> &mut Self
+    where
+        [(); D]: IsSquared<D, D2>,
+    {
+        *self = crate::matrix::multiply::<F, D2, D, D, D, D, 1>(m, self.deref()).into();
+        self
+    }
+
+    //cp uniform_dist_sphere3
     /// Get a point on a sphere uniformly distributed for a point
     /// where x in [0,1) and y in [0,1)
     #[must_use]
@@ -492,6 +503,10 @@ where
 /// [SqMatrix] for addition, subtraction, multiplication and division by
 /// a scalar [Float] value type that they are comprised of. Hence a
 /// `m:SqMatrix<F>` may be scaled by a `s:F` using `m * s`.
+pub trait IsSquared<const D: usize, const D2: usize> {}
+impl IsSquared<2, 4> for [(); 2] {}
+impl IsSquared<3, 9> for [(); 3] {}
+impl IsSquared<4, 16> for [(); 4] {}
 pub trait SqMatrix<F: Float, const D: usize, const D2: usize>:
     ArrayBasic
     + ArrayRef<F, D2>
@@ -568,21 +583,19 @@ pub trait SqMatrix4<F: Float>: SqMatrix<F, 4, 16> {
     }
 
     /// Generate a matrix that represents a 'look at a vector'
-    fn look_at<V: Vector<F, 3>>(eye: &V, center: &V, up: &V) -> Self {
-        crate::matrix::look_at4(eye.as_ref(), center.as_ref(), up.as_ref()).into()
+    fn look_at(eye: &[F; 3], center: &[F; 3], up: &[F; 3]) -> Self {
+        crate::matrix::look_at4(eye, center, up).into()
     }
 
     /// Translate the matrix by a Vec3
-    fn translate3<V: std::ops::Deref<Target = [F; 3]>>(&mut self, by: &V) {
-        let by = by.deref();
+    fn translate3(&mut self, by: &[F; 3]) {
         self[3] += by[0];
         self[7] += by[1];
         self[11] += by[2];
     }
 
     /// Translate the matrix by a Vec4
-    fn translate4<V: std::ops::Deref<Target = [F; 4]>>(&mut self, by: &V) {
-        let by = by.deref();
+    fn translate4(&mut self, by: &[F; 4]) {
         self[3] += by[0];
         self[7] += by[1];
         self[11] += by[2];
@@ -723,16 +736,12 @@ pub trait Quaternion<F: Float>:
     //mp mix
     /// Create a linear combination of this [Quaternion] and another using parameter `t` from zero to one
     #[must_use]
-    fn mix<A>(self, other: A, t: F) -> Self
-    where
-        A: std::ops::Deref<Target = [F; 4]>,
-    {
-        vector::mix(self.deref(), other.deref(), t).into()
+    fn mix(self, other: &[F; 4], t: F) -> Self {
+        vector::mix(self.deref(), other, t).into()
     }
 
     //mp dot
     /// Return the dot product of two quaternions; basically used for length
-    #[must_use]
     fn dot(self, other: &Self) -> F {
         vector::dot(self.deref(), other.deref())
     }

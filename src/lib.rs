@@ -79,7 +79,32 @@ Self), this would force the caller to convert the resultant type back
 to the required Vector type. The policy is therefore, for such
 methods, to use a generic on the method `T:Deref<Target = [}>`; to
 take an argument of type `&T`, and to return a `T`. This usually
-requires T to also provide `From<F;D>`.
+requires T to also provide `From<F;D>`. These methods can be described
+as 'apply M to type T to produce a modified T'. In general there will
+then be a method on the type T that operates on '&mut T' and
+explicitly takes a `&M'. These methods also return `&mut self` to
+permit chaining.
+
+For example, a matrix `M` can transform a vector `T` by using
+
+```
+    use geo_nd::{FArray, FArray2, SqMatrix, Vector};
+    let t : FArray::<f32, 3> = [0.0, 1.0, 2.0].into();
+    let m = FArray2::<f32, 3, 9>::identity();
+    let mut t = m.transform(&t);
+    // or
+    t.transformed_by_m(&m);
+
+```
+
+The downside to this policy is that one cannot apply a matrix to transform an array `[F;D]`
+
+```ignore
+    use geo_nd::{FArray, FArray2, SqMatrix, Vector};
+    let m = FArray2::<f32, 3, 9>::identity();
+    let t = m.transform(&[1.0,3.0,5.0]);
+```
+
 
 # Function operation
 
