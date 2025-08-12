@@ -328,45 +328,49 @@ assert!((m.transform(&y) - z).length() < 1.0E-8);
 assert!((m.transform(&z) - x).length() < 1.0E-8);
 ```
 
-# Trait discussion...
+# Trait discussion
 
- A [Vector] is effectively a wrapper around [F; D] that is as cheap
- as possible, that then supports the relevant vector addition,
- subtraction, etc operations
+The libraries operate on arrays `[F;D]`, and so types that implement
+the Vector, Quaternion etc traits are expected to be wrappers around
+such array (but perhaps with greater alignment restrictions).
 
- An array [f32/f64; D] supports:
+An array `[f32/f64; D]` supports:
 
-   Copy, Clone, Debug, Default, PartialEq, PartialOrd
+ *   Copy, Clone, Debug, Default, PartialEq, PartialOrd
 
-   Index<I> and mut
+ *   Index<usize> and IndexMut<usize>
 
-   IntoIterator for T, &T, &mut T
+ *   IntoIterator for T, &T, &mut T
 
-   PartialEq of [U;N], [U] (where T PartialEq of U)
+ *   PartialEq of `[U;N]` and `[U]` (where T: PartialEq of U)
 
-   TryFrom of &[T], Vec<T, A>, Box<[T]> with mut where appropriate; some times for &[F; D] too
+ *   TryFrom of `&[T]`, `Vec<T, A>`, `Box<[T]>` with mut where appropriate; some times for `&[F; D]` too
 
-   AsRef[T], Borrow[T] (and mut for those three)
+ *   AsRef[T], Borrow[T] (and mut for those three)
 
-   Serialize, Deserialize
+ *   Serialize, Deserialize
 
- Note: Hash is not supported as f32/f64 do not support it
+Note: Hash is not supported as f32/f64 do not support it
 
- Hence A [Vector] should provide:
+Hence a [Vector] or [Quaternion] should provide:
 
-   Copy, Clone, Debug, Default, PartialEq
+ *   Copy, Clone, Debug, Default, PartialEq
 
-   Deref<Target = [F; D]>, DerefMut
+ *   Index<usize> and IndexMut<usize>
 
-   From for &[F], [F;D] &[F;D]
+ *   Deref <Target = `[F; D]`>, DerefMut
 
-   Into [F;D] (deref provides equivalent of &[F; D])
+ *   AsRef and AsMut of `[F; D]`
 
-   TryFrom<&[F]>
+ *   From of `&[F]`, `[F;D]`,  `&[F;D]`
 
-   Serialize, Deserialize
+ *   Into `[F;D]` (deref provides equivalent of &[F; D])
 
- Not PartialOrd, as vectors dont't have an ordering
+ *   TryFrom of `&[F]`, `Vec<F>`
+
+ *   Serialize, Deserialize
+
+Note: Not PartialOrd, as vectors dont't have an ordering
 
  Addition/Subtraction/Multiplication/Division
 
@@ -375,7 +379,7 @@ assert!((m.transform(&z) - x).length() < 1.0E-8);
     Rust has no syntax for that.
 
  Mul/Div with Rhs of F, &F are *required* for utility; previous
-    versions supported Self to do item-by-item operations, which
+    versions supported Self to do element-wise operations, which
     has been removed This is in part because it would need to work
     for Deref<Target = [F;D]>, but f32/f64 do not implement Deref,
     and they might in the future do so which breaks the F and &F
@@ -384,15 +388,15 @@ assert!((m.transform(&z) - x).length() < 1.0E-8);
  Not AsRef/Mut of [F], as [F; D] implement that, and Vector gets it through Deref
 
 
-    + std::convert::AsRef<[F]>
+    std::convert::AsRef<[F]>
 
  Note AsRef<[F]> is implemented through Deref to [F; D]
 
-    + std::convert::AsMut<[F]>
+    std::convert::AsMut<[F]>
 
  Note AsMut<[F]> is implemented through DerefMut to [F; D]
 
- + std::ops::Add<[F;D], Output = Self>
+   std::ops::Add<[F;D], Output = Self>
 
  if required, then it blocks Add<Deref<Target = [F;D]>>
 !*/

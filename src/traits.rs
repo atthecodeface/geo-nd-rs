@@ -50,6 +50,150 @@ pub trait Float: Num + num_traits::Float + num_traits::FloatConst + From<f32> {}
 
 impl<T> Float for T where T: Num + num_traits::Float + num_traits::FloatConst + From<f32> {}
 
+//a Array traits
+//tp ArrayBasic
+pub trait ArrayBasic:
+    Clone + Copy + std::fmt::Debug + std::fmt::Display + std::default::Default + PartialEq<Self>
+{
+}
+
+//ip ArrayBasic
+impl<T> ArrayBasic for T where
+    T: Clone + Copy + std::fmt::Debug + std::fmt::Display + std::default::Default + PartialEq<Self>
+{
+}
+
+//tp ArrayRef
+pub trait ArrayRef<F, const D:usize>:
+    std::convert::AsRef<[F; D]> // Note, [F;D] implements AsRef only for [F] which is an issue
+    + std::convert::AsMut<[F; D]> // Note, [F;D] implements AsRef only for [F] which is an issue
+    + std::ops::Deref<Target = [F;D]>
+    + std::ops::DerefMut
+{
+}
+
+//ip ArrayRef
+impl<T, F, const D: usize> ArrayRef<F, D> for T where
+    T: std::convert::AsRef<[F; D]> // Note, [F;D] implements AsRef only for [F] which is an issue
+        + std::convert::AsMut<[F; D]>
+        // Note, [F;D] implements AsRef only for [F] which is an issue
+        + std::ops::Deref<Target = [F; D]>
+        + std::ops::DerefMut
+{
+}
+
+//tp ArrayIndex
+pub trait ArrayIndex<F>: std::ops::Index<usize, Output = F> + std::ops::IndexMut<usize> {}
+
+//ip ArrayIndex
+impl<T, F> ArrayIndex<F> for T where
+    T: std::ops::Index<usize, Output = F> + std::ops::IndexMut<usize>
+{
+}
+
+//ip ArrayConvert
+pub trait ArrayConvert<F, const D: usize>:
+    std::convert::From<[F; D]>
+    + for<'a> std::convert::From<&'a [F; D]>
+    + for<'a> std::convert::TryFrom<&'a [F]>
+    + for<'a> std::convert::TryFrom<Vec<F>>
+    + std::convert::Into<[F; D]>
+{
+}
+
+//ip ArrayConvert
+impl<T, F, const D: usize> ArrayConvert<F, D> for T where
+    T: std::convert::From<[F; D]>
+        + for<'a> std::convert::From<&'a [F; D]>
+        + for<'a> std::convert::TryFrom<&'a [F]>
+        + for<'a> std::convert::TryFrom<Vec<F>>
+        + std::convert::Into<[F; D]>
+{
+}
+
+//tt ArrayAddSubNeg
+pub trait ArrayAddSubNeg<F, const D: usize>:
+    Sized
+    + std::ops::Neg<Output = Self>
+    + std::ops::Add<Self, Output = Self>
+    + for<'a> std::ops::Add<&'a [F; D], Output = Self>
+    + for<'a> std::ops::Add<&'a Self, Output = Self>
+    + std::ops::AddAssign<Self>
+    + for<'a> std::ops::AddAssign<&'a [F; D]>
+    + std::ops::Sub<Self, Output = Self>
+    + for<'a> std::ops::Sub<&'a [F; D], Output = Self>
+    + for<'a> std::ops::Sub<&'a Self, Output = Self>
+    + std::ops::SubAssign<Self>
+    + for<'a> std::ops::SubAssign<&'a [F; D]>
+{
+}
+//tt ArrayAddSubNeg
+impl<T, F, const D: usize> ArrayAddSubNeg<F, D> for T where
+    T: Sized
+        + std::ops::Neg<Output = Self>
+        + std::ops::Add<Self, Output = Self>
+        + for<'a> std::ops::Add<&'a [F; D], Output = Self>
+        + for<'a> std::ops::Add<&'a Self, Output = Self>
+        + std::ops::AddAssign<Self>
+        + for<'a> std::ops::AddAssign<&'a [F; D]>
+        + std::ops::Sub<Self, Output = Self>
+        + for<'a> std::ops::Sub<&'a [F; D], Output = Self>
+        + for<'a> std::ops::Sub<&'a Self, Output = Self>
+        + std::ops::SubAssign<Self>
+        + for<'a> std::ops::SubAssign<&'a [F; D]>
+{
+}
+
+//tp ArrayMulDiv
+pub trait ArrayMulDiv<F, const D: usize>:
+    Sized
+    + std::ops::Mul<Self, Output = Self>
+    + for<'a> std::ops::Mul<&'a [F; 4], Output = Self>
+    + for<'a> std::ops::Mul<&'a Self, Output = Self>
+    + std::ops::MulAssign<Self>
+    + for<'a> std::ops::MulAssign<&'a [F; 4]>
+    + std::ops::Div<Self, Output = Self>
+    + for<'a> std::ops::Div<&'a [F; 4], Output = Self>
+    + for<'a> std::ops::Div<&'a Self, Output = Self>
+    + std::ops::DivAssign<Self>
+    + for<'a> std::ops::DivAssign<&'a [F; 4]>
+{
+}
+
+//ip ArrayMulDiv
+impl<T, F, const D: usize> ArrayMulDiv<F, D> for T where
+    T: Sized
+        + std::ops::Mul<Self, Output = Self>
+        + for<'a> std::ops::Mul<&'a [F; 4], Output = Self>
+        + for<'a> std::ops::Mul<&'a Self, Output = Self>
+        + std::ops::MulAssign<Self>
+        + for<'a> std::ops::MulAssign<&'a [F; 4]>
+        + std::ops::Div<Self, Output = Self>
+        + for<'a> std::ops::Div<&'a [F; 4], Output = Self>
+        + for<'a> std::ops::Div<&'a Self, Output = Self>
+        + std::ops::DivAssign<Self>
+        + for<'a> std::ops::DivAssign<&'a [F; 4]>
+{
+}
+
+//tp ArrayScale
+pub trait ArrayScale<F>:
+    std::ops::Mul<F, Output = Self>
+    + std::ops::MulAssign<F>
+    + std::ops::Div<F, Output = Self>
+    + std::ops::DivAssign<F>
+{
+}
+
+//ip ArrayScale
+impl<T, F> ArrayScale<F> for T where
+    T: std::ops::Mul<F, Output = Self>
+        + std::ops::MulAssign<F>
+        + std::ops::Div<F, Output = Self>
+        + std::ops::DivAssign<F>
+{
+}
+
 //a Vector, Vector3, Vector4
 //tt Vector
 /// The [Vector] trait describes an N-dimensional vector of [Float] type.
@@ -134,46 +278,12 @@ impl<T> Float for T where T: Num + num_traits::Float + num_traits::FloatConst + 
 //
 // if required, then it blocks Add<Deref<Target = [F;D]>>
 pub trait Vector<F: Float, const D: usize>:
-    Clone
-    + Copy
-    + std::fmt::Debug
-    + std::fmt::Display
-    + std::default::Default
-    + PartialEq<Self>
-
-    + std::convert::AsRef<[F; D]> // Note, [F;D] implements AsRef only for [F] which is an issue
-    + std::convert::AsMut<[F; D]> // Note, [F;D] implements AsRef only for [F] which is an issue
-    + std::ops::Deref<Target = [F;D]>
-    + std::ops::DerefMut
-    + std::ops::Index<usize, Output = F>
-    + std::ops::IndexMut<usize>
-
-    + std::convert::From<[F;D]>
-    + for< 'a> std::convert::From<&'a [F;D]>
-    + for< 'a> std::convert::TryFrom<&'a [F]>
-    + for< 'a> std::convert::TryFrom<Vec<F>>
-    + std::convert::Into<[F;D]>
-
-    + std::ops::Neg<Output = Self>
-
-    + std::ops::Add<Self, Output = Self>
-    + for <'a> std::ops::Add<&'a [F;D], Output = Self>
-    + for <'a> std::ops::Add<&'a Self, Output = Self>
-    + std::ops::AddAssign<Self>
-    + for <'a> std::ops::AddAssign<&'a [F;D]>
-
-    + std::ops::Sub<Self, Output = Self>
-    + for <'a> std::ops::Sub<&'a [F;D], Output = Self>
-    + for <'a> std::ops::Sub<&'a Self, Output = Self>
-    + std::ops::SubAssign<Self>
-    + for <'a> std::ops::SubAssign<&'a [F;D]>
-
-    + std::ops::Mul<F, Output = Self>
-    + std::ops::MulAssign<F>
-    + std::ops::Div<F, Output = Self>
-    + std::ops::DivAssign<F>
-
-    // + where for <'a>  &'a Self : std::ops::Add<&'a Self, Output = Self>
+    ArrayBasic
+    + ArrayRef<F, D>
+    + ArrayIndex<F>
+    + ArrayConvert<F, D>
+    + ArrayAddSubNeg<F, D>
+    + ArrayScale<F>
 {
     //mp is_zero
     /// Return true if the vector is all zeros
@@ -185,15 +295,15 @@ pub trait Vector<F: Float, const D: usize>:
     /// Create a linear combination of this [Vector] and another using parameter `t` from zero to one
     #[must_use]
     fn mix<A>(self, other: A, t: F) -> Self
-          where A: std::ops::Deref<Target = [F; D]>,
+    where
+        A: std::ops::Deref<Target = [F; D]>,
     {
         vector::mix(self.deref(), other.deref(), t).into()
     }
 
     //mp dot
     /// Return the dot product of two vectors
-    fn dot(&self, other: &[F; D]) -> F
-    {
+    fn dot(&self, other: &[F; D]) -> F {
         vector::dot(self.deref(), other)
     }
 
@@ -273,8 +383,9 @@ pub trait Vector<F: Float, const D: usize>:
     /// Cross product of two 3-element vectors
     #[must_use]
     fn cross_product(&self, other: &[F; 3]) -> Self
-    where Self: From<[F; 3]>,
-          Self: AsRef<[F; 3]> // so that it knows as_ref() returns &[F;3], i.e. D is 3
+    where
+        Self: From<[F; 3]>,
+        Self: AsRef<[F; 3]>, // so that it knows as_ref() returns &[F;3], i.e. D is 3
     {
         vector::cross_product3(self.as_ref(), other).into()
     }
@@ -293,9 +404,10 @@ pub trait Vector<F: Float, const D: usize>:
     /// result need not be cast
     #[must_use]
     fn apply_q3<Q>(&self, q: &Q) -> Self
-    where Q: Quaternion<F>,
-          Self: From<[F; 3]>,
-          Self: AsRef<[F; 3]> // so that it knows as_ref() returns &[F;3], i.e. D is 3
+    where
+        Q: Quaternion<F>,
+        Self: From<[F; 3]>,
+        Self: AsRef<[F; 3]>, // so that it knows as_ref() returns &[F;3], i.e. D is 3
     {
         quat::apply3(q.deref(), self.as_ref()).into()
     }
@@ -314,9 +426,10 @@ pub trait Vector<F: Float, const D: usize>:
     /// result need not be cast
     #[must_use]
     fn apply_q4<Q>(&self, q: &Q) -> Self
-    where Q: Quaternion<F>,
-          Self: From<[F; 4]>,
-          Self: AsRef<[F; 4]> // so that it knows as_ref() returns &[F;3], i.e. D is 3
+    where
+        Q: Quaternion<F>,
+        Self: From<[F; 4]>,
+        Self: AsRef<[F; 4]>, // so that it knows as_ref() returns &[F;3], i.e. D is 3
     {
         quat::apply4(q.deref(), self.as_ref()).into()
     }
@@ -325,7 +438,9 @@ pub trait Vector<F: Float, const D: usize>:
     /// where x in [0,1) and y in [0,1)
     #[must_use]
     fn uniform_dist_sphere3(x: [F; 2], map: bool) -> Self
-    where Self: From<[F; 3]> {
+    where
+        Self: From<[F; 3]>,
+    {
         (vector::uniform_dist_sphere3(x, map)).into()
     }
 }
@@ -485,80 +600,33 @@ pub trait SqMatrix4<F: Float, V3: Vector<F, 3>, V4: Vector<F, 4>>: SqMatrix<V4, 
 ///
 /// The [Quaternion] can be indexed only by a `usize`; that is individual
 /// components of the vector can be accessed, but ranges may not.
-pub trait Quaternion<F: Float> :
-    Clone
-    + Copy
-    + std::fmt::Debug
-    + std::fmt::Display
-    + std::default::Default
-    + PartialEq<Self>
-
-    + std::convert::AsRef<[F; 4]> // Note, [F;4] implements AsRef only for [F] which is an issue
-    + std::convert::AsMut<[F; 4]> // Note, [F;4] implements AsRef only for [F] which is an issue
-    + std::ops::Deref<Target = [F; 4]>
-    + std::ops::DerefMut
-    + std::ops::Index<usize, Output = F>
-    + std::ops::IndexMut<usize>
-
-    + std::convert::From<[F;4]>
-    + for< 'a> std::convert::From<&'a [F;4]>
-    + for< 'a> std::convert::TryFrom<&'a [F]>
-    + for< 'a> std::convert::TryFrom<Vec<F>>
-    + std::convert::Into<[F;4]>
-
-    + std::ops::Neg<Output = Self>
-
-    + std::ops::Add<Self, Output = Self>
-    + for <'a> std::ops::Add<&'a [F;4], Output = Self>
-    + for <'a> std::ops::Add<&'a Self, Output = Self>
-    + std::ops::AddAssign<Self>
-    + for <'a> std::ops::AddAssign<&'a [F;4]>
-
-    + std::ops::Sub<Self, Output = Self>
-    + for <'a> std::ops::Sub<&'a [F; 4], Output = Self>
-    + for <'a> std::ops::Sub<&'a Self, Output = Self>
-    + std::ops::SubAssign<Self>
-    + for <'a> std::ops::SubAssign<&'a [F; 4]>
-
-    + std::ops::Mul<F, Output = Self>
-    + std::ops::MulAssign<F>
-    + std::ops::Div<F, Output = Self>
-    + std::ops::DivAssign<F>
-
-    + std::ops::Mul<Self, Output = Self>
-    + for <'a> std::ops::Mul<&'a [F;4], Output = Self>
-    + for <'a> std::ops::Mul<&'a Self, Output = Self>
-    + std::ops::MulAssign<Self>
-    + for <'a> std::ops::MulAssign<&'a [F;4]>
-
-    + std::ops::Div<Self, Output = Self>
-     + for <'a> std::ops::Div<&'a [F; 4], Output = Self>
-    + for <'a> std::ops::Div<&'a Self, Output = Self>
-    + std::ops::DivAssign<Self>
-    + for <'a> std::ops::DivAssign<&'a [F; 4]>
-
-    // apply to V3 - cannot support this as we already have F as RHS of Mul - can only have one trait there
-    // + std::ops::Mul<V3, Output = V3>
-    // where V3:Vector<F,3>, V4:Vector<F,4>, F:Float
+pub trait Quaternion<F: Float>:
+    ArrayBasic
+    + ArrayRef<F, 4>
+    + ArrayIndex<F>
+    + ArrayConvert<F, 4>
+    + ArrayAddSubNeg<F, 4>
+    + ArrayMulDiv<F, 4>
+    + ArrayScale<F>
 {
     //cp of_rijk
     /// Create from r, i, j, k
     #[must_use]
-    fn of_rijk(r:F, i:F, j:F, k:F) -> Self;
+    fn of_rijk(r: F, i: F, j: F, k: F) -> Self;
 
     //cp conjugate
     /// Create the conjugate of a quaternion
     #[must_use]
     #[inline]
     fn conjugate(self) -> Self {
-        let (r,i,j,k) = self.as_rijk();
-        Self::of_rijk(r,-i,-j,-k)
+        let (r, i, j, k) = self.as_rijk();
+        Self::of_rijk(r, -i, -j, -k)
     }
 
     //cp of_axis_angle
     /// Create a unit quaternion for a rotation of an angle about an axis
     #[must_use]
-    fn of_axis_angle(axis:&[F; 3], angle:F) -> Self {
+    fn of_axis_angle(axis: &[F; 3], angle: F) -> Self {
         quat::of_axis_angle(axis, angle).into()
     }
 
@@ -589,13 +657,14 @@ pub trait Quaternion<F: Float> :
     //cp of_rotation3
     /// Find the unit quaternion of a Matrix3 assuming it is purely a rotation
     #[must_use]
-    fn of_rotation3<M, V3:Vector3<F>> (rotation:&M) -> Self
-    where M:SqMatrix<V3, F, 3, 9>;
+    fn of_rotation3<M, V3: Vector3<F>>(rotation: &M) -> Self
+    where
+        M: SqMatrix<V3, F, 3, 9>;
 
     //cp look_at
     /// Create a quaternion that maps a unit V3 of dirn to (0,0,-1) and a unit V3 of up (if perpendicular to dirn) to (0,1,0)
     #[must_use]
-    fn look_at(dirn:&[F; 3], up:&[F; 3]) -> Self {
+    fn look_at(dirn: &[F; 3], up: &[F; 3]) -> Self {
         quat::look_at(dirn, up).into()
     }
 
@@ -627,8 +696,8 @@ pub trait Quaternion<F: Float> :
     ///
     /// This is an approximation compared to the Landis Markley paper
     #[must_use]
-    fn weighted_average_many<A:Into<[F; 4]>, I: Iterator<Item = (F, A)>>(value_iter:I) -> Self {
-        let value_iter = value_iter.map(|(w,v)| (w, v.into()));
+    fn weighted_average_many<A: Into<[F; 4]>, I: Iterator<Item = (F, A)>>(value_iter: I) -> Self {
+        let value_iter = value_iter.map(|(w, v)| (w, v.into()));
         quat::weighted_average_many(value_iter).into()
     }
 
@@ -653,7 +722,8 @@ pub trait Quaternion<F: Float> :
     /// Create a linear combination of this [Quaternion] and another using parameter `t` from zero to one
     #[must_use]
     fn mix<A>(self, other: A, t: F) -> Self
-          where A: std::ops::Deref<Target = [F; 4]>,
+    where
+        A: std::ops::Deref<Target = [F; 4]>,
     {
         vector::mix(self.deref(), other.deref(), t).into()
     }
@@ -661,44 +731,58 @@ pub trait Quaternion<F: Float> :
     //mp dot
     /// Return the dot product of two quaternions; basically used for length
     #[must_use]
-    fn dot(self, other:&Self) -> F {
+    fn dot(self, other: &Self) -> F {
         vector::dot(self.deref(), other.deref())
     }
 
     //mp length_sq
     /// Return the square of the length of the quaternion
-    fn length_sq(&self) -> F { self.dot(self) }
+    fn length_sq(&self) -> F {
+        self.dot(self)
+    }
 
     //mp length
     /// Return the length of the quaternion
-    fn length(&self)    -> F { self.length_sq().sqrt() }
+    fn length(&self) -> F {
+        self.length_sq().sqrt()
+    }
 
     //mp distance_sq
     /// Return the square of the distance between this quaternion and another
-    fn distance_sq(&self, other:&Self) -> F { (*self - *other).length_sq() }
+    fn distance_sq(&self, other: &Self) -> F {
+        (*self - *other).length_sq()
+    }
 
     //mp distance
     /// Return the distance between this quaternion and another
-    fn distance(&self, other:&Self) -> F { self.distance_sq(other).sqrt() }
+    fn distance(&self, other: &Self) -> F {
+        self.distance_sq(other).sqrt()
+    }
 
     //mp normalize
     /// Normalize the quaternion; if its length is close to zero, then set it to be zero
     #[must_use]
     fn normalize(mut self) -> Self {
         let l = self.length();
-        if l < F::epsilon() {self.set_zero()} else {self /= l}
+        if l < F::epsilon() {
+            self.set_zero()
+        } else {
+            self /= l
+        }
         self
     }
 
     //fp set_rotation3
     /// Set a Matrix3 to be the rotation matrix corresponding to the unit quaternion
-    fn set_rotation3<V3: Vector3<F>, M> (&self, m:&mut M)
-    where M:SqMatrix<V3, F, 3, 9>;
+    fn set_rotation3<V3: Vector3<F>, M>(&self, m: &mut M)
+    where
+        M: SqMatrix<V3, F, 3, 9>;
 
     //fp set_rotation4
     /// Set a Matrix4 to be the rotation matrix corresponding to the unit quaternion
-    fn set_rotation4<V4: Vector4<F>, M> (&self, m:&mut M)
-    where M:SqMatrix<V4, F, 4, 16>;
+    fn set_rotation4<V4: Vector4<F>, M>(&self, m: &mut M)
+    where
+        M: SqMatrix<V4, F, 4, 16>;
 
     //fp apply3
     /// Apply the quaternion to a V3
@@ -714,8 +798,10 @@ pub trait Quaternion<F: Float> :
     /// result need not be cast
     #[must_use]
     fn apply3<A>(&self, other: &A) -> A
-    where A: std::ops::Deref<Target = [F; 3]>,
-          A: From<[F; 3]> {
+    where
+        A: std::ops::Deref<Target = [F; 3]>,
+        A: From<[F; 3]>,
+    {
         quat::apply3(self.deref(), other.deref()).into()
     }
 
