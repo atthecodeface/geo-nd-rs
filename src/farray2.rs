@@ -11,6 +11,7 @@ use crate::{Float, SqMatrix, Vector};
 /// It provides implementations of the traits required for a [SqMatrix]
 /// trait operating on an [FArray] of dimesion D.
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(transparent)]
 pub struct FArray2<F: Float, const D: usize, const D2: usize> {
     data: [F; D2],
 }

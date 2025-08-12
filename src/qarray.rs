@@ -1,7 +1,7 @@
 //a Imports
 use std::ops::Deref;
 
-use num_traits::{One, Zero};
+use num_traits::{ConstOne, ConstZero};
 use serde::{Deserialize, Serialize};
 
 use super::{quat, vector};
@@ -14,6 +14,7 @@ use super::{Float, Quaternion, SqMatrix3, SqMatrix4};
 /// It provides implementations of the traits required for a [Vector]
 /// trait, hence it can be used for a [Vector] of any size `D`.
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(transparent)]
 pub struct QArray<F>
 where
     F: Float,
@@ -30,10 +31,10 @@ macro_rules! qarray_basic_traits {
         //ip Default for Qarray
         impl std::default::Default for $ty {
             fn default() -> Self {
-                [<$f>::zero(),
-                 <$f>::zero(),
-                 <$f>::zero(),
-                 <$f>::one(),
+                [<$f>::ZERO,
+                 <$f>::ZERO,
+                 <$f>::ZERO,
+                 <$f>::ONE,
                  ].into()
             }
         }

@@ -14,6 +14,7 @@ use super::{Float, Vector};
 ///
 /// Default must be provided separately as it is only implemented for [F;D] up to D=32
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(transparent)]
 pub struct FArray<F: Float, const D: usize> {
     data: [F; D],
 }

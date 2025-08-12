@@ -37,7 +37,7 @@ use crate::{Float, Num};
 #[must_use]
 #[inline]
 pub fn new<V: Num>() -> [V; 4] {
-    [V::zero(), V::zero(), V::zero(), V::one()]
+    [V::ZERO, V::ZERO, V::ZERO, V::ONE]
 }
 
 //fp as_rijk
@@ -61,7 +61,7 @@ pub fn of_rijk<V: Num>(r: V, i: V, j: V, k: V) -> [V; 4] {
 #[must_use]
 #[inline]
 pub fn identity<V: Num>() -> [V; 4] {
-    [V::zero(), V::zero(), V::zero(), V::one()]
+    [V::ZERO, V::ZERO, V::ZERO, V::ONE]
 }
 
 //fp of_axis_angle
@@ -94,9 +94,9 @@ pub fn as_axis_angle<V: Float>(q: &[V; 4]) -> ([V; 3], V) {
     let k2 = k * k;
     let l = (i2 + j2 + k2).sqrt();
     if l < V::epsilon() {
-        ([i, j, k], V::zero())
+        ([i, j, k], V::ZERO)
     } else {
-        let rl = V::one() / l;
+        let rl = V::ONE / l;
         ([i * rl, j * rl, k * rl], V::atan2(l, r))
     }
 }
@@ -110,7 +110,7 @@ pub fn to_rotation3<V: Float>(q: &[V; 4], m: &mut [V; 9]) {
     let r2 = q[3] * q[3];
 
     let l2 = r2 + i2 + j2 + k2;
-    let rl2 = V::one() / l2;
+    let rl2 = V::ONE / l2;
 
     m[0] = (r2 + i2 - j2 - k2) * rl2;
     m[4] = (r2 - i2 + j2 - k2) * rl2;
@@ -137,7 +137,7 @@ pub fn to_rotation4<V: Float>(q: &[V; 4], m: &mut [V; 16]) {
     let r2 = q[3] * q[3];
 
     let l2 = r2 + i2 + j2 + k2;
-    let rl2 = V::one() / l2;
+    let rl2 = V::ONE / l2;
 
     m[0] = (r2 + i2 - j2 - k2) * rl2;
     m[5] = (r2 - i2 + j2 - k2) * rl2;
@@ -154,13 +154,13 @@ pub fn to_rotation4<V: Float>(q: &[V; 4], m: &mut [V; 16]) {
     m[6] = (q[1] * q[2] - q[0] * q[3]) * drl2;
     m[9] = (q[1] * q[2] + q[0] * q[3]) * drl2;
 
-    m[3] = V::zero();
-    m[7] = V::zero();
-    m[11] = V::zero();
-    m[12] = V::zero();
-    m[13] = V::zero();
-    m[14] = V::zero();
-    m[15] = V::one();
+    m[3] = V::ZERO;
+    m[7] = V::ZERO;
+    m[11] = V::ZERO;
+    m[12] = V::ZERO;
+    m[13] = V::ZERO;
+    m[14] = V::ZERO;
+    m[15] = V::ONE;
 }
 
 //fp of_rotation
@@ -168,17 +168,17 @@ pub fn to_rotation4<V: Float>(q: &[V; 4], m: &mut [V; 16]) {
 #[must_use]
 pub fn of_rotation<V: Float>(m: &[V; 9]) -> [V; 4] {
     fn safe_sqrt<V: Float>(x: V) -> V {
-        if x < V::zero() {
-            V::zero()
+        if x < V::ZERO {
+            V::ZERO
         } else {
             x.sqrt()
         }
     }
     let half: V = 0.5_f32.into();
-    let r = safe_sqrt(V::one() + m[0] + m[4] + m[8]) * half;
-    let mut i = safe_sqrt(V::one() + m[0] - m[4] - m[8]) * half;
-    let mut j = safe_sqrt(V::one() - m[0] + m[4] - m[8]) * half;
-    let mut k = safe_sqrt(V::one() - m[0] - m[4] + m[8]) * half;
+    let r = safe_sqrt(V::ONE + m[0] + m[4] + m[8]) * half;
+    let mut i = safe_sqrt(V::ONE + m[0] - m[4] - m[8]) * half;
+    let mut j = safe_sqrt(V::ONE - m[0] + m[4] - m[8]) * half;
+    let mut k = safe_sqrt(V::ONE - m[0] - m[4] + m[8]) * half;
 
     let r_i_4 = m[7] - m[5];
     let r_j_4 = m[2] - m[6];
@@ -213,9 +213,9 @@ pub fn invert<V: Float>(a: &[V; 4]) -> [V; 4] {
     let l = vector::length_sq(a);
     let r_l = {
         if l < V::epsilon() {
-            V::zero()
+            V::ZERO
         } else {
-            V::one() / l
+            V::ONE / l
         }
     };
     [-a[0] * r_l, -a[1] * r_l, -a[2] * r_l, a[3] * r_l]
@@ -299,7 +299,7 @@ pub fn multiply<V: Num>(a: &[V; 4], b: &[V; 4]) -> [V; 4] {
 pub fn divide<V: Float>(a: &[V; 4], b: &[V; 4]) -> [V; 4] {
     let l2 = vector::length_sq(b);
     if l2 < V::epsilon() {
-        [V::zero(); 4]
+        [V::ZERO; 4]
     } else {
         let i = a[0] * b[3] - a[3] * b[0] - a[1] * b[2] + a[2] * b[1];
         let j = a[1] * b[3] - a[3] * b[1] - a[2] * b[0] + a[0] * b[2];
@@ -328,10 +328,10 @@ pub fn nlerp<V: Float>(t: V, in0: &[V; 4], in1: &[V; 4]) -> [V; 4] {
 pub fn distance_sq<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
     let qi = invert(a);
     let mut qn = multiply(&qi, b);
-    if qn[3] < V::zero() {
-        qn[3] += V::one();
+    if qn[3] < V::ZERO {
+        qn[3] += V::ONE;
     } else {
-        qn[3] -= V::one();
+        qn[3] -= V::ONE;
     }
     vector::length_sq(&qn)
 }
@@ -347,8 +347,8 @@ pub fn distance<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
 /// Convert the quaternion to a bank, heading, altitude tuple - applied in that order
 #[must_use]
 pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
-    let zero = V::zero();
-    let one = V::one();
+    let zero = V::ZERO;
+    let one = V::ONE;
     let two = one + one;
     let almost_half: V = 0.499999_f32.into();
     let halfpi = V::PI() / two;
@@ -367,9 +367,9 @@ pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
             let j2 = j * j;
             let k2 = k * k;
             (
-                V::atan2(two * j * r - two * i * k, V::one() - two * j2 - two * k2),
+                V::atan2(two * j * r - two * i * k, V::ONE - two * j2 - two * k2),
                 V::asin(two * test),
-                V::atan2(two * i * r - two * j * k, V::one() - two * i2 - two * k2),
+                V::atan2(two * i * r - two * j * k, V::ONE - two * i2 - two * k2),
             )
         }
     };
@@ -380,7 +380,7 @@ pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
 /// Apply the quaternion to a vector3
 #[must_use]
 pub fn apply3<V: Float>(q: &[V; 4], v: &[V; 3]) -> [V; 3] {
-    let one = V::one();
+    let one = V::ONE;
     let two = one + one;
     let (r, i, j, k) = as_rijk(q);
     let x = (r * r + i * i - j * j - k * k) * v[0]
@@ -399,7 +399,7 @@ pub fn apply3<V: Float>(q: &[V; 4], v: &[V; 3]) -> [V; 3] {
 /// Apply the quaternion to a vector3
 #[must_use]
 pub fn apply4<V: Float>(q: &[V; 4], v: &[V; 4]) -> [V; 4] {
-    let one = V::one();
+    let one = V::ONE;
     let two = one + one;
     let (r, i, j, k) = as_rijk(q);
     let x = (r * r + i * i - j * j - k * k) * v[0]
@@ -503,12 +503,12 @@ pub fn weighted_average_many<I: Iterator<Item = (V, [V; 4])>, V: Float>(
 /// The vectors must be unit vectors
 #[must_use]
 pub fn rotation_of_vec_to_vec<V: Float>(a: &[V; 3], b: &[V; 3]) -> [V; 4] {
-    let obtuse = vector::dot(a, b) < V::zero();
+    let obtuse = vector::dot(a, b) < V::ZERO;
     let cp = vector::cross_product3(a, b);
     let sa = vector::length(&cp);
     let angle = sa.asin();
     let angle = if obtuse {
-        let pi = (-V::one()).acos();
+        let pi = V::PI();
         pi - angle
     } else {
         angle

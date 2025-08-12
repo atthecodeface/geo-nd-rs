@@ -23,6 +23,8 @@ pub trait Num:
     std::ops::Neg<Output = Self>
     + num_traits::Num
     + num_traits::NumAssignOps
+    + num_traits::ConstOne
+    + num_traits::ConstZero
     + Clone
     + Copy
     + PartialEq
@@ -37,6 +39,8 @@ impl<T> Num for T where
     T: std::ops::Neg<Output = Self>
         + num_traits::Num
         + num_traits::NumAssignOps
+        + num_traits::ConstOne
+        + num_traits::ConstZero
         + Clone
         + Copy
         + PartialEq

@@ -32,8 +32,8 @@ use crate::{Float, Num};
 /// assert_eq!( a, [0., 0., 0., 0.]);
 /// ```
 ///
-pub fn zero<V: Num, const D: usize>() -> [V; D] {
-    [V::zero(); D]
+pub const fn zero<V: Num, const D: usize>() -> [V; D] {
+    [V::ZERO; D]
 }
 
 //mp set_zero
@@ -67,12 +67,7 @@ pub fn set_zero<V: Num>(v: &mut [V]) {
 /// ```
 ///
 pub fn is_zero<V: Num>(v: &[V]) -> bool {
-    for c in v {
-        if !c.is_zero() {
-            return false;
-        }
-    }
-    true
+    v.iter().all(|c| c.is_zero())
 }
 
 //fp uniform_dist_sphere3
@@ -88,7 +83,7 @@ pub fn is_zero<V: Num>(v: &[V]) -> bool {
 /// vectors are more evenly spaced across the sphere
 #[inline]
 pub fn uniform_dist_sphere3<V: Float>(x: [V; 2], map: bool) -> [V; 3] {
-    let one = V::one();
+    let one = V::ONE;
     let two = one + one;
 
     let (u, v) = if map {
@@ -156,7 +151,7 @@ pub fn cross_product3<V: Num>(x: &[V; 3], y: &[V; 3]) -> [V; 3] {
 ///
 pub fn mix<V: Float, const D: usize>(a: &[V; D], b: &[V; D], t: V) -> [V; D] {
     let mut v = zero();
-    let omt = V::one() - t;
+    let omt = V::ONE - t;
     for i in 0..D {
         v[i] = a[i] * omt + b[i] * t;
     }
@@ -252,8 +247,8 @@ pub fn mix<V: Float, const D: usize>(a: &[V; D], b: &[V; D], t: V) -> [V; D] {
 ///
 /// However, if 2+2c is close to 0 then this fails
 pub fn axis_of_rotation3<V: Float>(rotation: &[V; 9]) -> [V; 3] {
-    let zero = V::zero();
-    let one = V::one();
+    let zero = V::ZERO;
+    let one = V::ONE;
     let almost_one: V = 0.99999_f32.into();
     let almost_zero: V = 0.00001_f32.into();
 
@@ -467,7 +462,7 @@ pub fn rotate_around<V: Float, const D: usize>(
 ///
 #[inline]
 pub fn length_sq<V: Num>(v: &[V]) -> V {
-    let mut r = V::zero();
+    let mut r = V::ZERO;
     for c in v.iter() {
         r += (*c) * (*c)
     }
@@ -501,7 +496,7 @@ pub fn length<V: Float>(v: &[V]) -> V {
 ///
 #[inline]
 pub fn distance_sq<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
-    let mut r = V::zero();
+    let mut r = V::ZERO;
     for i in 0..D {
         let d = v[i] - other[i];
         r += d * d;
@@ -536,7 +531,7 @@ pub fn distance<V: Float, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
 ///
 #[inline]
 pub fn dot<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
-    let mut r = V::zero();
+    let mut r = V::ZERO;
     for i in 0..D {
         r += v[i] * other[i];
     }
