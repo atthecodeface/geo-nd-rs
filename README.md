@@ -9,38 +9,9 @@ floats by the application, encompassing sets of vertices and matrices,
 with the library enabling in-place operations on those vertices and
 matrices.
 
-The library takes advantage of the developiong
-[core_simd](https://rust-lang.github.io/stdsimd/core_simd/) crate to
-provide architecture-specific implementations, without attempting to
-support architectural SIMD implementations within this crate.
-
-This crate is in alpha; it is used in a small number of applications,
-and the functionality is mature, but the API may undergo some changes
-in the near future (through Q3 2023) to ensure high performance OpenGL
-and Vulkan operation while maintaining simplicity of operation for
-other applications.
-
-## Usage
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-geo-nd = "0.1.2"
-```
-
-## Features
-
-*NOTE* Until *core_simd* is part of std or on crates.io the following does not work - the dependency in the geo-nd/Cargo.toml for core_simd must be commented out on crates.io; so a locally modified clone of this crate is required until that point.
-
-This crate can be used with the upcoming [core_simd](https://rust-lang.github.io/stdsimd/core_simd/) crate by enabling
-the default `simd` feature. Use this in `Cargo.toml`:
-
-```toml
-[dependencies.geo-nd]
-version = "0.1"
-features = ["simd"]
-```
+This crate is been in use since 2023, and is relatively stable, but
+the API is alpha; it is used in a small number of applications, and
+the functionality is mature. 
 
 ## Releases
 

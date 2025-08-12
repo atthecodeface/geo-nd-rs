@@ -2,6 +2,11 @@
 
 - Completely rejig the traits to make them more useful
 
+  The traits are no longer generic on each other; they refer back to Rust arrays
+  much more frequently, and this reduces some of the conversion work
+
+  It needs more analysis probably
+
 - Reduced local traits Num and Float to just amalgamate those of num_traits
 
   This means means dropping Float functions 'pi', 'tau', and
