@@ -324,12 +324,12 @@ macro_rules! farray_traits {
     { $f:ty,  $e:expr, $ty:ty } => {
 
         farray_basic_traits!{$f, $e, $ty}
-        farray_ref_traits!{$f, $e, $ty}
-        farray_convert_traits!{$f, $e, $ty}
-        farray_serialize_traits!{$f, $e, $ty}
-        farray_unary_traits!{$f, $e, $ty}
-        farray_add_sub_traits!{$f, $e, $ty, Add, add, +, AddAssign, add_assign, +=}
-        farray_add_sub_traits!{$f, $e, $ty, Sub, sub, -, SubAssign, sub_assign, -=}
+        crate::ref_traits!{$f, $e, $ty}
+        crate::convert_traits!{$f, $e, $ty}
+        crate::unary_traits!{$f, $e, $ty}
+        crate::elementwise_traits!{$f, $e, $ty, Add, add, +, AddAssign, add_assign, +=}
+        crate::elementwise_traits!{$f, $e, $ty, Sub, sub, -, SubAssign, sub_assign, -=}
+        crate::serialize_traits!{$f, $e, $ty}
         farray_mul_div_traits!{$f, $e, $ty, Mul, mul, *, MulAssign, mul_assign, *=}
         farray_mul_div_traits!{$f, $e, $ty, Div, div, /, DivAssign, div_assign, /=}
 

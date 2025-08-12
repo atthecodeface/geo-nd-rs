@@ -99,251 +99,106 @@ macro_rules! binary_op_by_f {
 ///
 /// It provides implementations of the traits required for a [SqMatrix]
 /// trait operating on an [FArray] of dimesion D.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct FArray2<F: Float, const D: usize, const D2: usize> {
     data: [F; D2],
 }
 
-//ip FArray2
-index_ops! { FArray2 }
-ref_op! { FArray2, [F;D2] }
-ref_op! { FArray2, [F] }
-binary_op! { FArray2, Add, add, +, AddAssign, add_assign, += }
-binary_op! { FArray2, Sub, sub, -, SubAssign, sub_assign, -= }
-binary_op_by_f! { FArray2, Mul, mul, *, MulAssign, mul_assign, *= }
-binary_op_by_f! { FArray2, Div, div, /, DivAssign, div_assign, /= }
+//mi farray2_basic_traits!
+macro_rules! farray2_basic_traits {
+    { $f:ty,  $d:expr,  $d2:expr, $ty:ty } => {
 
-impl<F: Float, const D: usize, const D2: usize> std::default::Default for FArray2<F, D, D2> {
-    fn default() -> Self {
-        Self {
-            data: vector::zero(),
+        //ip Default for FArray
+        impl std::default::Default for $ty {
+            fn default() -> Self {
+                Self {
+                    data: vector::zero(),
+                }
+            }
+        }
+
+        //ip Display for FArray
+        impl std::fmt::Display for $ty {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                vector::fmt(f, &self.data)
+            }
         }
     }
 }
 
-//ip Mul, MulAssign <Self> for FArray2
-impl<F: Float, const D: usize, const D2: usize> std::ops::Mul<Self> for FArray2<F, D, D2> {
-    type Output = Self;
-    fn mul(self, other: Self) -> Self {
-        matrix::multiply::<F, D2, D2, D2, D, D, D>(self.as_ref(), other.as_ref()).into()
-    }
-}
-impl<F: Float, const D: usize, const D2: usize> std::ops::MulAssign<Self> for FArray2<F, D, D2> {
-    fn mul_assign(&mut self, other: Self) {
-        *self = *self * other;
+//mi farray2_mul_traits!
+macro_rules! farray2_mul_traits {
+    { $f:ty,  $d:expr,  $d2:expr, $ty:ty } => {
+        //ip FArray2
+        //ip Mul, MulAssign <Self> for FArray2
+        impl std::ops::Mul<Self> for $ty {
+            type Output = Self;
+            fn mul(self, other: Self) -> Self {
+                matrix::multiply::<$f, $d2, $d2, $d2, $d, $d, $d>(&self.data, &other.data).into()
+            }
+        }
+        impl std::ops::MulAssign<Self> for $ty {
+            fn mul_assign(&mut self, other: Self) {
+                *self = *self * other;
+            }
+        }
     }
 }
 
-//ip Serialize for FArray2
-impl<F: Float + serde::Serialize, const D: usize, const D2: usize> Serialize for FArray2<F, D, D2> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeTuple;
-        let mut seq = serializer.serialize_tuple(D2)?;
-        for e in self.data.iter() {
-            seq.serialize_element(e)?;
-        }
-        seq.end()
-    }
-}
-
-//ip Deserialize for FArray2
-impl<'de, F: Float + serde::Deserialize<'de>, const D: usize, const D2: usize> Deserialize<'de>
-    for FArray2<F, D, D2>
-{
-    fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
-    where
-        DE: serde::Deserializer<'de>,
-    {
-        let array = Vec::<F>::deserialize(deserializer)?;
-        if array.len() != D2 {
-            return Err(serde::de::Error::invalid_length(array.len(), &"<D> floats"));
-        }
-        let mut data = Self::default();
-        for (i, d) in array.into_iter().enumerate() {
-            data[i] = d;
-        }
-        Ok(data)
-    }
-}
-
-//ip From<[F;D]> for FArray
-impl<F: Float, const D: usize, const D2: usize> From<[F; D2]> for FArray2<F, D, D2> {
-    fn from(data: [F; D2]) -> Self {
-        Self { data }
-    }
-}
 //ip SqMatrix<F,2,4> for FArray2
-impl<F: Float> SqMatrix<FArray<F, 2>, F, 2, 4> for FArray2<F, 2, 4>
-where
-    FArray<F, 2>: Vector<F, 2>,
-{
-    fn from_array(data: [F; 4]) -> Self {
-        Self { data }
-    }
-    fn into_array(self) -> [F; 4] {
-        self.data
-    }
-    fn zero() -> Self {
-        Self {
-            data: vector::zero(),
+//mi farray2_sqmatrix_trait!
+macro_rules! farray2_sqmatrix_trait {
+    { $f:ty,  $d:expr,  $d2:expr, $ty:ty, $det_fn:expr, $inv_fn:expr } => {
+
+        impl SqMatrix<$f, $d, $d2> for $ty
+        where
+            FArray<$f, $d>: Vector<$f, $d>,
+        {
+            fn transpose(&self) -> Self {
+                matrix::transpose::<$f, $d2, $d, $d>(self.data).into()
+            }
+            fn transform<T>(&self, v: &T) -> T
+            where
+                T: std::ops::Deref<Target = [$f; $d]>,
+                T: From<[$f; $d]>
+            {
+                matrix::multiply::<$f, $d2, $d, $d, $d, $d, 1>(&self.data, v).into()
+            }
+            fn determinant(&self) -> $f {
+                $det_fn (&self.data)
+            }
+            fn inverse(&self) -> Self {
+                $inv_fn (&self.data).into()
+            }
         }
     }
-    fn identity() -> Self {
-        [F::one(), F::zero(), F::zero(), F::one()].into()
-    }
-    fn is_zero(&self) -> bool {
-        vector::is_zero(&self.data)
-    }
-    fn set_zero(&mut self) {
-        vector::set_zero(&mut self.data)
-    }
-    fn transpose(&self) -> Self {
-        Self::from_array(matrix::transpose::<F, 4, 2, 2>(self.data))
-    }
-    fn determinant(&self) -> F {
-        matrix::determinant2(&self.data)
-    }
-    fn inverse(&self) -> Self {
-        Self::from_array(matrix::inverse2(&self.data))
-    }
-    fn transform(&self, v: &FArray<F, 2>) -> FArray<F, 2> {
-        matrix::multiply::<F, 4, 2, 2, 2, 2, 1>(&self.data, v.as_ref()).into()
+}
+
+//a New
+//mi farray2_traits
+macro_rules! farray2_traits {
+    { $f:ty,  $d:expr,  $d2:expr, $ty:ty, $det_fn:expr, $inv_fn:expr } => {
+        farray2_basic_traits! {$f, $d, $d2, $ty}
+
+        crate::ref_traits!{$f, $d2, $ty}
+        crate::convert_traits!{$f, $d2, $ty}
+        crate::serialize_traits!{$f, $d2, $ty}
+        crate::unary_traits!{$f, $d2, $ty}
+        crate::elementwise_traits!{$f, $d2, $ty, Add, add, +, AddAssign, add_assign, +=}
+        crate::elementwise_traits!{$f, $d2, $ty, Sub, sub, -, SubAssign, sub_assign, -=}
+        crate::scale_by_f_traits!{$f, $ty, Mul, mul, *, MulAssign, mul_assign, *=}
+        crate::scale_by_f_traits!{$f, $ty, Div, div, /, DivAssign, div_assign, /=}
+
+        farray2_mul_traits! {$f, $d, $d2, $ty}
+
+        farray2_sqmatrix_trait! {$f, $d, $d2, $ty, $det_fn, $inv_fn}
     }
 }
 
-//ip SqMatrix<F,3,9> for FArray2
-impl<F: Float> SqMatrix<FArray<F, 3>, F, 3, 9> for FArray2<F, 3, 9>
-where
-    FArray<F, 3>: Vector<F, 3>,
-{
-    fn from_array(data: [F; 9]) -> Self {
-        Self { data }
-    }
-    fn into_array(self) -> [F; 9] {
-        self.data
-    }
-    fn zero() -> Self {
-        Self {
-            data: vector::zero(),
-        }
-    }
-    fn identity() -> Self {
-        [
-            F::one(),
-            F::zero(),
-            F::zero(),
-            F::zero(),
-            F::one(),
-            F::zero(),
-            F::zero(),
-            F::zero(),
-            F::one(),
-        ]
-        .into()
-    }
-    fn is_zero(&self) -> bool {
-        vector::is_zero(&self.data)
-    }
-    fn set_zero(&mut self) {
-        vector::set_zero(&mut self.data)
-    }
-    fn transpose(&self) -> Self {
-        Self::from_array(matrix::transpose::<F, 9, 3, 3>(self.data))
-    }
-    fn determinant(&self) -> F {
-        matrix::determinant3(&self.data)
-    }
-    fn inverse(&self) -> Self {
-        Self::from_array(matrix::inverse3(&self.data))
-    }
-    fn transform(&self, v: &FArray<F, 3>) -> FArray<F, 3> {
-        matrix::multiply::<F, 9, 3, 3, 3, 3, 1>(&self.data, v.as_ref()).into()
-    }
-}
+farray2_traits! {f32,2,4,FArray2<f32,2,4>, matrix::determinant2, matrix::inverse2}
+farray2_traits! {f32,3,9,FArray2<f32,3,9>, matrix::determinant3, matrix::inverse3}
+farray2_traits! {f32,4,16,FArray2<f32,4,16>, matrix::determinant4, matrix::inverse4}
 
-//ip SqMatrix3<F> for FArray2
-impl<F: Float> SqMatrix3<FArray<F, 3>, F> for FArray2<F, 3, 9> where FArray<F, 3>: Vector<F, 3> {}
-
-//ip SqMatrix<F,4,16> for FArray2
-impl<F: Float> SqMatrix<FArray<F, 4>, F, 4, 16> for FArray2<F, 4, 16>
-where
-    FArray<F, 4>: Vector<F, 4>,
-{
-    fn from_array(data: [F; 16]) -> Self {
-        Self { data }
-    }
-    fn into_array(self) -> [F; 16] {
-        self.data
-    }
-    fn zero() -> Self {
-        Self {
-            data: vector::zero(),
-        }
-    }
-    fn identity() -> Self {
-        [
-            F::one(),
-            F::zero(),
-            F::zero(),
-            F::zero(),
-            F::zero(),
-            F::one(),
-            F::zero(),
-            F::zero(),
-            F::zero(),
-            F::zero(),
-            F::one(),
-            F::zero(),
-            F::zero(),
-            F::zero(),
-            F::zero(),
-            F::one(),
-        ]
-        .into()
-    }
-    fn is_zero(&self) -> bool {
-        vector::is_zero(&self.data)
-    }
-    fn set_zero(&mut self) {
-        vector::set_zero(&mut self.data)
-    }
-    fn transpose(&self) -> Self {
-        Self::from_array(matrix::transpose::<F, 16, 4, 4>(self.data))
-    }
-    fn determinant(&self) -> F {
-        matrix::determinant4(&self.data)
-    }
-    fn inverse(&self) -> Self {
-        Self::from_array(matrix::inverse4(&self.data))
-    }
-    fn transform(&self, v: &FArray<F, 4>) -> FArray<F, 4> {
-        matrix::multiply::<F, 16, 4, 4, 4, 4, 1>(&self.data, v.as_ref()).into()
-    }
-}
-
-//ip SqMatrix4<F> for FArray2
-impl<F: Float> SqMatrix4<F, FArray<F, 3>, FArray<F, 4>> for FArray2<F, 4, 16>
-where
-    FArray<F, 3>: Vector<F, 3>,
-    FArray<F, 4>: Vector<F, 4>,
-{
-    fn perspective(fov: F, aspect: F, near: F, far: F) -> Self {
-        Self::from_array(matrix::perspective4(fov, aspect, near, far))
-    }
-    fn look_at(eye: &FArray<F, 3>, center: &FArray<F, 3>, up: &FArray<F, 3>) -> Self {
-        Self::from_array(matrix::look_at4(eye.as_ref(), center.as_ref(), up.as_ref()))
-    }
-    fn translate3(&mut self, by: &FArray<F, 3>) {
-        self.data[3] += by[0];
-        self.data[7] += by[1];
-        self.data[11] += by[2];
-    }
-    fn translate4(&mut self, by: &FArray<F, 4>) {
-        self.data[3] += by[0];
-        self.data[7] += by[1];
-        self.data[11] += by[2];
-    }
-}
+farray2_traits! {f64,2,4,FArray2<f64,2,4>, matrix::determinant2, matrix::inverse2}
+farray2_traits! {f64,3,9,FArray2<f64,3,9>, matrix::determinant3, matrix::inverse3}
+farray2_traits! {f64,4,16,FArray2<f64,4,16>, matrix::determinant4, matrix::inverse4}

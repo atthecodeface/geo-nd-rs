@@ -5,7 +5,7 @@ use num_traits::{One, Zero};
 use serde::{Deserialize, Serialize};
 
 use super::{quat, vector};
-use super::{Float, Quaternion, SqMatrix, Vector3, Vector4};
+use super::{Float, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Vector3, Vector4};
 
 //a QArray
 //tp QArray
@@ -463,23 +463,25 @@ macro_rules! qarray_quaternion_trait {
             //fp of_rotation3
             /// Find the quaternion of a Matrix3 assuming it is purely a rotation
             #[inline]
-            fn of_rotation3<M, V3:Vector3<$f>> (rotation:&M) -> Self
+            fn of_rotation3<M>(rotation: &M) -> Self
             where
-                M: SqMatrix<V3, $f, 3, 9>,
+                M: SqMatrix3<$f>
             {
                 quat::of_rotation(rotation.as_ref()).into()
             }
 
             #[inline]
-            fn set_rotation3<V3: Vector3<$f>, M> (&self, matrix3:&mut M)
-            where M:SqMatrix<V3, $f, 3, 9>
+            fn set_rotation3<M> (&self, matrix3:&mut M)
+            where
+                M: SqMatrix3<$f>
             {
                 quat::to_rotation3(&self.data, matrix3.as_mut())
             }
 
             #[inline]
-            fn set_rotation4<V4: Vector4<$f>, M> (&self, matrix:&mut M)
-            where M:SqMatrix<V4, $f, 4, 16>
+            fn set_rotation4<M> (&self, matrix:&mut M)
+            where
+                M: SqMatrix4<$f>
             {
                 quat::to_rotation4(&self.data, matrix.as_mut())
             }
@@ -492,14 +494,14 @@ macro_rules! qarray_traits {
     { $f:ty, $ty:ty } => {
 
         qarray_basic_traits!{$f, $ty}
-        qarray_ref_traits!{$f, $ty}
-        qarray_convert_traits!{$f, $ty}
-        qarray_serialize_traits!{$f, $ty}
-        qarray_unary_traits!{$f, $ty}
-        qarray_add_sub_traits!{$f, $ty, Add, add, +, AddAssign, add_assign, +=}
-        qarray_add_sub_traits!{$f, $ty, Sub, sub, -, SubAssign, sub_assign, -=}
-        qarray_mul_div_f_traits!{$f, $ty, Mul, mul, *, MulAssign, mul_assign, *=}
-        qarray_mul_div_f_traits!{$f, $ty, Div, div, /, DivAssign, div_assign, /=}
+        crate::ref_traits!{$f, 4, $ty}
+        crate::convert_traits!{$f, 4, $ty}
+        crate::serialize_traits!{$f, 4, $ty}
+        crate::unary_traits!{$f, 4, $ty}
+        crate::elementwise_traits!{$f, 4, $ty, Add, add, +, AddAssign, add_assign, +=}
+        crate::elementwise_traits!{$f, 4, $ty, Sub, sub, -, SubAssign, sub_assign, -=}
+        crate::scale_by_f_traits!{$f, $ty, Mul, mul, *, MulAssign, mul_assign, *=}
+        crate::scale_by_f_traits!{$f, $ty, Div, div, /, DivAssign, div_assign, /=}
         qarray_mul_div_traits!{$f, $ty}
 
         qarray_quaternion_trait!{$f, $ty}

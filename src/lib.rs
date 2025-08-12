@@ -1,21 +1,3 @@
-/*a Copyright
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-@file    lib.rs
-@brief   Geometry library
- */
-
 /*a To do
 
 remove indexing from quaternions
@@ -25,8 +7,6 @@ Add matrix trait which takes out most of the sqmatrix traits
 Document and get transform to work
 
 Fix rotate_x, rotate_y, rotate_z
-
-Make quaternion *not* be of V3 V4 but have them in the where of the functions as it is with of_rotation3
 
 quaternion distance functions?
 
@@ -84,6 +64,22 @@ some other issues).
 Additionally, the inference of a type for `V` is sometimes required to
 be forced, so there may be a small amount of turbofish notation such
 as `identity2::<f32>()`.
+
+# Trait method policy
+
+The purpose of the traits is to permit simple operation on arrays such
+as `[f32;4]`, without necessarily requiring conversion of those arrays
+into a specific type first. For example, it is simple to add `[1,2,3]`
+to a Vector type without having to convert that first into a Vector
+type - but it must also work for any Vector type too. Hence the
+arguments to methods are generally `&[F; D]`.
+
+However, for methods that return a (e.g.) Vector type (that is not
+Self), this would force the caller to convert the resultant type back
+to the required Vector type. The policy is therefore, for such
+methods, to use a generic on the method `T:Deref<Target = [}>`; to
+take an argument of type `&T`, and to return a `T`. This usually
+requires T to also provide `From<F;D>`.
 
 # Function operation
 
@@ -387,21 +383,20 @@ Note: Not PartialOrd, as vectors dont't have an ordering
 
  Not AsRef/Mut of [F], as [F; D] implement that, and Vector gets it through Deref
 
-
-    std::convert::AsRef<[F]>
-
  Note AsRef<[F]> is implemented through Deref to [F; D]
 
-    std::convert::AsMut<[F]>
-
  Note AsMut<[F]> is implemented through DerefMut to [F; D]
-
-   std::ops::Add<[F;D], Output = Self>
 
  if required, then it blocks Add<Deref<Target = [F;D]>>
 !*/
 
 //a Imports
+mod macros;
+pub(crate) use macros::{
+    convert_traits, elementwise_traits, ref_traits, scale_by_f_traits, serialize_traits,
+    unary_traits,
+};
+
 mod matrix_op;
 mod matrixr_op;
 mod quaternion_op;

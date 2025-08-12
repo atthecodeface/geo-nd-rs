@@ -194,7 +194,7 @@ impl<T, F> ArrayScale<F> for T where
 {
 }
 
-//a Vector, Vector3, Vector4
+//a Vector, Vector2, Vector3, Vector4
 //tt Vector
 /// The [Vector] trait describes an N-dimensional vector of [Float] type.
 ///
@@ -492,55 +492,29 @@ where
 /// [SqMatrix] for addition, subtraction, multiplication and division by
 /// a scalar [Float] value type that they are comprised of. Hence a
 /// `m:SqMatrix<F>` may be scaled by a `s:F` using `m * s`.
-pub trait SqMatrix<V: Vector<F, D>, F: Float, const D: usize, const D2: usize>:
-    Clone
-    + Copy
-    + std::fmt::Debug
-    + std::default::Default
-    + std::convert::AsRef<[F; D2]>
-    + std::convert::AsMut<[F; D2]>
-    + std::convert::AsRef<[F]>
-    + std::convert::AsMut<[F]>
-    + std::ops::Add<Output = Self>
-    + std::ops::AddAssign
-    + std::ops::Sub<Output = Self>
-    + std::ops::SubAssign
+pub trait SqMatrix<F: Float, const D: usize, const D2: usize>:
+    ArrayBasic
+    + ArrayRef<F, D2>
+    + ArrayIndex<F>
+    + ArrayConvert<F, D2>
+    + ArrayAddSubNeg<F, D2>
+    + ArrayScale<F>
     + std::ops::Mul<Output = Self>
     + std::ops::MulAssign
-    + std::ops::Mul<F, Output = Self>
-    + std::ops::MulAssign<F>
-    + std::ops::Div<F, Output = Self>
-    + std::ops::DivAssign<F>
 {
-    //fp from_array
-    /// Create a [SqMatrix] from an array of [Float]s
-    #[must_use]
-    fn from_array(data: [F; D2]) -> Self;
-
-    //fp into_array
-    /// Create a vector from an array of [Float]
-    #[must_use]
-    fn into_array(self) -> [F; D2];
-
-    //fp identity
-    /// Create an identity [SqMatrix]
-    #[must_use]
-    fn identity() -> Self;
-
-    //fp zero
-    /// Create a zero [SqMatrix]
-    #[must_use]
-    fn zero() -> Self;
-
-    //fp is_zero
-    /// Return true if the matrix is zer
-    fn is_zero(&self) -> bool;
-
-    //fp set_zero
-    /// Set the matrix to zero
-    fn set_zero(&mut self);
-
-    // absmax
+    fn identity() -> Self {
+        let mut s = Self::default();
+        for i in 0..D {
+            s[i * (D + 1)] = F::one();
+        }
+        s
+    }
+    fn is_zero(&self) -> bool {
+        vector::is_zero(self.deref())
+    }
+    fn set_zero(&mut self) {
+        vector::set_zero(self.deref_mut())
+    }
 
     //mp transpose
     /// Return a transpose matrix
@@ -556,34 +530,69 @@ pub trait SqMatrix<V: Vector<F, D>, F: Float, const D: usize, const D2: usize>:
 
     //mp transform
     /// Apply the matrix to a vector to transform it
-    fn transform(&self, v: &V) -> V;
+    fn transform<T>(&self, v: &T) -> T
+    where
+        T: std::ops::Deref<Target = [F; D]>,
+        T: From<[F; D]>;
+}
+
+//tt SqMatrix2
+/// The [SqMatrix2] trait describes a 2-dimensional vector of [Float]
+///
+pub trait SqMatrix2<F: Float>: SqMatrix<F, 2, 4> {}
+impl<F, M> SqMatrix2<F> for M
+where
+    F: Float,
+    M: SqMatrix<F, 2, 4>,
+{
 }
 
 //tt SqMatrix3
-/// The [SqMatrix3] trait describes a 3-dimensional square matrix of [Float] type that operates on a [Vector].
+/// The [SqMatrix3] trait describes a 2-dimensional vector of [Float]
 ///
-pub trait SqMatrix3<V3: Vector<F, 3>, F: Float>: SqMatrix<V3, F, 3, 9> {
-    // fn invert(&mut self);
-    // fn inverse(&self) -> Self;
+pub trait SqMatrix3<F: Float>: SqMatrix<F, 3, 9> {}
+impl<F, M> SqMatrix3<F> for M
+where
+    F: Float,
+    M: SqMatrix<F, 3, 9>,
+{
 }
 
 //tt SqMatrix4
-/// The [SqMatrix4] trait describes a 4-dimensional square matrix of [Float] type that operates on a [Vector].
+/// The [SqMatrix4] trait describes a 2-dimensional vector of [Float]
 ///
-pub trait SqMatrix4<F: Float, V3: Vector<F, 3>, V4: Vector<F, 4>>: SqMatrix<V4, F, 4, 16> {
-    // fn invert(&mut self);
-    // fn inverse(&self) -> Self;
+pub trait SqMatrix4<F: Float>: SqMatrix<F, 4, 16> {
     /// Generate a perspective matrix
-    fn perspective(fov: F, aspect: F, near: F, far: F) -> Self;
+    fn perspective(fov: F, aspect: F, near: F, far: F) -> Self {
+        crate::matrix::perspective4(fov, aspect, near, far).into()
+    }
 
     /// Generate a matrix that represents a 'look at a vector'
-    fn look_at(eye: &V3, center: &V3, up: &V3) -> Self;
+    fn look_at<V: Vector<F, 3>>(eye: &V, center: &V, up: &V) -> Self {
+        crate::matrix::look_at4(eye.as_ref(), center.as_ref(), up.as_ref()).into()
+    }
 
     /// Translate the matrix by a Vec3
-    fn translate3(&mut self, by: &V3);
+    fn translate3<V: std::ops::Deref<Target = [F; 3]>>(&mut self, by: &V) {
+        let by = by.deref();
+        self[3] += by[0];
+        self[7] += by[1];
+        self[11] += by[2];
+    }
 
     /// Translate the matrix by a Vec4
-    fn translate4(&mut self, by: &V4);
+    fn translate4<V: std::ops::Deref<Target = [F; 4]>>(&mut self, by: &V) {
+        let by = by.deref();
+        self[3] += by[0];
+        self[7] += by[1];
+        self[11] += by[2];
+    }
+}
+impl<F, M> SqMatrix4<F> for M
+where
+    F: Float,
+    M: SqMatrix<F, 4, 16>,
+{
 }
 
 //a Quaternion
@@ -653,13 +662,6 @@ pub trait Quaternion<F: Float>:
     fn rotate_z(self, angle: F) -> Self {
         quat::rotate_z(self.as_ref(), angle).into()
     }
-
-    //cp of_rotation3
-    /// Find the unit quaternion of a Matrix3 assuming it is purely a rotation
-    #[must_use]
-    fn of_rotation3<M, V3: Vector3<F>>(rotation: &M) -> Self
-    where
-        M: SqMatrix<V3, F, 3, 9>;
 
     //cp look_at
     /// Create a quaternion that maps a unit V3 of dirn to (0,0,-1) and a unit V3 of up (if perpendicular to dirn) to (0,1,0)
@@ -772,17 +774,24 @@ pub trait Quaternion<F: Float>:
         self
     }
 
+    //cp of_rotation3
+    /// Find the unit quaternion of a Matrix3 assuming it is purely a rotation
+    #[must_use]
+    fn of_rotation3<M>(rotation: &M) -> Self
+    where
+        M: SqMatrix3<F>;
+
     //fp set_rotation3
     /// Set a Matrix3 to be the rotation matrix corresponding to the unit quaternion
-    fn set_rotation3<V3: Vector3<F>, M>(&self, m: &mut M)
+    fn set_rotation3<M>(&self, m: &mut M)
     where
-        M: SqMatrix<V3, F, 3, 9>;
+        M: SqMatrix3<F>;
 
     //fp set_rotation4
     /// Set a Matrix4 to be the rotation matrix corresponding to the unit quaternion
-    fn set_rotation4<V4: Vector4<F>, M>(&self, m: &mut M)
+    fn set_rotation4<M>(&self, m: &mut M)
     where
-        M: SqMatrix<V4, F, 4, 16>;
+        M: SqMatrix4<F>;
 
     //fp apply3
     /// Apply the quaternion to a V3
@@ -797,10 +806,10 @@ pub trait Quaternion<F: Float>:
     /// If it tkes the latter then it cannot operate on [F;3], but its
     /// result need not be cast
     #[must_use]
-    fn apply3<A>(&self, other: &A) -> A
+    fn apply3<T>(&self, other: &T) -> T
     where
-        A: std::ops::Deref<Target = [F; 3]>,
-        A: From<[F; 3]>,
+        T: std::ops::Deref<Target = [F; 3]>,
+        T: From<[F; 3]>,
     {
         quat::apply3(self.deref(), other.deref()).into()
     }
@@ -808,8 +817,12 @@ pub trait Quaternion<F: Float>:
     //fp apply4
     /// Apply the quaternion to a V4
     #[must_use]
-    fn apply4(&self, other: &[F; 4]) -> [F; 4] {
-        quat::apply4(self.deref(), other)
+    fn apply4<T>(&self, other: &T) -> T
+    where
+        T: std::ops::Deref<Target = [F; 4]>,
+        T: From<[F; 4]>,
+    {
+        quat::apply4(self.deref(), other.deref()).into()
     }
 
     //zz All done
@@ -823,7 +836,7 @@ pub trait Quaternion<F: Float>:
 /// A transformation that is a translation . scaling . rotation
 /// (i.e. it applies the rotation to an object, then scales it, then
 /// translates it)
-pub trait Transform<F, V3, V4, M4, Q>:
+pub trait Transform<F, V3, Q>:
     Clone + Copy + std::fmt::Debug + std::fmt::Display + std::default::Default
 // + std::ops::Neg<Output = Self>
 // apply to self - this is possible
@@ -854,8 +867,6 @@ pub trait Transform<F, V3, V4, M4, Q>:
 where
     F: Float,
     V3: Vector<F, 3>,
-    V4: Vector<F, 4>,
-    M4: SqMatrix4<F, V3, V4>,
     Q: Quaternion<F>,
 {
     /// Create a transformation that is a translation, rotation and scaling
@@ -872,7 +883,7 @@ where
     /// Invert the transformation
     fn invert(&mut self);
     /// Convert it to a 4-by-4 matrix
-    fn as_mat(&self) -> M4;
+    fn as_mat<M: SqMatrix4<F>>(&self) -> M;
 }
 
 //a Vector3D, Geometry3D
@@ -902,13 +913,13 @@ pub trait Geometry3D<Scalar: Float> {
     /// The type of a 3D vector with an additional '1' expected in its extra element if it is a position
     type Vec4: Vector<Scalar, 4>;
     /// The type of a 3D matrix that can transform Vec3
-    type Mat3: SqMatrix3<Self::Vec3, Scalar>;
+    type Mat3: SqMatrix3<Scalar>;
     /// The type of a 3D matrix which allows for translations, that can transform Vec4
-    type Mat4: SqMatrix4<Scalar, Self::Vec3, Self::Vec4>;
+    type Mat4: SqMatrix4<Scalar>;
     /// The quaternion type that provides for rotations in 3D
     type Quat: Quaternion<Scalar>;
     /// The transform type
-    type Trans: Transform<Scalar, Self::Vec3, Self::Vec4, Self::Mat4, Self::Quat>;
+    type Trans: Transform<Scalar, Self::Vec3, Self::Quat>;
     // fn of_transform3/4?
     // cross_product3
     // axis_of_rotation3/4
@@ -924,5 +935,5 @@ pub trait Geometry2D<Scalar: Float> {
     /// The type of a 2D vector
     type Vec2: Vector<Scalar, 2>;
     /// The type of a 2D matrix that can transform a Vec2
-    type Mat2: SqMatrix<Self::Vec2, Scalar, 2, 4>;
+    type Mat2: SqMatrix<Scalar, 2, 4>;
 }
