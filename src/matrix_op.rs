@@ -1,21 +1,3 @@
-/*a Copyright
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-@file    matrix_op.rs
-@brief   Square matrix operations - part of geometry library
- */
-
 //a Imports
 use super::{matrixr_op, vector_op};
 use crate::{Float, Num};
@@ -143,13 +125,14 @@ pub fn inverse3<V: Float>(m: &[V; 9]) -> [V; 9] {
 //fp from_quat3
 /// Create a rotation 3-by-3 matrix from a quaternion
 pub fn from_quat3<V: Float>(q: [V; 4]) -> [V; 9] {
-    let mut r = [V::zero(); 9];
+    let zero = V::zero();
+    let one = V::one();
+    let two = one + one;
+    let mut r = [zero; 9];
     let x = q[0];
     let y = q[1];
     let z = q[2];
     let w = q[3];
-    let one = V::one();
-    let two = V::from(2).unwrap();
 
     // Allow clippy identity lint for <n>+0 to keep vector clarity
     #[allow(clippy::identity_op)]
@@ -347,13 +330,15 @@ pub fn look_at4<V: Float>(eye: &[V; 3], centre: &[V; 3], up: &[V; 3]) -> [V; 16]
 //fp perspective4
 /// Create a perspective graphics matrix
 pub fn perspective4<V: Float>(fov: V, aspect: V, near: V, far: V) -> [V; 16] {
-    let mut r = [V::zero(); 16];
-    let two = V::from(2).unwrap();
-    let f = V::one() / V::tan(fov / two);
+    let zero = V::zero();
+    let one = V::one();
+    let two = one + one;
+    let mut r = [zero; 16];
+    let f = one / V::tan(fov / two);
     r[0] = f / aspect;
     r[5] = f;
-    r[11] = -V::one();
-    let nf = V::one() / (near - far);
+    r[11] = -one;
+    let nf = one / (near - far);
     r[10] = (far + near) * nf;
     r[14] = two * far * near * nf;
     r
@@ -362,13 +347,14 @@ pub fn perspective4<V: Float>(fov: V, aspect: V, near: V, far: V) -> [V; 16] {
 //fp from_quat4
 /// Create a rotation 4-by-4 matrix from a quaternion
 pub fn from_quat4<V: Float>(q: [V; 4]) -> [V; 16] {
-    let mut r = [V::zero(); 16];
+    let zero = V::zero();
+    let one = V::one();
+    let two = one + one;
+    let mut r = [zero; 16];
     let x = q[0];
     let y = q[1];
     let z = q[2];
     let w = q[3];
-    let one = V::one();
-    let two = V::from(2).unwrap();
 
     // Allow clippy identity lint for <n>+0 to keep matrix clarity
     #[allow(clippy::identity_op)]

@@ -2,6 +2,13 @@
 
 - Completely rejig the traits to make them more useful
 
+- Reduced local traits Num and Float to just amalgamate those of num_traits
+
+  This means means dropping Float functions 'pi', 'tau', and
+  conversions from isize and fractions; instead values can be created
+  with f32.into(), and the constants are in functions 'PI', 'TAU' (and
+  more)
+
 # Release 0.5.2 (2024-08-04)
 
 - Fix scaling of matrix by F

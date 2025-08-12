@@ -88,14 +88,14 @@ pub fn is_zero<V: Num>(v: &[V]) -> bool {
 /// vectors are more evenly spaced across the sphere
 #[inline]
 pub fn uniform_dist_sphere3<V: Float>(x: [V; 2], map: bool) -> [V; 3] {
-    let one = V::frac(1, 1);
-    let two = V::frac(2, 1);
+    let one = V::one();
+    let two = one + one;
 
     let (u, v) = if map {
-        let cos_map = V::frac(5, 13);
-        let sin_map = V::frac(12, 13);
-        let u_ofs = V::frac(13, 101);
-        let v_ofs = V::frac(6, 73);
+        let cos_map: V = (5_f32 / 13_f32).into();
+        let sin_map: V = (12_f32 / 13_f32).into();
+        let u_ofs: V = (13_f32 / 101_f32).into();
+        let v_ofs: V = (6_f32 / 73_f32).into();
         let u = u_ofs + x[0] * cos_map - x[1] * sin_map;
         let v = v_ofs + x[0] * sin_map + x[1] * cos_map;
         (u, v)
@@ -104,7 +104,7 @@ pub fn uniform_dist_sphere3<V: Float>(x: [V; 2], map: bool) -> [V; 3] {
     };
 
     let v = v - v.floor();
-    let theta = two * V::pi() * u;
+    let theta = V::TAU() * u;
     let phi = (two * v - one).acos();
     let sin_theta = theta.sin();
     let cos_theta = theta.cos();
@@ -252,9 +252,12 @@ pub fn mix<V: Float, const D: usize>(a: &[V; D], b: &[V; D], t: V) -> [V; D] {
 ///
 /// However, if 2+2c is close to 0 then this fails
 pub fn axis_of_rotation3<V: Float>(rotation: &[V; 9]) -> [V; 3] {
+    let zero = V::zero();
+    let one = V::one();
+    let almost_one: V = 0.99999_f32.into();
+    let almost_zero: V = 0.00001_f32.into();
+
     let mut rot_min_id = *rotation;
-    let almost_one = V::from(99999).unwrap() / V::from(100000).unwrap();
-    let almost_zero = V::one() / V::from(100000).unwrap();
     // Allow clippt lint for assigning rot_min_id[8] to keep operation obvious
     #[allow(clippy::assign_op_pattern)]
     {
@@ -264,9 +267,9 @@ pub fn axis_of_rotation3<V: Float>(rotation: &[V; 9]) -> [V; 3] {
     }
     let rot_min_id_i = matrix::inverse3(&rot_min_id);
     for j in 0..3 {
-        let mut v = [V::zero(); 3];
-        v[j] = V::one();
-        let mut last_v = [V::zero(); 3];
+        let mut v = [zero; 3];
+        v[j] = one;
+        let mut last_v = [zero; 3];
         for _ in 0..10 {
             last_v = v;
             v = normalize(matrix::transform_vec3(&rot_min_id_i, &v));
@@ -275,7 +278,7 @@ pub fn axis_of_rotation3<V: Float>(rotation: &[V; 9]) -> [V; 3] {
             return v;
         }
     }
-    [V::zero(); 3]
+    [zero; 3]
 }
 
 //a Combinations

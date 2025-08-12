@@ -21,7 +21,7 @@ type Quat = <f32 as Geometry3D<f32>>::Quat;
 /// types of V they must.
 fn vec3_eq(v: &FArray<f32, 3>, v2: &[f32; 3]) -> bool {
     let d2 = vector::distance_sq(v, v2);
-    if d2 < f32::frac(1, 1000) {
+    if d2 < 1.0 / 1000.0 {
         true
     } else {
         dbg!(v, v2, d2);
@@ -31,9 +31,9 @@ fn vec3_eq(v: &FArray<f32, 3>, v2: &[f32; 3]) -> bool {
 fn quat_eq(q: &Quat, q2: &Quat) -> bool {
     let d_sub = *q2 - *q;
     let d_add = *q2 + *q;
-    if d_sub.length_sq() < f32::frac(1, 1000) {
+    if d_sub.length_sq() < 1.0 / 1000.0 {
         true
-    } else if d_add.length_sq() < f32::frac(1, 1000) {
+    } else if d_add.length_sq() < 1.0 / 1000.0 {
         true
     } else {
         dbg!(q, q2, d_sub, d_sub.length_sq(), d_add, d_add.length_sq());

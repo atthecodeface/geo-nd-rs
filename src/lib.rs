@@ -40,8 +40,26 @@ quaternion distance functions?
 This library provides for N-dimensional geometrical objects,
 particularly *Vector*s, *Matrix*, *Quaternion* operations.
 
-The underlying type is \[Num; N\], so the data may be shared simply
-with other libraries, including OpenGL.
+The underlying numeric type that must be supported for these
+operations is either a type supporting [Num] - which includes integers
+- or in most circumstances [Float]. Particularly the latter is
+provided by f32 anf f64.
+
+It provides libraries that provide functions that implement vector,
+matrix and quaternion operations using arrays of values. For
+quaternions this is `[F; 4]`, in the order i, j, k, r.
+
+It additionally provides traits for [Vector], [Quaternion], and
+[SqMatrix]. These traits provide consistent means of manipulating such
+items, which are expected to be in some manner a wrapper around a
+`[F;D]`, but with perhaps greater alignment restrictions. In theory
+this could be a SIMD type.
+
+The purpose of these traits is to provide simple access to the vector,
+matrix, and quaternion operations using methods, rather than invoking
+these operations through explicit function calls. For example,
+quaternions can be multiplied together with `a*b`, rather than
+invoking quat::multiply.
 
 The library mirrors the operation of 'glm' in some sense.
 
@@ -49,12 +67,6 @@ The desire for the library is that it does not undergo much
 development; it provides a stable and simple basis for operations that
 are common mathematical operations, with no aim for it to grow into a
 larger linear algebra library.
-
-The library operates on arrays of elements that support the
-[`Num`](Num) trait, which requires basic arithmetic operations, copy,
-clone, debug and display; some functions further require the
-[`Float`](Float) trait, which also requires operations such as sqrt,
-sin/cos, etc.
 
 ## Caveats
 
@@ -315,6 +327,74 @@ assert!((m.transform(&x) - y).length() < 1.0E-8);
 assert!((m.transform(&y) - z).length() < 1.0E-8);
 assert!((m.transform(&z) - x).length() < 1.0E-8);
 ```
+
+# Trait discussion...
+
+ A [Vector] is effectively a wrapper around [F; D] that is as cheap
+ as possible, that then supports the relevant vector addition,
+ subtraction, etc operations
+
+ An array [f32/f64; D] supports:
+
+   Copy, Clone, Debug, Default, PartialEq, PartialOrd
+
+   Index<I> and mut
+
+   IntoIterator for T, &T, &mut T
+
+   PartialEq of [U;N], [U] (where T PartialEq of U)
+
+   TryFrom of &[T], Vec<T, A>, Box<[T]> with mut where appropriate; some times for &[F; D] too
+
+   AsRef[T], Borrow[T] (and mut for those three)
+
+   Serialize, Deserialize
+
+ Note: Hash is not supported as f32/f64 do not support it
+
+ Hence A [Vector] should provide:
+
+   Copy, Clone, Debug, Default, PartialEq
+
+   Deref<Target = [F; D]>, DerefMut
+
+   From for &[F], [F;D] &[F;D]
+
+   Into [F;D] (deref provides equivalent of &[F; D])
+
+   TryFrom<&[F]>
+
+   Serialize, Deserialize
+
+ Not PartialOrd, as vectors dont't have an ordering
+
+ Addition/Subtraction/Multiplication/Division
+
+ Add/Sub with Rhs of Self, &Self, Deref<Target = [F;D]> are
+    *required* for utility; we cannot *require* the last of these, as
+    Rust has no syntax for that.
+
+ Mul/Div with Rhs of F, &F are *required* for utility; previous
+    versions supported Self to do item-by-item operations, which
+    has been removed This is in part because it would need to work
+    for Deref<Target = [F;D]>, but f32/f64 do not implement Deref,
+    and they might in the future do so which breaks the F and &F
+    operation.
+
+ Not AsRef/Mut of [F], as [F; D] implement that, and Vector gets it through Deref
+
+
+    + std::convert::AsRef<[F]>
+
+ Note AsRef<[F]> is implemented through Deref to [F; D]
+
+    + std::convert::AsMut<[F]>
+
+ Note AsMut<[F]> is implemented through DerefMut to [F; D]
+
+ + std::ops::Add<[F;D], Output = Self>
+
+ if required, then it blocks Add<Deref<Target = [F;D]>>
 !*/
 
 //a Imports

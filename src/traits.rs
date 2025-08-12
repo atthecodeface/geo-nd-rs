@@ -1,21 +1,3 @@
-/*a Copyright
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-@file    vector_op.rs
-@brief   Part of geometry library
- */
-
 //a Imports
 use crate::{quat, vector};
 
@@ -38,72 +20,35 @@ pub trait Num:
 {
 }
 
+//ip Num
+/// Num is implemented for all types that support the traits
+impl<T> Num for T where
+    T: std::ops::Neg<Output = Self>
+        + num_traits::Num
+        + num_traits::NumAssignOps
+        + Clone
+        + Copy
+        + PartialEq
+        + std::fmt::Display
+        + std::fmt::Debug
+{
+}
+
 //tp Float
-/// The [Float] trait is required for matrix or vector elements which have a float aspect, such as `sqrt`.
+/// The [Float] trait is required for matrix or vector elements which
+/// have a float aspect, such as `sqrt`.
 ///
 /// The trait is essentially `num_traits::Float`, but it supplies
 /// implicit methods for construction of a [Float] from an `isize`
 /// value, or as a rational from a pair of `isize` values.
 ///
-/// As num_traits::Float includes num_traits::NumCast it is not
+/// As [num_traits::Float] includes [num_traits::NumCast] it is not
 /// possible to require, as would perhaps be desired, a From<f32>
 /// trait, without conflicts occurring.
 ///
-pub trait Float: Num + num_traits::Float {
-    //fp int
-    /// Create a [Float] from an `isize` value; this should support
-    /// constant implementations with no run-time overhead.
-    #[inline]
-    fn int(n: isize) -> Self {
-        Self::from(n).unwrap()
-    }
+pub trait Float: Num + num_traits::Float + num_traits::FloatConst + From<f32> {}
 
-    //fp frac
-    /// Create a [Float] as a fraction described by a numerator and
-    /// denomiator pair of `isize` values; this should support
-    /// constant implementations with no run-time overhead.
-    #[inline]
-    fn frac(n: isize, d: usize) -> Self {
-        Self::from((n as f32) / (d as f32)).unwrap()
-    }
-
-    //fp pi
-    /// Return the value of PI
-    fn pi() -> Self;
-
-    //fp tau
-    /// Return the value of 2*PI
-    fn tau() -> Self;
-}
-
-//ti Num for f32/f64/i32/i64/isize
-impl Num for f32 {}
-impl Num for f64 {}
-impl Num for i32 {}
-impl Num for i64 {}
-impl Num for isize {}
-
-//ti Float for f32/f64
-impl Float for f32 {
-    #[inline]
-    fn pi() -> Self {
-        std::f32::consts::PI
-    }
-    #[inline]
-    fn tau() -> Self {
-        std::f32::consts::TAU
-    }
-}
-impl Float for f64 {
-    #[inline]
-    fn pi() -> Self {
-        std::f64::consts::PI
-    }
-    #[inline]
-    fn tau() -> Self {
-        std::f64::consts::TAU
-    }
-}
+impl<T> Float for T where T: Num + num_traits::Float + num_traits::FloatConst + From<f32> {}
 
 //a Vector, Vector3, Vector4
 //tt Vector

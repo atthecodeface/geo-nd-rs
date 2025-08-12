@@ -69,7 +69,7 @@ pub fn identity<V: Num>() -> [V; 4] {
 #[must_use]
 #[inline]
 pub fn of_axis_angle<V: Float>(axis: &[V; 3], angle: V) -> [V; 4] {
-    let (s, c) = V::sin_cos(angle / V::from(2).unwrap());
+    let (s, c) = V::sin_cos(angle / (2.0_f32.into()));
     let l = vector::length(axis);
     if l < V::epsilon() {
         identity()
@@ -116,7 +116,7 @@ pub fn to_rotation3<V: Float>(q: &[V; 4], m: &mut [V; 9]) {
     m[4] = (r2 - i2 + j2 - k2) * rl2;
     m[8] = (r2 - i2 - j2 + k2) * rl2;
 
-    let drl2 = V::frac(2, 1) * rl2;
+    let drl2 = rl2 + rl2;
 
     m[1] = (q[0] * q[1] - q[2] * q[3]) * drl2;
     m[3] = (q[0] * q[1] + q[2] * q[3]) * drl2;
@@ -143,7 +143,7 @@ pub fn to_rotation4<V: Float>(q: &[V; 4], m: &mut [V; 16]) {
     m[5] = (r2 - i2 + j2 - k2) * rl2;
     m[10] = (r2 - i2 - j2 + k2) * rl2;
 
-    let drl2 = V::frac(2, 1) * rl2;
+    let drl2 = rl2 + rl2;
 
     m[1] = (q[0] * q[1] - q[2] * q[3]) * drl2;
     m[4] = (q[0] * q[1] + q[2] * q[3]) * drl2;
@@ -174,10 +174,11 @@ pub fn of_rotation<V: Float>(m: &[V; 9]) -> [V; 4] {
             x.sqrt()
         }
     }
-    let r = safe_sqrt(V::one() + m[0] + m[4] + m[8]) * V::frac(1, 2);
-    let mut i = safe_sqrt(V::one() + m[0] - m[4] - m[8]) * V::frac(1, 2);
-    let mut j = safe_sqrt(V::one() - m[0] + m[4] - m[8]) * V::frac(1, 2);
-    let mut k = safe_sqrt(V::one() - m[0] - m[4] + m[8]) * V::frac(1, 2);
+    let half: V = 0.5_f32.into();
+    let r = safe_sqrt(V::one() + m[0] + m[4] + m[8]) * half;
+    let mut i = safe_sqrt(V::one() + m[0] - m[4] - m[8]) * half;
+    let mut j = safe_sqrt(V::one() - m[0] + m[4] - m[8]) * half;
+    let mut k = safe_sqrt(V::one() - m[0] - m[4] + m[8]) * half;
 
     let r_i_4 = m[7] - m[5];
     let r_j_4 = m[2] - m[6];
@@ -245,7 +246,7 @@ pub fn normalize<V: Float>(a: [V; 4]) -> [V; 4] {
 #[must_use]
 #[inline]
 pub fn rotate_x<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
-    let (s, c) = V::sin_cos(angle / V::from(2).unwrap());
+    let (s, c) = V::sin_cos(angle / (2.0_f32.into()));
     let i = a[0] * c + a[3] * s;
     let j = a[1] * c + a[2] * s;
     let k = a[2] * c - a[1] * s;
@@ -258,7 +259,7 @@ pub fn rotate_x<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
 #[must_use]
 #[inline]
 pub fn rotate_y<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
-    let (s, c) = V::sin_cos(angle / V::from(2).unwrap());
+    let (s, c) = V::sin_cos(angle / (2.0_f32.into()));
     let i = a[0] * c - a[2] * s;
     let j = a[1] * c + a[3] * s;
     let k = a[2] * c + a[0] * s;
@@ -271,7 +272,7 @@ pub fn rotate_y<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
 #[must_use]
 #[inline]
 pub fn rotate_z<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
-    let (s, c) = V::sin_cos(angle / V::from(2).unwrap());
+    let (s, c) = V::sin_cos(angle / (2.0_f32.into()));
     let i = a[0] * c + a[1] * s;
     let j = a[1] * c - a[0] * s;
     let k = a[2] * c + a[3] * s;
@@ -346,19 +347,21 @@ pub fn distance<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
 /// Convert the quaternion to a bank, heading, altitude tuple - applied in that order
 #[must_use]
 pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
+    let zero = V::zero();
+    let one = V::one();
+    let two = one + one;
+    let almost_half: V = 0.49999999_f32.into();
+    let halfpi = V::PI() / two;
     let i = q[0];
     let j = q[1];
     let k = q[2];
     let r = q[3];
     let test = i * j + r * k;
-    let two = V::from(2).unwrap();
-    let almost_half = V::from(4_999_999).unwrap() / V::from(10_000_000).unwrap();
-    let halfpi = V::zero().acos();
     let (heading, attitude, bank) = {
         if test > almost_half {
-            (two * V::atan2(i, r), halfpi, V::zero())
+            (two * V::atan2(i, r), halfpi, zero)
         } else if test < -almost_half {
-            (-two * V::atan2(i, r), -halfpi, V::zero())
+            (-two * V::atan2(i, r), -halfpi, zero)
         } else {
             let i2 = i * i;
             let j2 = j * j;
@@ -377,8 +380,9 @@ pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
 /// Apply the quaternion to a vector3
 #[must_use]
 pub fn apply3<V: Float>(q: &[V; 4], v: &[V; 3]) -> [V; 3] {
+    let one = V::one();
+    let two = one + one;
     let (r, i, j, k) = as_rijk(q);
-    let two = V::frac(2, 1);
     let x = (r * r + i * i - j * j - k * k) * v[0]
         + two * (i * k + r * j) * v[2]
         + two * (i * j - r * k) * v[1];
@@ -395,8 +399,9 @@ pub fn apply3<V: Float>(q: &[V; 4], v: &[V; 3]) -> [V; 3] {
 /// Apply the quaternion to a vector3
 #[must_use]
 pub fn apply4<V: Float>(q: &[V; 4], v: &[V; 4]) -> [V; 4] {
+    let one = V::one();
+    let two = one + one;
     let (r, i, j, k) = as_rijk(q);
-    let two = V::frac(2, 1);
     let x = (r * r + i * i - j * j - k * k) * v[0]
         + two * (i * k + r * j) * v[2]
         + two * (i * j - r * k) * v[1];
@@ -418,9 +423,9 @@ pub fn apply4<V: Float>(q: &[V; 4], v: &[V; 4]) -> [V; 4] {
 /// Averaging Quaternions by F. Landis Markley
 #[must_use]
 pub fn weighted_average_pair<V: Float>(qa: &[V; 4], w_a: V, qb: &[V; 4], w_b: V) -> [V; 4] {
+    let four: V = 4.0_f32.into();
     let (ra, ia, ja, ka) = as_rijk(qa);
     let (rb, ib, jb, kb) = as_rijk(qb);
-    let four = V::frac(4, 1);
     let w_diff = w_a - w_b;
     let q1_q2 = ra * rb + ia * ib + ja * jb + ka * kb;
     let z_sq = w_diff * w_diff + four * w_a * w_b * q1_q2 * q1_q2;
