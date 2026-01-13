@@ -108,6 +108,7 @@ pub fn transpose<V: Float, const RC: usize, const R: usize, const C: usize>(m: [
 ///
 /// The first matrix is R by X, the second ix X by C, so the result is
 /// R by C
+#[track_caller]
 pub fn multiply<
     V: Float,
     const RX: usize, // Total elements in first matrix
@@ -120,9 +121,9 @@ pub fn multiply<
     a: &[V; RX],
     b: &[V; XC],
 ) -> [V; RC] {
-    assert_eq!(RX, R * X);
-    assert_eq!(RC, R * C);
-    assert_eq!(XC, X * C);
+    assert_eq!(RX, R * X, "RX must equal R*X");
+    assert_eq!(RC, R * C, "RC must equal R*C");
+    assert_eq!(XC, X * C, "XC must equal X*C");
     let mut m = [V::zero(); RC];
     for r in 0..R {
         for c in 0..C {

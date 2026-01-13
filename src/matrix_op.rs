@@ -471,3 +471,192 @@ pub fn from_quat4<V: Float>(q: [V; 4]) -> [V; 16] {
    pass
 
 */
+
+/// Decompose a square matrix into L and U matrices with a pivot P, and return the determinant
+///
+/// LU is both the lower and upper matrices; the lower matrix has a diagonal of 1.0,
+/// and the upper matrix has its diagonal in LU.
+pub fn lup_decompose<V: Float>(order: usize, matrix: &[V], lu: &mut [V], pivot: &mut [usize]) -> V {
+    assert!(
+        pivot.len() >= order,
+        "Pivot must be at least the order of the matrix"
+    );
+    assert_eq!(
+        matrix.len(),
+        order * order,
+        "Matrix provided must be square and of the correct order"
+    );
+    assert_eq!(
+        lu.len(),
+        order * order,
+        "Resulting LU decomposition provided must be square and of the correct order"
+    );
+    for i in 0..order {
+        pivot[i] = i;
+    }
+    let mut det = V::one();
+
+    // Start by copying the matrix
+    lu.copy_from_slice(matrix);
+
+    // For each row in LU except the last
+    for d in 0..(order - 1) {
+        // Find row with maximum (abs) value in column d (below or at row d)
+        let mut max_lu_rc = V::zero();
+        let mut r_max = 0;
+        for r in d..order {
+            let t = lu[r * order + d];
+            if t.abs() > max_lu_rc.abs() {
+                max_lu_rc = t;
+                r_max = r;
+            }
+        }
+
+        // If there is no row with anything other than zero then it is not invertible
+        if max_lu_rc == V::zero() {
+            return max_lu_rc;
+        }
+
+        // Swap row i with r_max and update the pivot list
+        //
+        //
+        if r_max != d {
+            det = -det;
+            let p = pivot[r_max];
+            pivot[r_max] = pivot[d];
+            pivot[d] = p;
+            for c in 0..order {
+                let v = lu[r_max * order + c];
+                lu[r_max * order + c] = lu[d * order + c];
+                lu[d * order + c] = v;
+            }
+        }
+        det *= max_lu_rc;
+
+        // Subtract out from rows below scaling down by LU[d][d] (in p) and up by LU[r][r]
+        for r in (d + 1)..order {
+            let scale = lu[r * order + d] / max_lu_rc;
+            lu[r * order + d] = scale;
+            for c in (d + 1)..order {
+                lu[r * order + c] -= scale * lu[d * order + c];
+            }
+        }
+    }
+    det * lu[order * order - 1]
+}
+
+///    Split an LU where L has diagonal of 1s and is stored in lower half, U is upper half
+///
+/// Store U in LU, L in the provided lower
+pub fn lu_split<V: Float>(order: usize, lu: &mut [V], lower: &mut [V]) {
+    assert_eq!(
+        lu.len(),
+        order * order,
+        "LU decomposition provided must be square and of the correct order"
+    );
+    assert_eq!(
+        lower.len(),
+        order * order,
+        "Lower matrix provided must be square and of the correct order"
+    );
+    lower.copy_from_slice(lu);
+    for r in 0..order {
+        for c in 0..order {
+            if r == c {
+                lower[r * order + c] = V::one();
+            } else if r < c {
+                lower[r * order + c] = V::zero();
+            } else {
+                lu[r * order + c] = V::zero();
+            }
+        }
+    }
+}
+
+/// self should be an LU matrix
+/// Note that LUP matrix is actually a matrix P.L.U
+/// If we find vectors 'x' such that L.U.x = P-1.Ic for the c'th column of the identity matrix
+/// we will find (with all 'n' x) the inverse
+pub fn lup_invert<V: Float>(
+    n: usize,
+    lu: &[V],
+    pivot: &[usize],
+    result: &mut [V],
+    temp_row: &mut [V],
+    temp_row2: &mut [V],
+) -> bool {
+    // For each column in the identity matrix...
+    for c in 0..n {
+        // We want to find vector x such that LU.x = Ic
+        // First find a such that L.a = Ic
+        // Note that as L is a lower, we can find the elements top down
+        for r in 0..n {
+            temp_row[r] = V::zero();
+        }
+        temp_row[c] = V::one();
+        for r in 0..n {
+            // Would divide a[r] by Lrr, but that is 1 for L
+            // a[r] = a[r]/1
+            // For the rest of the column remove multiples of a[r] (Lir, n>i>r)
+            for i in (r + 1)..n {
+                temp_row[i] -= lu[i * n + r] * temp_row[r];
+            }
+        }
+
+        // Now we have L.a = Ic
+        // Hence a = U.x
+        // Here we can work up from the bottom of x - we have to start with a...
+        temp_row2.copy_from_slice(temp_row);
+        let mut r = n - 1;
+        loop {
+            // Now divide a[r] by Urr, which is not 1
+            let urr = lu[r * n + r];
+            if urr == V::zero() {
+                return false;
+            }
+            temp_row2[r] /= urr;
+            // For the rest of the column remove multiples of x[r] (Uir, r>i>=0)
+            for i in 0..r {
+                temp_row2[i] -= lu[i * n + r] * temp_row2[r]
+            }
+            if r == 0 {
+                break;
+            }
+            r -= 1;
+        }
+
+        // So we know that LU.x = Ic
+        // Insert into R at the permuted column
+        for r in 0..n {
+            // result[pivot[c] * n + r] = temp_row2[r];
+            result[r * n + pivot[c]] = temp_row2[r];
+        }
+        // R.transpose()
+    }
+    true
+}
+
+/// 'Unapply' the pivot P
+pub fn unpivot<V: Float>(order: usize, matrix: &[V], pivot: &[usize], result: &mut [V]) {
+    for r in 0..order {
+        for c in 0..order {
+            let p = pivot[r];
+            result[r * order + c] = matrix[p * order + c];
+        }
+    }
+}
+
+/// Invert a matrix (in-place)
+///
+/// Return false (and untouched matrix) if the determinant is zero
+pub fn invert<V: Float, const D2: usize, const D: usize>(matrix: &mut [V; D2]) -> bool {
+    let mut lu = [V::zero(); D2];
+    let mut pivot = [0; D];
+    let mut tr0 = [V::zero(); D];
+    let mut tr1 = [V::zero(); D];
+    if lup_decompose(D, matrix, &mut lu, &mut pivot) == V::zero() {
+        false
+    } else {
+        lup_invert(D, &lu, &pivot, matrix, &mut tr0, &mut tr1)
+    }
+}

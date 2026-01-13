@@ -1,3 +1,7 @@
+# Release 0.6.1 (2025-08-26)
+
+- Add mapping_vector_pair_to_vector_pair to quaternion
+
 # Release 0.6.0 (2025-08-15)
 
 - Completely rejig the traits to make them more useful

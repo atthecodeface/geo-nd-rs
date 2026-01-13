@@ -255,7 +255,7 @@ impl<T, F, const D: usize> QuatMulDiv<F, D> for T where
 ///
 pub trait Vector<F: Float, const D: usize>:
     ArrayBasic
-    + ArrayRef<F, D>
+    + ArrayRef<F, D> // Can we move this to specifically Vector3 and Vector4? Maybe just the asref?
     + ArrayIndex<F>
     + ArrayConvert<F, D>
     + ArrayAddSubNeg<F, D>
@@ -666,6 +666,40 @@ pub trait Quaternion<F: Float>:
         quat::rotation_of_vec_to_vec(a, b).into()
     }
 
+    //cp mapping_vector_pair_to_vector_pair
+    /// Create a quaternion that maps (v0, v1) to (w0, w1)
+    ///
+    /// This will map v0 to the Z axis, and the Z axis to w0. Applying
+    /// both of these quaternions in succession maps v0 to w0.
+    ///
+    /// It maps v1 to v1' and w1 *backwards* to w1', where the
+    /// difference between v1' and w1' should be *just* a rotation
+    /// around the Z axis. Creating a rotation to do this is a third quaternion
+    ///
+    /// Then the three quaternions can be applied appropriately to map
+    /// v0 to w0 (for sure), and v1 to w1 (if the intermediate
+    /// rotation were just a Z-rotation)
+    fn mapping_vector_pair_to_vector_pair(
+        (di_m, dj_m): (&[F; 3], &[F; 3]),
+        (di_c, dj_c): (&[F; 3], &[F; 3]),
+    ) -> Self {
+        let z_axis: [F; 3] = [F::zero(), F::zero(), F::one()];
+        let qi_c = Self::rotation_of_vec_to_vec(di_c, &z_axis);
+        let qi_m = Self::rotation_of_vec_to_vec(di_m, &z_axis);
+
+        let dj_c_rotated = quat::apply3(&qi_c, dj_c);
+        let dj_m_rotated = quat::apply3(&qi_m, dj_m);
+
+        let theta_dj_m = dj_m_rotated[0].atan2(dj_m_rotated[1]);
+        let theta_dj_c = dj_c_rotated[0].atan2(dj_c_rotated[1]);
+        let theta = theta_dj_m - theta_dj_c;
+        let theta_div_2 = theta / (F::one() + F::one());
+        let cos_2theta = theta_div_2.cos();
+        let sin_2theta = theta_div_2.sin();
+        let q_z = Self::of_rijk(cos_2theta, F::zero(), F::zero(), sin_2theta);
+        qi_c.conjugate() * q_z * qi_m
+    }
+
     //cp weighted_average_pair
     /// Calculate the weighted average of two unit quaternions
     ///
@@ -735,7 +769,7 @@ pub trait Quaternion<F: Float>:
     //mp distance_sq
     /// Return the square of the distance between this quaternion and another
     fn distance_sq(&self, other: &Self) -> F {
-        (*self - *other).length_sq()
+        quat::distance_sq(self, other)
     }
 
     //mp distance

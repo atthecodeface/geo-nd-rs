@@ -319,21 +319,10 @@ pub fn nlerp<V: Float>(t: V, in0: &[V; 4], in1: &[V; 4]) -> [V; 4] {
 
 //a Operational functions
 //fp distance_sq
-/// Get a measure of the 'distance' between two quaternions
-///
-/// This is calculated as |a' * b|, where || is the l
-///
-/// Should this instead be 1 - <a.b>^2 where a.b is the inner product?
+/// Get a measure of the 'distance' between two unit quaternions
 #[inline]
 pub fn distance_sq<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
-    let qi = invert(a);
-    let mut qn = multiply(&qi, b);
-    if qn[3] < V::ZERO {
-        qn[3] += V::ONE;
-    } else {
-        qn[3] -= V::ONE;
-    }
-    vector::length_sq(&qn)
+    V::ONE - (a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]).abs()
 }
 
 //fp distance
