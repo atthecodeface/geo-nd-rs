@@ -54,10 +54,10 @@ pub fn determinant2<V: Num>(m: &[V; 4]) -> V {
 /// }
 /// ```
 ///
-pub fn inverse2<V: Float>(m: &[V; 4]) -> [V; 4] {
+pub fn inverse2<V: Num>(m: &[V; 4]) -> [V; 4] {
     let d = determinant2(m);
     let r_d = {
-        if V::abs(d) > V::epsilon() {
+        if d != V::ZERO {
             V::one() / d
         } else {
             V::zero()
@@ -93,11 +93,11 @@ pub fn determinant3<V: Num>(m: &[V; 9]) -> V {
 /// }
 /// ```
 ///
-pub fn inverse3<V: Float>(m: &[V; 9]) -> [V; 9] {
+pub fn inverse3<V: Num>(m: &[V; 9]) -> [V; 9] {
     let mut r = [V::zero(); 9];
     let d = determinant3(m);
     let r_d = {
-        if V::abs(d) > V::epsilon() {
+        if d != V::ZERO {
             V::one() / d
         } else {
             V::zero()
@@ -124,7 +124,7 @@ pub fn inverse3<V: Float>(m: &[V; 9]) -> [V; 9] {
 
 //fp from_quat3
 /// Create a rotation 3-by-3 matrix from a quaternion
-pub fn from_quat3<V: Float>(q: [V; 4]) -> [V; 9] {
+pub fn from_quat3<V: Num>(q: [V; 4]) -> [V; 9] {
     let zero = V::zero();
     let one = V::one();
     let two = one + one;
@@ -195,10 +195,10 @@ pub fn determinant4<V: Num>(m: &[V; 16]) -> V {
 /// }
 /// ```
 ///
-pub fn inverse4<V: Float>(m: &[V; 16]) -> [V; 16] {
+pub fn inverse4<V: Num>(m: &[V; 16]) -> [V; 16] {
     let d = determinant4(m);
-    let mut r = [V::zero(); 16];
-    if V::abs(d) > V::epsilon() {
+    let mut r = [V::ZERO; 16];
+    if d != V::ZERO {
         let r_d = V::one() / d;
 
         for j in 0..4 {
@@ -227,30 +227,30 @@ pub fn inverse4<V: Float>(m: &[V; 16]) -> [V; 16] {
 
 //fp multiply2
 /// Multiply two square 2x2 matrices and produce a result
-pub fn multiply2<V: Float>(a: &[V; 2 * 2], b: &[V; 2 * 2]) -> [V; 2 * 2] {
+pub fn multiply2<V: Num>(a: &[V; 2 * 2], b: &[V; 2 * 2]) -> [V; 2 * 2] {
     matrixr_op::multiply::<V, 4, 4, 4, 2, 2, 2>(a, b)
 }
 
 //fp transform_vec2
 /// Multiply a vec2 by a 2x2 matrix
-pub fn transform_vec2<V: Float>(m: &[V; 4], v: &[V; 2]) -> [V; 2] {
+pub fn transform_vec2<V: Num>(m: &[V; 4], v: &[V; 2]) -> [V; 2] {
     matrixr_op::transform_vec::<V, 4, 2, 2>(m, v)
 }
 
 //fp multiply3
 /// Multiply two square 3x3 matrices and produce a result
-pub fn multiply3<V: Float>(a: &[V; 9], b: &[V; 9]) -> [V; 9] {
+pub fn multiply3<V: Num>(a: &[V; 9], b: &[V; 9]) -> [V; 9] {
     matrixr_op::multiply::<V, 9, 9, 9, 3, 3, 3>(a, b)
 }
 
 //fp transform_vec3
 /// Multiply a vec3 by a 3x3 matrix
-pub fn transform_vec3<V: Float>(m: &[V; 9], v: &[V; 3]) -> [V; 3] {
+pub fn transform_vec3<V: Num>(m: &[V; 9], v: &[V; 3]) -> [V; 3] {
     matrixr_op::transform_vec::<V, 9, 3, 3>(m, v)
 }
 
 //fp look_at3
-/// Create a matrix that maps unit dirn to [0,0,-1] and unit up (perp to dirn) to [0,1,0]
+/// Create a matrix that maps unit dirn to \[0,0,-1\] and unit up (perp to dirn) to \[0,1,0\]
 pub fn look_at3<V: Float>(dirn: &[V; 3], up: &[V; 3]) -> [V; 9] {
     let d = vector_op::normalize(*dirn);
     let du = vector_op::dot(&d, up);
@@ -271,13 +271,13 @@ pub fn look_at3<V: Float>(dirn: &[V; 3], up: &[V; 3]) -> [V; 9] {
 
 //fp multiply4
 /// Multiply two square 4x4 matrices and produce a result
-pub fn multiply4<V: Float>(a: &[V; 16], b: &[V; 16]) -> [V; 16] {
+pub fn multiply4<V: Num>(a: &[V; 16], b: &[V; 16]) -> [V; 16] {
     matrixr_op::multiply::<V, 16, 16, 16, 4, 4, 4>(a, b)
 }
 
 //fp transform_vec4
 /// Multiply a vec4 by a 4x4 matrix
-pub fn transform_vec4<V: Float>(m: &[V; 16], v: &[V; 4]) -> [V; 4] {
+pub fn transform_vec4<V: Num>(m: &[V; 16], v: &[V; 4]) -> [V; 4] {
     matrixr_op::transform_vec::<V, 16, 4, 4>(m, v)
 }
 
@@ -300,7 +300,8 @@ pub fn translate4<V: Num>(m: &[V; 16], v: &[V; 4]) -> [V; 16] {
 }
 
 //fp look_at4
-/// Create a matrix that maps eye to [0,0,0], unit (centre-eye) to [0,0,-1] and unit up (perp to centre-eye) to [0,1,0]
+/// Create a matrix that maps eye to \[0,0,0\], unit (centre-eye) to \[0,0,-1\]
+/// and unit up (perp to centre-eye) to \[0,1,0\]
 pub fn look_at4<V: Float>(eye: &[V; 3], centre: &[V; 3], up: &[V; 3]) -> [V; 16] {
     let dirn = vector_op::sub(*centre, eye, V::one());
     let d = vector_op::normalize(dirn);
@@ -346,7 +347,7 @@ pub fn perspective4<V: Float>(fov: V, aspect: V, near: V, far: V) -> [V; 16] {
 
 //fp from_quat4
 /// Create a rotation 4-by-4 matrix from a quaternion
-pub fn from_quat4<V: Float>(q: [V; 4]) -> [V; 16] {
+pub fn from_quat4<V: Num>(q: [V; 4]) -> [V; 16] {
     let zero = V::zero();
     let one = V::one();
     let two = one + one;
@@ -476,7 +477,13 @@ pub fn from_quat4<V: Float>(q: [V; 4]) -> [V; 16] {
 ///
 /// LU is both the lower and upper matrices; the lower matrix has a diagonal of 1.0,
 /// and the upper matrix has its diagonal in LU.
-pub fn lup_decompose<V: Float>(order: usize, matrix: &[V], lu: &mut [V], pivot: &mut [usize]) -> V {
+#[track_caller]
+pub fn lup_decompose<V: Num + std::cmp::PartialOrd>(
+    order: usize,
+    matrix: &[V],
+    lu: &mut [V],
+    pivot: &mut [usize],
+) -> V {
     assert!(
         pivot.len() >= order,
         "Pivot must be at least the order of the matrix"
@@ -506,9 +513,20 @@ pub fn lup_decompose<V: Float>(order: usize, matrix: &[V], lu: &mut [V], pivot: 
         let mut r_max = 0;
         for r in d..order {
             let t = lu[r * order + d];
-            if t.abs() > max_lu_rc.abs() {
-                max_lu_rc = t;
-                r_max = r;
+            if t < V::zero() {
+                if (max_lu_rc < V::zero() && t < max_lu_rc)
+                    || (max_lu_rc >= V::zero() && t < -max_lu_rc)
+                {
+                    max_lu_rc = t;
+                    r_max = r;
+                }
+            } else {
+                if (max_lu_rc > V::zero() && t > max_lu_rc)
+                    || (max_lu_rc <= V::zero() && t > -max_lu_rc)
+                {
+                    max_lu_rc = t;
+                    r_max = r;
+                }
             }
         }
 
@@ -531,14 +549,14 @@ pub fn lup_decompose<V: Float>(order: usize, matrix: &[V], lu: &mut [V], pivot: 
                 lu[d * order + c] = v;
             }
         }
-        det *= max_lu_rc;
+        det = det * max_lu_rc;
 
         // Subtract out from rows below scaling down by LU[d][d] (in p) and up by LU[r][r]
         for r in (d + 1)..order {
             let scale = lu[r * order + d] / max_lu_rc;
             lu[r * order + d] = scale;
             for c in (d + 1)..order {
-                lu[r * order + c] -= scale * lu[d * order + c];
+                lu[r * order + c] = lu[r * order + c] - scale * lu[d * order + c];
             }
         }
     }
@@ -548,7 +566,7 @@ pub fn lup_decompose<V: Float>(order: usize, matrix: &[V], lu: &mut [V], pivot: 
 ///    Split an LU where L has diagonal of 1s and is stored in lower half, U is upper half
 ///
 /// Store U in LU, L in the provided lower
-pub fn lu_split<V: Float>(order: usize, lu: &mut [V], lower: &mut [V]) {
+pub fn lu_split<V: Num>(order: usize, lu: &mut [V], lower: &mut [V]) {
     assert_eq!(
         lu.len(),
         order * order,
@@ -577,7 +595,8 @@ pub fn lu_split<V: Float>(order: usize, lu: &mut [V], lower: &mut [V]) {
 /// Note that LUP matrix is actually a matrix P.L.U
 /// If we find vectors 'x' such that L.U.x = P-1.Ic for the c'th column of the identity matrix
 /// we will find (with all 'n' x) the inverse
-pub fn lup_invert<V: Float>(
+#[track_caller]
+pub fn lup_invert<V: Num>(
     n: usize,
     lu: &[V],
     pivot: &[usize],
@@ -585,6 +604,23 @@ pub fn lup_invert<V: Float>(
     temp_row: &mut [V],
     temp_row2: &mut [V],
 ) -> bool {
+    assert_eq!(
+        lu.len(),
+        n * n,
+        "Inverting a square {n} by {n} matrix expected LU len to match",
+    );
+    assert_eq!(
+        pivot.len(),
+        n,
+        "Inverting a square {n} by {n} matrix expected pivot len to be n",
+    );
+    assert_eq!(
+        result.len(),
+        n * n,
+        "Inverting a square {n} by {n} matrix expected result len to match",
+    );
+    assert_eq!(temp_row.len(), n, "Temp row 1 must be length `n`");
+    assert_eq!(temp_row2.len(), n, "Temp row 2 must be length `n`");
     // For each column in the identity matrix...
     for c in 0..n {
         // We want to find vector x such that LU.x = Ic
@@ -599,7 +635,7 @@ pub fn lup_invert<V: Float>(
             // a[r] = a[r]/1
             // For the rest of the column remove multiples of a[r] (Lir, n>i>r)
             for i in (r + 1)..n {
-                temp_row[i] -= lu[i * n + r] * temp_row[r];
+                temp_row[i] = temp_row[i] - lu[i * n + r] * temp_row[r];
             }
         }
 
@@ -614,10 +650,10 @@ pub fn lup_invert<V: Float>(
             if urr == V::zero() {
                 return false;
             }
-            temp_row2[r] /= urr;
+            temp_row2[r] = temp_row2[r] / urr;
             // For the rest of the column remove multiples of x[r] (Uir, r>i>=0)
             for i in 0..r {
-                temp_row2[i] -= lu[i * n + r] * temp_row2[r]
+                temp_row2[i] = temp_row2[i] - lu[i * n + r] * temp_row2[r]
             }
             if r == 0 {
                 break;
@@ -637,7 +673,7 @@ pub fn lup_invert<V: Float>(
 }
 
 /// 'Unapply' the pivot P
-pub fn unpivot<V: Float>(order: usize, matrix: &[V], pivot: &[usize], result: &mut [V]) {
+pub fn unpivot<V: Num>(order: usize, matrix: &[V], pivot: &[usize], result: &mut [V]) {
     for r in 0..order {
         for c in 0..order {
             let p = pivot[r];
@@ -649,7 +685,9 @@ pub fn unpivot<V: Float>(order: usize, matrix: &[V], pivot: &[usize], result: &m
 /// Invert a matrix (in-place)
 ///
 /// Return false (and untouched matrix) if the determinant is zero
-pub fn invert<V: Float, const D2: usize, const D: usize>(matrix: &mut [V; D2]) -> bool {
+pub fn invert<V: Num + std::cmp::PartialOrd, const D2: usize, const D: usize>(
+    matrix: &mut [V; D2],
+) -> bool {
     let mut lu = [V::zero(); D2];
     let mut pivot = [0; D];
     let mut tr0 = [V::zero(); D];

@@ -12,7 +12,8 @@ use super::{Float, Vector};
 /// It provides implementations of the traits required for a [Vector]
 /// trait, hence it can be used for a [Vector] of any size `D`.
 ///
-/// Default must be provided separately as it is only implemented for [F;D] up to D=32
+/// Default must be provided separately as it is only implemented
+/// for \[F; D\] up to D=32
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(transparent)]
 pub struct FArray<F: Float, const D: usize> {

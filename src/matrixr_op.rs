@@ -1,21 +1,3 @@
-/*a Copyright
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-@file    matrixr_op.rs
-@brief   Rectangular matrix operations - part of geometry library
- */
-
 //a Imports
 use crate::vector_op as vector;
 use crate::{Float, Num};
@@ -92,7 +74,7 @@ pub fn normalize<V: Float, const RC: usize, const C: usize>(mut m: [V; RC]) -> [
 /// The matrices are row-major, so successive entries of m are adjacent columns
 ///
 /// The output matrix has adjacent entries that are therefore adjacent rows in m
-pub fn transpose<V: Float, const RC: usize, const R: usize, const C: usize>(m: [V; RC]) -> [V; RC] {
+pub fn transpose<V: Num, const RC: usize, const R: usize, const C: usize>(m: [V; RC]) -> [V; RC] {
     assert_eq!(RC, R * C);
     let mut v = zero::<V, RC>();
     for r in 0..R {
@@ -110,7 +92,7 @@ pub fn transpose<V: Float, const RC: usize, const R: usize, const C: usize>(m: [
 /// R by C
 #[track_caller]
 pub fn multiply<
-    V: Float,
+    V: Num,
     const RX: usize, // Total elements in first matrix
     const XC: usize, // Total elements in second matrix
     const RC: usize, // Total elements in result
@@ -129,7 +111,7 @@ pub fn multiply<
         for c in 0..C {
             let mut v = V::zero();
             for x in 0..X {
-                v += a[r * X + x] * b[x * C + c];
+                v = v + a[r * X + x] * b[x * C + c];
             }
             m[r * C + c] = v;
         }
@@ -137,11 +119,28 @@ pub fn multiply<
     m
 }
 
+//mp tranpose_dyn
+/// Transpose a matrix
+pub fn transpose_dyn<V: Copy>(
+    r: usize,
+    c: usize,
+    m: &[V],       // r by c
+    m_t: &mut [V], // c by r
+) {
+    assert!(m.len() == r * c);
+    assert!(m_t.len() == r * c);
+    for ri in 0..r {
+        for ci in 0..c {
+            m_t[ci * r + ri] = m[ri * c + ci];
+        }
+    }
+}
+
 //mp multiply_dyn
 /// Multiply two matrices, dynamically sized
 ///
 /// Until generic const expressions work cleanly this is a workaround
-pub fn multiply_dyn<V: Float>(
+pub fn multiply_dyn<V: Num>(
     r: usize,
     x: usize,
     c: usize,
@@ -149,14 +148,32 @@ pub fn multiply_dyn<V: Float>(
     b: &[V],     // x by c
     m: &mut [V], // r by c
 ) {
-    assert!(a.len() >= r * x);
-    assert!(b.len() >= x * c);
-    assert!(m.len() >= r * c);
+    assert!(
+        a.len() >= r * x,
+        "Expected a (length {}) to be r*x = {} * {}",
+        a.len(),
+        r,
+        x
+    );
+    assert!(
+        b.len() >= x * c,
+        "Expected a (length {}) to be r*x = {} * {}",
+        a.len(),
+        r,
+        x
+    );
+    assert!(
+        m.len() >= r * c,
+        "Expected a (length {}) to be r*x = {} * {}",
+        a.len(),
+        r,
+        x
+    );
     for ri in 0..r {
         for ci in 0..c {
             let mut v = V::zero();
             for xi in 0..x {
-                v += a[ri * x + xi] * b[xi * c + ci];
+                v = v + a[ri * x + xi] * b[xi * c + ci];
             }
             m[ri * c + ci] = v;
         }
@@ -165,7 +182,7 @@ pub fn multiply_dyn<V: Float>(
 
 //mp transform_vec
 /// Transform a vector
-pub fn transform_vec<V: Float, const RD: usize, const R: usize, const D: usize>(
+pub fn transform_vec<V: Num, const RD: usize, const R: usize, const D: usize>(
     m: &[V; RD],
     v: &[V; D],
 ) -> [V; R] {
@@ -213,7 +230,7 @@ pub fn fmt<V: Num, const C: usize>(f: &mut std::fmt::Formatter, v: &[V]) -> std:
 //a MatrixType, used in formatting
 /// A structure that supports the Debug and Display traits, borrowing
 /// a matrix; this permits a relatively simple format of a matrix
-/// through using the [`new`] constructor of the type
+/// through using the `[new]` constructor of the type
 ///
 /// # Example
 ///

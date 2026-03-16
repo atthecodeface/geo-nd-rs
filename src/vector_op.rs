@@ -1,24 +1,6 @@
-/*a Copyright
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-@file    vector_op.rs
-@brief   Part of geometry library
- */
-
 //a Imports
 use super::matrix_op as matrix;
-use crate::{Float, Num};
+use crate::{Float, Num, f_const};
 
 //a Vector constructors
 //fp zero
@@ -72,9 +54,9 @@ pub fn is_zero<V: Num>(v: &[V]) -> bool {
 
 //fp uniform_dist_sphere3
 /// Generate a unit vector (point on a sphere) uniformly distributed
-/// given a [V;2] with each coordinate in the range [0, 1)
+/// given a \[V;2\] with each coordinate in the range \[0, 1\)
 ///
-/// This considers the [V;2] as a mapping onto the surface of a
+/// This considers the \[V;2\] as a mapping onto the surface of a
 /// cylinder, and wraps that onto the sphere; this works as related by
 /// Archimedes.
 ///
@@ -87,10 +69,10 @@ pub fn uniform_dist_sphere3<V: Float>(x: [V; 2], map: bool) -> [V; 3] {
     let two = one + one;
 
     let (u, v) = if map {
-        let cos_map: V = (5_f32 / 13_f32).into();
-        let sin_map: V = (12_f32 / 13_f32).into();
-        let u_ofs: V = (13_f32 / 101_f32).into();
-        let v_ofs: V = (6_f32 / 73_f32).into();
+        let cos_map = f_const!(V, 5, 13);
+        let sin_map = f_const!(V, 12, 13);
+        let u_ofs = f_const!(V, 13, 101);
+        let v_ofs = f_const!(V, 6, 73);
         let u = u_ofs + x[0] * cos_map - x[1] * sin_map;
         let v = v_ofs + x[0] * sin_map + x[1] * cos_map;
         (u, v)
@@ -99,7 +81,8 @@ pub fn uniform_dist_sphere3<V: Float>(x: [V; 2], map: bool) -> [V; 3] {
     };
 
     let v = v - v.floor();
-    let theta = V::TAU() * u;
+    // Precision on theta is not critical, so using 6.283... is fine for 2*PI
+    let theta = V::from_f32(6.2831853_f32).unwrap() * u;
     let phi = (two * v - one).acos();
     let sin_theta = theta.sin();
     let cos_theta = theta.cos();
@@ -149,11 +132,11 @@ pub fn cross_product3<V: Num>(x: &[V; 3], y: &[V; 3]) -> [V; 3] {
 /// assert_eq!( vector::mix( &a, &b, 0.5), [2.5, 2.]);
 /// ```
 ///
-pub fn mix<V: Float, const D: usize>(a: &[V; D], b: &[V; D], t: V) -> [V; D] {
+pub fn mix<V: Num, const D: usize>(a: &[V; D], b: &[V; D], t: V) -> [V; D] {
     let mut v = zero();
     let omt = V::ONE - t;
-    for i in 0..D {
-        v[i] = a[i] * omt + b[i] * t;
+    for (v, (a, b)) in v.iter_mut().zip(a.iter().zip(b.iter())) {
+        *v = *a * omt + *b * t;
     }
     v
 }
@@ -249,8 +232,8 @@ pub fn mix<V: Float, const D: usize>(a: &[V; D], b: &[V; D], t: V) -> [V; D] {
 pub fn axis_of_rotation3<V: Float>(rotation: &[V; 9]) -> [V; 3] {
     let zero = V::ZERO;
     let one = V::ONE;
-    let almost_one: V = 0.99999_f32.into();
-    let almost_zero: V = 0.00001_f32.into();
+    let almost_one = f_const!(V, 99_999, 1_000_000);
+    let almost_zero = f_const!(V, 1, 1_000_000);
 
     let mut rot_min_id = *rotation;
     // Allow clippt lint for assigning rot_min_id[8] to keep operation obvious
@@ -290,7 +273,7 @@ pub fn axis_of_rotation3<V: Float>(rotation: &[V; 9]) -> [V; 3] {
 ///
 pub fn scale<V: Num, const D: usize>(mut v: [V; D], s: V) -> [V; D] {
     for c in &mut v {
-        *c *= s;
+        *c = *c * s;
     }
     v
 }
@@ -308,8 +291,8 @@ pub fn scale<V: Num, const D: usize>(mut v: [V; D], s: V) -> [V; D] {
 /// ```
 ///
 pub fn comp_mult<V: Num, const D: usize>(mut v: [V; D], s: &[V; D]) -> [V; D] {
-    for i in 0..D {
-        v[i] *= s[i];
+    for (v, s) in v.iter_mut().zip(s.iter()) {
+        *v = *v * *s;
     }
     v
 }
@@ -327,9 +310,78 @@ pub fn comp_mult<V: Num, const D: usize>(mut v: [V; D], s: &[V; D]) -> [V; D] {
 ///
 pub fn reduce<V: Num, const D: usize>(mut v: [V; D], s: V) -> [V; D] {
     for c in &mut v {
-        *c /= s;
+        *c = *c / s;
     }
     v
+}
+
+//cp sum_scaled
+/// Add a number of vectors together, each scaled by a different amount
+///
+pub fn sum_scaled<V: Num, const D: usize>(v: &[[V; D]], scales: &[V]) -> [V; D] {
+    scales
+        .iter()
+        .zip(v.iter())
+        .fold([V::ZERO; D], |mut acc, (s, v)| {
+            for (a, v) in acc.iter_mut().zip(v.iter()) {
+                *a = *a + *v * *s;
+            }
+            acc
+        })
+}
+
+/// Set a min/max bounding box given a set of points
+#[track_caller]
+pub fn set_bbox<V: Num, const D: usize>(v: &[[V; D]], min: &mut [V; D], max: &mut [V; D]) {
+    assert!(
+        !v.is_empty(),
+        "Cannot create a bounding box of an empty slice of points"
+    );
+    *min = v[0];
+    *max = v[0];
+    let _ = update_bbox(&v[1..], min, max);
+}
+
+//cp update_bbox
+/// Update a min/max bounding box given a set of points
+///
+/// Returns true if the bounding box was updated
+pub fn update_bbox<V: Num, const D: usize>(
+    v: &[[V; D]],
+    min: &mut [V; D],
+    max: &mut [V; D],
+) -> bool {
+    let mut modified = false;
+    for (i, (min, max)) in min.iter_mut().zip(max.iter_mut()).enumerate() {
+        let (coord_modified, new_min, new_max) = v.iter().fold(
+            (false, *min, *max),
+            |(mut modified, mut min, mut max), v| {
+                if v[i] < min {
+                    modified = true;
+                    min = v[i];
+                }
+                if v[i] > max {
+                    modified = true;
+                    max = v[i];
+                }
+                (modified, min, max)
+            },
+        );
+        if coord_modified {
+            *min = new_min;
+            *max = new_max;
+            modified = true;
+        }
+    }
+    modified
+}
+
+/// Expand a min/max bounding box by a given amount
+pub fn expand_bbox<V: Num, const D: usize>(v: V, min: &mut [V; D], max: &mut [V; D]) {
+    for (min, max) in min.iter_mut().zip(max.iter_mut()) {
+        *min = *min - v;
+        *max = *max + v;
+    }
 }
 
 //cp add
@@ -345,8 +397,8 @@ pub fn reduce<V: Num, const D: usize>(mut v: [V; D], s: V) -> [V; D] {
 /// ```
 ///
 pub fn add<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [V; D] {
-    for i in 0..D {
-        v[i] += other[i] * scale;
+    for (v, o) in v.iter_mut().zip(other.iter()) {
+        *v = *v + *o * scale;
     }
     v
 }
@@ -355,8 +407,8 @@ pub fn add<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [
 /// Consume the vector, and return a new vector that is the sum of
 /// this and a borrowed other vector scaled
 pub fn sub<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [V; D] {
-    for i in 0..D {
-        v[i] -= other[i] * scale;
+    for (v, o) in v.iter_mut().zip(other.iter()) {
+        *v = *v - *o * scale;
     }
     v
 }
@@ -462,11 +514,7 @@ pub fn rotate_around<V: Float, const D: usize>(
 ///
 #[inline]
 pub fn length_sq<V: Num>(v: &[V]) -> V {
-    let mut r = V::ZERO;
-    for c in v.iter() {
-        r += (*c) * (*c)
-    }
-    r
+    v.iter().fold(V::ZERO, |acc, v| acc + *v * *v)
 }
 
 //mp length
@@ -496,12 +544,9 @@ pub fn length<V: Float>(v: &[V]) -> V {
 ///
 #[inline]
 pub fn distance_sq<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
-    let mut r = V::ZERO;
-    for i in 0..D {
-        let d = v[i] - other[i];
-        r += d * d;
-    }
-    r
+    v.iter()
+        .zip(other.iter())
+        .fold(V::ZERO, |acc, (v, o)| acc + (*v - *o) * (*v - *o))
 }
 
 //mp distance
@@ -531,11 +576,9 @@ pub fn distance<V: Float, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
 ///
 #[inline]
 pub fn dot<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
-    let mut r = V::ZERO;
-    for i in 0..D {
-        r += v[i] * other[i];
-    }
-    r
+    v.iter()
+        .zip(other.iter())
+        .fold(V::ZERO, |acc, (v, o)| acc + *v * *o)
 }
 
 //a Formatting

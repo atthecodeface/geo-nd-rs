@@ -1,25 +1,6 @@
-/*a Copyright
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-@file    quaternion_op.rs
-@brief   Part of geometry library
- */
-
-//a Imports
 use crate::matrix_op as matrix;
 use crate::vector_op as vector;
-use crate::{Float, Num};
+use crate::{Float, Num, f_const};
 
 //a Notes on matrices of quaternions
 // 1 - 2*j2 - 2*k2           2*i*j - 2*k*r        2*i*k + 2*j*r
@@ -69,7 +50,7 @@ pub fn identity<V: Num>() -> [V; 4] {
 #[must_use]
 #[inline]
 pub fn of_axis_angle<V: Float>(axis: &[V; 3], angle: V) -> [V; 4] {
-    let (s, c) = V::sin_cos(angle / (2.0_f32.into()));
+    let (s, c) = V::sin_cos(angle * f_const!(V, 1, 2));
     let l = vector::length(axis);
     if l < V::epsilon() {
         identity()
@@ -168,13 +149,9 @@ pub fn to_rotation4<V: Float>(q: &[V; 4], m: &mut [V; 16]) {
 #[must_use]
 pub fn of_rotation<V: Float>(m: &[V; 9]) -> [V; 4] {
     fn safe_sqrt<V: Float>(x: V) -> V {
-        if x < V::ZERO {
-            V::ZERO
-        } else {
-            x.sqrt()
-        }
+        if x < V::ZERO { V::ZERO } else { x.sqrt() }
     }
-    let half: V = 0.5_f32.into();
+    let half = f_const!(V, 1, 2);
     let r = safe_sqrt(V::ONE + m[0] + m[4] + m[8]) * half;
     let mut i = safe_sqrt(V::ONE + m[0] - m[4] - m[8]) * half;
     let mut j = safe_sqrt(V::ONE - m[0] + m[4] - m[8]) * half;
@@ -242,11 +219,11 @@ pub fn normalize<V: Float>(a: [V; 4]) -> [V; 4] {
 ///
 /// Rotation about the X axis is c+i*s
 ///
-/// (c+i*s) * a[] = c*a - s*a[i] + i.s*a[r] - j.s*a[k] + k.s*a[j]
+/// `(c+i*s) * a[] = c*a - s*a[i] + i.s*a[r] - j.s*a[k] + k.s*a[j]`
 #[must_use]
 #[inline]
 pub fn rotate_x<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
-    let (s, c) = V::sin_cos(angle / (2.0_f32.into()));
+    let (s, c) = V::sin_cos(angle * f_const!(V, 1, 2));
     let i = a[0] * c + a[3] * s;
     let j = a[1] * c + a[2] * s;
     let k = a[2] * c - a[1] * s;
@@ -259,7 +236,7 @@ pub fn rotate_x<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
 #[must_use]
 #[inline]
 pub fn rotate_y<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
-    let (s, c) = V::sin_cos(angle / (2.0_f32.into()));
+    let (s, c) = V::sin_cos(angle * f_const!(V, 1, 2));
     let i = a[0] * c - a[2] * s;
     let j = a[1] * c + a[3] * s;
     let k = a[2] * c + a[0] * s;
@@ -272,7 +249,7 @@ pub fn rotate_y<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
 #[must_use]
 #[inline]
 pub fn rotate_z<V: Float>(a: &[V; 4], angle: V) -> [V; 4] {
-    let (s, c) = V::sin_cos(angle / (2.0_f32.into()));
+    let (s, c) = V::sin_cos(angle * f_const!(V, 1, 2));
     let i = a[0] * c + a[1] * s;
     let j = a[1] * c - a[0] * s;
     let k = a[2] * c + a[3] * s;
@@ -339,8 +316,8 @@ pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
     let zero = V::ZERO;
     let one = V::ONE;
     let two = one + one;
-    let almost_half: V = 0.499999_f32.into();
-    let halfpi = V::PI() / two;
+    let almost_half = f_const!(V, 499_999, 1_000_000);
+    let halfpi = V::from_f32(1.570796326_f32).unwrap();
     let i = q[0];
     let j = q[1];
     let k = q[2];
@@ -408,11 +385,11 @@ pub fn apply4<V: Float>(q: &[V; 4], v: &[V; 4]) -> [V; 4] {
 ///
 /// w_a + w_b must be 1.
 ///
-/// See http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf
+/// See <http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf>
 /// Averaging Quaternions by F. Landis Markley
 #[must_use]
 pub fn weighted_average_pair<V: Float>(qa: &[V; 4], w_a: V, qb: &[V; 4], w_b: V) -> [V; 4] {
-    let four: V = 4.0_f32.into();
+    let four = V::from_u8(4).unwrap();
     let (ra, ia, ja, ka) = as_rijk(qa);
     let (rb, ib, jb, kb) = as_rijk(qb);
     let w_diff = w_a - w_b;
@@ -497,8 +474,7 @@ pub fn rotation_of_vec_to_vec<V: Float>(a: &[V; 3], b: &[V; 3]) -> [V; 4] {
     let sa = vector::length(&cp);
     let angle = sa.asin();
     let angle = if obtuse {
-        let pi = V::PI();
-        pi - angle
+        V::from_f32(3.141592653_f32).unwrap() - angle
     } else {
         angle
     };

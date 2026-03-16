@@ -16,36 +16,42 @@ impl IsSquared<4, 16> for [(); 4] {}
 //tp Num
 /// The [Num] trait is required for matrix or vector elements; it is
 /// not a float, and so some of the matrix and vector operations can
-/// operate on integer types such as i32, i64 and isize
+/// operate on integer types such as i32, i64 and isize; it can also
+/// operate on rational numbers (such as num::Rational64)
+///
+/// The fundamental difference between this and Float is the lack of support
+/// for functions such as sqrt(), cos(), abs() (!), powi(_), etc
 ///
 /// The trait requires basic numeric operations, plus specifically [std::fmt::Display].
+///
+/// v0.7 added PartialOrd, FromPrimitve
 pub trait Num:
-    std::ops::Neg<Output = Self>
-    + num_traits::Num
-    + num_traits::NumAssignOps
-    + num_traits::ConstOne
-    + num_traits::ConstZero
-    + Clone
-    + Copy
+    Copy
     + PartialEq
+    + PartialOrd
     + std::fmt::Display
     + std::fmt::Debug
+    + std::ops::Neg<Output = Self>
+    + num_traits::Num
+    + num_traits::ConstOne
+    + num_traits::ConstZero
+    + num_traits::FromPrimitive
 {
 }
 
 //ip Num
 /// Num is implemented for all types that support the traits
 impl<T> Num for T where
-    T: std::ops::Neg<Output = Self>
-        + num_traits::Num
-        + num_traits::NumAssignOps
-        + num_traits::ConstOne
-        + num_traits::ConstZero
-        + Clone
-        + Copy
+    T: Copy
         + PartialEq
+        + PartialOrd
         + std::fmt::Display
         + std::fmt::Debug
+        + std::ops::Neg<Output = Self>
+        + num_traits::Num
+        + num_traits::ConstOne
+        + num_traits::ConstZero
+        + num_traits::FromPrimitive
 {
 }
 
@@ -56,14 +62,14 @@ impl<T> Num for T where
 /// The trait is essentially `num_traits::Float`, but it supplies
 /// implicit methods for construction of a [Float] from an `isize`
 /// value, or as a rational from a pair of `isize` values.
-///
-/// As [num_traits::Float] includes [num_traits::NumCast] it is not
-/// possible to require, as would perhaps be desired, a From<f32>
-/// trait, without conflicts occurring.
-///
-pub trait Float: Num + num_traits::Float + num_traits::FloatConst + From<f32> {}
+pub trait Float: Num + num_traits::Float {
+    /// Generate a value that is the fraction of a signed integer numerator and an unsigned integer denominator
+    fn frac(n: i32, d: u32) -> Self {
+        Self::from_i32(n).unwrap() / Self::from_u32(d).unwrap()
+    }
+}
 
-impl<T> Float for T where T: Num + num_traits::Float + num_traits::FloatConst + From<f32> {}
+impl<T> Float for T where T: Num + num_traits::Float {}
 
 //a Array and Quat traits
 //tp ArrayBasic
@@ -178,6 +184,7 @@ impl<T, F> ArrayScale<F> for T where
 }
 
 //tp ArrayMulDiv - not used yet
+#[allow(dead_code)]
 pub trait ArrayMulDiv<F, const D: usize>:
     Sized
     + std::ops::Mul<Self, Output = Self>
@@ -287,7 +294,7 @@ pub trait Vector<F: Float, const D: usize>:
     fn reduce_sum(&self) -> F {
         let mut r = F::zero();
         for d in self.deref() {
-            r += *d
+            r = r + *d
         }
         r
     }
@@ -369,14 +376,14 @@ pub trait Vector<F: Float, const D: usize>:
     //fp apply_q3
     /// Apply a quaternion to a V3
     ///
-    /// This can either take other as &[F;3] and produce [F; 3], or
-    ///  &D where D:Deref<Target =[F; 3]> and D:From<[F; 3]
+    /// This can either take other as &\[F;3\] and produce \[F; 3\], or
+    ///  &D where D:Deref<Target = \[F; 3\]> and D:From<\[F; 3\]
     ///
-    /// If it takes the former then it can operate on [F;3] and
-    /// anything that is Deref<Target=[F;3]>, but it needs its result
+    /// If it takes the former then it can operate on \[F;3\] and
+    /// anything that is Deref<Target = \[F;3\]>, but it needs its result
     /// cast into the correct vector
     ///
-    /// If it tkes the latter then it cannot operate on [F;3], but its
+    /// If it tkes the latter then it cannot operate on \[F;3\], but its
     /// result need not be cast
     #[must_use]
     fn apply_q3<Q>(&self, q: &Q) -> Self
@@ -391,14 +398,14 @@ pub trait Vector<F: Float, const D: usize>:
     //fp apply_q4
     /// Apply a quaternion to a V4
     ///
-    /// This can either take other as &[F;3] and produce [F; 3], or
-    ///  &D where D:Deref<Target =[F; 3]> and D:From<[F; 3]
+    /// This can either take other as &\[F;3\] and produce \[F; 3\], or
+    ///  &D where D:Deref<Target =\[F; 3\]> and D:From<\[F; 3\]
     ///
-    /// If it takes the former then it can operate on [F;3] and
-    /// anything that is Deref<Target=[F;3]>, but it needs its result
+    /// If it takes the former then it can operate on \[F;3\] and
+    /// anything that is Deref<Target = \[F;3\]>, but it needs its result
     /// cast into the correct vector
     ///
-    /// If it tkes the latter then it cannot operate on [F;3], but its
+    /// If it tkes the latter then it cannot operate on \[F;3\], but its
     /// result need not be cast
     #[must_use]
     fn apply_q4<Q>(&self, q: &Q) -> Self
@@ -563,16 +570,16 @@ pub trait SqMatrix4<F: Float>: SqMatrix<F, 4, 16> {
 
     /// Translate the matrix by a Vec3
     fn translate3(&mut self, by: &[F; 3]) {
-        self[3] += by[0];
-        self[7] += by[1];
-        self[11] += by[2];
+        self[3] = self[3] + by[0];
+        self[7] = self[7] + by[1];
+        self[11] = self[11] + by[2];
     }
 
     /// Translate the matrix by a Vec4
     fn translate4(&mut self, by: &[F; 4]) {
-        self[3] += by[0];
-        self[7] += by[1];
-        self[11] += by[2];
+        self[3] = self[3] + by[0];
+        self[7] = self[7] + by[1];
+        self[11] = self[11] + by[2];
     }
 }
 impl<F, M> SqMatrix4<F> for M
@@ -705,7 +712,7 @@ pub trait Quaternion<F: Float>:
     ///
     /// w_a + w_b must be 1.
     ///
-    /// See http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf
+    /// See <http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf>
     /// Averaging Quaternions by F. Landis Markley
     #[must_use]
     fn weighted_average_pair(&self, w_a: F, qb: &Self, w_b: F) -> Self {
@@ -813,14 +820,14 @@ pub trait Quaternion<F: Float>:
     //fp apply3
     /// Apply the quaternion to a V3
     ///
-    /// This can either take other as &[F;3] and produce [F; 3], or
-    ///  &D where D:Deref<Target =[F; 3]> and D:From<[F; 3]
+    /// This can either take other as &\[F;3\] and produce \[F; 3\], or
+    ///  &D where D:Deref<Target =\[F; 3\]> and D:From<\[F; 3\]>
     ///
-    /// If it takes the former then it can operate on [F;3] and
-    /// anything that is Deref<Target=[F;3]>, but it needs its result
+    /// If it takes the former then it can operate on \[F;3\] and
+    /// anything that is Deref<Target=\[F;3\]>, but it needs its result
     /// cast into the correct vector
     ///
-    /// If it tkes the latter then it cannot operate on [F;3], but its
+    /// If it tkes the latter then it cannot operate on \[F;3\], but its
     /// result need not be cast
     #[must_use]
     fn apply3<T>(&self, other: &T) -> T

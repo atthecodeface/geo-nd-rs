@@ -109,7 +109,7 @@ The downside to this policy is that one cannot apply a matrix to transform an ar
 # Function operation
 
 The functions for geometry manipulation are provided in the [vector],
-[mat] and [quat] modules.
+[matrix] and [quat] modules.
 
 ## Basic operation
 
@@ -133,7 +133,7 @@ The library provides traits for types that can be vectors, matrices, and quatern
 Types that provide [Vector] can be manipulated with negation, addition,
 subtraction, and can be scaled with multiplication and division by
 their 'float'; their components can be accessed through indexing
-(e.g. a[0]) immutably and mutably.
+(e.g. `a[0]`) immutably and mutably.
 
  As non-traditional vector operations they can be piece-wise
 multiplied and divided also, which can be useful in graphcis
@@ -147,8 +147,8 @@ They provide AsRef for float arrays of length 4 and slices for fast import and e
 
 ### Vector3
 
-Vector3 types are 3-element vectors which additionally provide a
-[Vector3::cross_product] method, which does not exist (in a simply
+Vector3 types are 3-element vectors, which are expected to usefullt provide a
+[Vector::cross_product] method, which may not exist (in a simply
 well defined manner) for other vector sizes.
 
 ## SqMatrix
@@ -156,9 +156,9 @@ well defined manner) for other vector sizes.
 Types that provide [SqMatrix] are square matrices that can be
 manipulated with negation, addition, subtraction, and multiplicaton, and can be
 scaled with multiplication and division by their 'float'; their
-components can be accessed through indexing (e.g. a[0]) immutably and
-mutably. The index is a usize, in row-major order (i.e. [0] is row
-zero column zero, [1] is row 0 column 1, and [nr] is row 1 column 0
+components can be accessed through indexing (e.g. `a[0]`) immutably and
+mutably. The index is a usize, in row-major order (i.e. \[0\] is row
+zero column zero, \[1\] is row 0 column 1, and \[nr\] is row 1 column 0
 for a matrixt that is 'nr' by 'nc' rows by columns.)
 
  They can also be piece-wise added and subtracted from using their
@@ -353,17 +353,17 @@ such array (but perhaps with greater alignment restrictions).
 
 An array `[f32/f64; D]` supports:
 
- *   Copy, Clone, Debug, Default, PartialEq, PartialOrd
+ *   `Copy`, `Clone`, `Debug`, `Default`, `PartialEq`, `PartialOrd`
 
- *   Index<usize> and IndexMut<usize>
+ *   `Index<usize>` and `IndexMut<usize>`
 
- *   IntoIterator for T, &T, &mut T
+ *   `IntoIterator` for T, &T, &mut T
 
- *   PartialEq of `[U;N]` and `[U]` (where T: PartialEq of U)
+ *   `PartialEq of` `[U;N]` and `[U]` (where T: PartialEq of U)
 
- *   TryFrom of `&[T]`, `Vec<T, A>`, `Box<[T]>` with mut where appropriate; some times for `&[F; D]` too
+ *   `TryFrom` of `&[T]`, `Vec<T, A>`, `Box<[T]>` with mut where appropriate; some times for `&[F; D]` too
 
- *   AsRef[T], Borrow[T] (and mut for those three)
+ *   `AsRef[T]`, `Borrow[T]` (and mut for those three)
 
  *   Serialize, Deserialize
 
@@ -371,50 +371,50 @@ Note: Hash is not supported as f32/f64 do not support it
 
 Hence a [Vector] or [Quaternion] should provide:
 
- *   Copy, Clone, Debug, Default, PartialEq
+ *   `Copy`, `Clone`, `Debug`, `Default`, `PartialEq`
 
- *   Index<usize> and IndexMut<usize>
+ *   `Index<usize>` and `IndexMut<usize>`
 
- *   Deref <Target = `[F; D]`>, DerefMut
+ *   `Deref <Target = [F; D]>`, `DerefMut`
 
- *   AsRef and AsMut of `[F; D]`
+ *   `AsRef` and `AsMut of [F; D]`
 
- *   From of `&[F]`, `[F;D]`,  `&[F;D]`
+ *   `From` of `&[F]`, `[F;D]`,  `&[F;D]`
 
- *   Into `[F;D]` (deref provides equivalent of &[F; D])
+ *   `Into` `[F;D]` (deref provides equivalent of `&[F; D]`)
 
- *   TryFrom of `&[F]`, `Vec<F>`
+ *   `TryFrom` of `&[F]`, `Vec<F>`
 
- *   Serialize, Deserialize
+ *   `Serialize`, `Deserialize`
 
-Note: Not PartialOrd, as vectors dont't have an ordering
+Note: Not `PartialOrd`, as vectors dont't have an ordering
 
  Addition/Subtraction/Multiplication/Division
 
- Add/Sub with Rhs of Self, &Self, Deref<Target = [F;D]> are
+ Add/Sub with Rhs of Self, &Self, Deref<Target = \[F;D\]> are
     *required* for utility; we cannot *require* the last of these, as
     Rust has no syntax for that.
 
  Mul/Div with Rhs of F, &F are *required* for utility; previous
     versions supported Self to do element-wise operations, which
     has been removed This is in part because it would need to work
-    for Deref<Target = [F;D]>, but f32/f64 do not implement Deref,
+    for Deref<Target = \[F;D\]>, but f32/f64 do not implement Deref,
     and they might in the future do so which breaks the F and &F
     operation.
 
- Not AsRef/Mut of [F], as [F; D] implement that, and Vector gets it through Deref
+ Not AsRef/Mut of \[F\], as \[F; D\] implement that, and Vector gets it through Deref
 
- Note AsRef<[F]> is implemented through Deref to [F; D]
+ Note AsRef<\[F\]> is implemented through Deref to \[F; D\]
 
- Note AsMut<[F]> is implemented through DerefMut to [F; D]
+ Note AsMut<\[F\]> is implemented through DerefMut to \[F; D\]
 
- if required, then it blocks Add<Deref<Target = [F;D]>>
+ if required, then it blocks Add<Deref<Target = \[F;D\]>>
 !*/
 
 //a Imports
 mod macros;
 pub(crate) use macros::{
-    convert_traits, elementwise_traits, ref_traits, scale_by_f_traits, serialize_traits,
+    convert_traits, elementwise_traits, f_const, ref_traits, scale_by_f_traits, serialize_traits,
     unary_traits,
 };
 
@@ -433,6 +433,7 @@ mod qarray;
 pub use farray::FArray;
 pub use farray2::FArray2;
 pub use fqarray::FQArrayTrans;
+pub use num_traits::cast;
 pub use qarray::QArray;
 pub use traits::{
     Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix2, SqMatrix3, SqMatrix4,

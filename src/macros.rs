@@ -1,3 +1,12 @@
+macro_rules! f_const {
+    ($f:ty, $e:expr) => {
+        <$f>::from_i32($e).unwrap()
+    };
+    ($f:ty, $n:expr, $d:expr) => {
+        <$f>::frac($n, $d)
+    };
+}
+
 //a Macros that operate on 'Self.data'
 //mi ref_traits - Deref/Mut, AsRef/AsMut, Index<usize>
 macro_rules! ref_traits {
@@ -278,6 +287,7 @@ macro_rules! serialize_traits {
 //a Export them
 pub(crate) use convert_traits;
 pub(crate) use elementwise_traits;
+pub(crate) use f_const;
 pub(crate) use ref_traits;
 pub(crate) use scale_by_f_traits;
 pub(crate) use serialize_traits;
