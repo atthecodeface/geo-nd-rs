@@ -838,6 +838,15 @@ pub trait Quaternion<F: Float>:
         quat::apply3(self.deref(), other.deref()).into()
     }
 
+    /// Apply the quaternion to a [F; 3]
+    ///
+    /// See apply3 for why this is provided
+    ///
+    #[must_use]
+    fn apply3_arr(&self, other: &[F; 3]) -> [F; 3] {
+        quat::apply3(self.deref(), other)
+    }
+
     //fp apply4
     /// Apply the quaternion to a V4
     #[must_use]
@@ -847,6 +856,15 @@ pub trait Quaternion<F: Float>:
         T: From<[F; 4]>,
     {
         quat::apply4(self.deref(), other.deref()).into()
+    }
+
+    /// Apply the quaternion to a [F; 3]
+    ///
+    /// See apply3 for why this is provided
+    ///
+    #[must_use]
+    fn apply4_arr(&self, other: &[F; 4]) -> [F; 4] {
+        quat::apply4(self.deref(), other)
     }
 
     //zz All done

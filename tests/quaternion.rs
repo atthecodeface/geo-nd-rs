@@ -1,6 +1,6 @@
 //a Imports
-use geo_nd::{quat, vector};
 use geo_nd::{FArray, Geometry3D, QArray, Quaternion, SqMatrix, Vector};
+use geo_nd::{quat, vector};
 
 //a Test type
 //ti Banana
@@ -347,4 +347,16 @@ fn test_look_at() {
     assert!(vec3_eq(&t, &[0., 0., -1.]));
     let t = q.apply3(&z);
     assert!(vec3_eq(&t, &[-1., 0., 0.]));
+}
+
+#[test]
+fn test_array3() {
+    let x = [1.0_f32, 0., 0.];
+    let y = [0., 1.0_f32, 0.];
+    let z = [0., 0., 1.0_f32];
+
+    let rsqrt2 = (0.5_f32).sqrt();
+    let q = Quat::default();
+    // Would love to be able to do this but cannot
+    // assert_eq!(q.apply3(&x), [1.0, 0., 0.]);
 }

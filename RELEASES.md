@@ -1,3 +1,15 @@
+# Release 0.6.4 (2025-05-06)
+
+- Add quaternion apply3_arr and apply4_arr methods, to be able to operate on arrays of 'F'
+
+# Release 0.6.3 (2025-05-06)
+
+- Use better constants and num_traits (makes some values use Num instead of Float, for example)
+- Added LUP decomposition/inversion to matrix operations
+- Reduced need of NumAssignOps
+- Added mapping_vector_pair_to_vector_pair to quaternions
+- Add sum_scaled, set_bbox, update_bbox, expand_bbox to Vector
+
 # Release 0.6.1 (2025-08-26)
 
 - Add mapping_vector_pair_to_vector_pair to quaternion
@@ -79,4 +91,3 @@
 - Publishing on crates.io for the first time
 
 **Contributors**: @atthecodeface
-
