@@ -1,7 +1,7 @@
 //a Imports
 use serde::{Deserialize, Serialize};
 
-use crate::{matrix, vector, FArray};
+use crate::{FArray, matrix, vector};
 use crate::{Float, SqMatrix, Vector};
 
 //a FArray2

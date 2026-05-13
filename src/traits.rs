@@ -568,6 +568,12 @@ pub trait SqMatrix4<F: Float>: SqMatrix<F, 4, 16> {
         matrix::look_at4(eye, center, up).into()
     }
 
+    /// Scale the matrix for a transformation - only update top *3* rows
+    fn scale3(&mut self, by: F) {
+        for d in self.iter_mut().take(12) {
+            *d = *d * by;
+        }
+    }
     /// Translate the matrix by a Vec3
     fn translate3(&mut self, by: &[F; 3]) {
         self[3] = self[3] + by[0];

@@ -121,8 +121,8 @@ macro_rules! unary_traits {
             type Output = $ty;
             fn neg(self) -> Self::Output {
                 let mut r = <$ty>::default();
-                for i in 0..$e {
-                    r.data[i] = -self.data[i];
+                for (r, d) in r.data.iter_mut().zip(self.data.iter()) {
+                    *r = -*d;
                 }
                 r
             }
@@ -218,8 +218,8 @@ macro_rules! scale_by_f_traits {
         impl std::ops::$trait_op<$f> for $ty {
             type Output = $ty;
             fn $fn_op(mut self, other: $f) -> $ty {
-                for i in 0..4 {
-                    self.data[i] $op_assign other;
+                for d in self.data.iter_mut() {
+                    *d $op_assign other;
                 }
                 self
             }
@@ -235,7 +235,9 @@ macro_rules! scale_by_f_traits {
 
         impl std::ops::$trait_assign_op<$f> for $ty {
             fn $fn_assign_op(&mut self, other: $f) {
-                for i in 0..4 {self.data[i] $op_assign other;}
+                for d in self.data.iter_mut() {
+                    *d $op_assign other;
+                }
             }
         }
 
@@ -243,8 +245,8 @@ macro_rules! scale_by_f_traits {
         impl <'a> std::ops::$trait_op<&'a $f> for $ty {
             type Output = $ty;
             fn $fn_op(mut self, other: &'a $f) -> $ty {
-                for i in 0..4 {
-                    self.data[i] $op_assign other;
+                for d in self.data.iter_mut() {
+                    *d $op_assign other;
                 }
                 self
             }
@@ -252,7 +254,9 @@ macro_rules! scale_by_f_traits {
 
         impl <'a> std::ops::$trait_assign_op<&'a $f> for $ty {
             fn $fn_assign_op(&mut self, other: &'a $f) {
-                for i in 0..4 {self.data[i] $op_assign other;}
+                for d in self.data.iter_mut() {
+                    *d $op_assign other;
+                }
             }
         }
     }
