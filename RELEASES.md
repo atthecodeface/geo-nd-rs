@@ -1,3 +1,9 @@
+# Release 0.7.0 (2025-06-03)
+
+- Restructured Transform trait
+- Changed FQArray to Transformation
+- Tidied other traits for more uniformity
+
 # Release 0.6.4 (2025-05-06)
 
 - Add quaternion apply3_arr and apply4_arr methods, to be able to operate on arrays of 'F'
