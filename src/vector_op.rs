@@ -342,7 +342,6 @@ pub fn set_bbox<V: Num, const D: usize>(v: &[[V; D]], min: &mut [V; D], max: &mu
     let _ = update_bbox(&v[1..], min, max);
 }
 
-//cp update_bbox
 /// Update a min/max bounding box given a set of points
 ///
 /// Returns true if the bounding box was updated
@@ -384,7 +383,6 @@ pub fn expand_bbox<V: Num, const D: usize>(v: V, min: &mut [V; D], max: &mut [V;
     }
 }
 
-//cp add
 /// Add another vector scaled by a value to a vector, returning the sum
 ///
 /// # Example
@@ -403,7 +401,6 @@ pub fn add<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [
     v
 }
 
-//cp sub
 /// Consume the vector, and return a new vector that is the sum of
 /// this and a borrowed other vector scaled
 pub fn sub<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [V; D] {
@@ -413,7 +410,6 @@ pub fn sub<V: Num, const D: usize>(mut v: [V; D], other: &[V; D], scale: V) -> [
     v
 }
 
-//cp clamp
 /// Clamp each element to be between min and max
 ///
 /// # Example
@@ -439,7 +435,6 @@ pub fn clamp<V: Float, const D: usize>(mut a: [V; D], min: V, max: V) -> [V; D] 
     a
 }
 
-//cp normalize
 /// Normalize (make unit length) a vector if possible
 ///
 /// If its length is too close to 0, then return the zero vector
@@ -462,7 +457,6 @@ pub fn normalize<V: Float, const D: usize>(mut v: [V; D]) -> [V; D] {
     v
 }
 
-//cp rotate_around
 /// Rotate a vector within a plane around a
 /// *pivot* point by the specified angle
 ///
@@ -502,7 +496,6 @@ pub fn rotate_around<V: Float, const D: usize>(
 }
 
 //a Accessors or mutations
-//mp length_sq
 /// Return the length^2 of the vector
 ///
 /// # Example
@@ -517,7 +510,6 @@ pub fn length_sq<V: Num>(v: &[V]) -> V {
     v.iter().fold(V::ZERO, |acc, v| acc + *v * *v)
 }
 
-//mp length
 /// Return the length of the vector
 ///
 /// # Example
@@ -532,7 +524,6 @@ pub fn length<V: Float>(v: &[V]) -> V {
     length_sq(v).sqrt()
 }
 
-//mp distance_sq
 /// Return the distance square between two vectors
 ///
 /// # Example
@@ -549,7 +540,6 @@ pub fn distance_sq<V: Num, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
         .fold(V::ZERO, |acc, (v, o)| acc + (*v - *o) * (*v - *o))
 }
 
-//mp distance
 /// Return the distance between two vectors
 ///
 /// # Example
@@ -564,7 +554,6 @@ pub fn distance<V: Float, const D: usize>(v: &[V; D], other: &[V; D]) -> V {
     distance_sq(v, other).sqrt()
 }
 
-//mp dot
 /// Return the inner product (aka dot product or scalar product) of this and another vector
 ///
 /// # Example

@@ -268,29 +268,23 @@ pub trait Vector<F: Float, const D: usize>:
     + ArrayAddSubNeg<F, D>
     + ArrayScale<F>
 {
-    //mp is_zero
+    /// Return true if the vector is all zeros
+    fn set_zero(&mut self) {
+        *self = [F::ZERO;D].into();
+    }
+
     /// Return true if the vector is all zeros
     fn is_zero(&self) -> bool {
         !self.deref().iter().any(|f| !f.is_zero())
     }
 
-    //mp mix
-    /// Create a linear combination of this [Vector] and another using parameter `t` from zero to one
-    #[must_use]
-    fn mix<A>(self, other: A, t: F) -> Self
-    where
-        A: std::ops::Deref<Target = [F; D]>,
-    {
-        vector::mix(self.deref(), other.deref(), t).into()
-    }
-
-    //mp dot
     /// Return the dot product of two vectors
+    #[inline]
     fn dot(&self, other: &[F; D]) -> F {
         vector::dot(self.deref(), other)
     }
 
-    /// Return the dot product of two vectors
+    /// Return the sum of the components
     fn reduce_sum(&self) -> F {
         let mut r = F::zero();
         for d in self.deref() {
@@ -299,35 +293,18 @@ pub trait Vector<F: Float, const D: usize>:
         r
     }
 
-    //mp length_sq
     /// Return the square of the length of the vector
     #[inline]
     fn length_sq(&self) -> F {
         self.dot(self)
     }
 
-    //mp length
     /// Return the length of the vector
     #[inline]
     fn length(&self) -> F {
         self.length_sq().sqrt()
     }
 
-    //mp distance_sq
-    /// Return the square of the distance between this vector and another
-    #[inline]
-    fn distance_sq(&self, other: &[F; D]) -> F {
-        (*self - other).length_sq()
-    }
-
-    //mp distance
-    /// Return the distance between this vector and another
-    #[inline]
-    fn distance(&self, other: &[F; D]) -> F {
-        self.distance_sq(other).sqrt()
-    }
-
-    //mp normalize
     /// Normalize the vector; if its length is close to zero, then set it to be zero
     #[inline]
     #[must_use]
@@ -341,7 +318,47 @@ pub trait Vector<F: Float, const D: usize>:
         self
     }
 
-    //cp rotate_around
+    /// Return the square of the distance between this vector and another
+    #[inline]
+    fn distance_sq(&self, other: &[F; D]) -> F {
+        (*self - other).length_sq()
+    }
+
+    /// Return the distance between this vector and another
+    #[inline]
+    fn distance(&self, other: &[F; D]) -> F {
+        self.distance_sq(other).sqrt()
+    }
+
+    /// Create a linear combination of this [Vector] and another using parameter `t` from zero to one
+    #[must_use]
+    fn mix<A>(self, other: A, t: F) -> Self
+    where
+        A: std::ops::Deref<Target = [F; D]>,
+    {
+        vector::mix(self.deref(), other.deref(), t).into()
+    }
+
+    /// Create a linear combination of a number of vectors given a scale for each
+    ///
+    /// If the lengths of the slices provided differ, then the entries in the
+    /// longer slice (without pairs to go with) are ignored
+    #[must_use]
+    fn sum_scaled<A>(v:&[A], scales:&[F]) -> Self
+    where
+        A: std::ops::Deref<Target = [F; D]>,
+    {
+        scales
+            .iter()
+            .zip(v.iter())
+            .fold([F::ZERO; D], |mut acc, (s, v)| {
+                for (a, v) in acc.iter_mut().zip(v.iter()) {
+                    *a = *a + *v * *s;
+                }
+                acc
+            }).into()
+    }
+
     /// Rotate a vector within a plane around a
     /// *pivot* point by the specified angle
     ///
@@ -618,12 +635,10 @@ pub trait Quaternion<F: Float>:
     + QuatMulDiv<F, 4>
     + ArrayScale<F>
 {
-    //cp of_rijk
     /// Create from r, i, j, k
     #[must_use]
     fn of_rijk(r: F, i: F, j: F, k: F) -> Self;
 
-    //cp conjugate
     /// Create the conjugate of a quaternion
     #[must_use]
     #[inline]
@@ -632,14 +647,76 @@ pub trait Quaternion<F: Float>:
         Self::of_rijk(r, -i, -j, -k)
     }
 
-    //cp of_axis_angle
+    //fp as_rijk
+    /// Break out into r, i, j, k
+    fn as_rijk(&self) -> (F, F, F, F);
+
+    //fp as_axis_angle
+    /// Find the axis and angle of rotation for a (non-unit) quaternion
+    fn as_axis_angle<V: From<[F; 3]>>(&self) -> (V, F) {
+        let (axis, angle) = quat::as_axis_angle(self.as_ref());
+        (axis.into(), angle)
+    }
+
+    /// Set to an identity transformation
+    fn set_identity(&mut self) {
+        *self = Self::default();
+    }
+
+    /// Set the quaternion to be all zeros
+    fn set_zero(&mut self) {
+        *self = [F::ZERO; 4].into();
+    }
+
+    /// Create a linear combination of this [Quaternion] and another using parameter `t` from zero to one
+    #[must_use]
+    fn mix(self, other: &[F; 4], t: F) -> Self {
+        vector::mix(self.deref(), other, t).into()
+    }
+
+    /// Return the dot product of two quaternions; basically used for length
+    fn dot(self, other: &Self) -> F {
+        vector::dot(self.deref(), other.deref())
+    }
+
+    /// Return the square of the length of the quaternion
+    fn length_sq(&self) -> F {
+        self.dot(self)
+    }
+
+    /// Return the length of the quaternion
+    fn length(&self) -> F {
+        self.length_sq().sqrt()
+    }
+
+    /// Return the square of the distance between this quaternion and another
+    fn distance_sq(&self, other: &Self) -> F {
+        quat::distance_sq(self, other)
+    }
+
+    /// Return the distance between this quaternion and another
+    fn distance(&self, other: &Self) -> F {
+        self.distance_sq(other).sqrt()
+    }
+
+    /// Normalize the quaternion; if its length is close to zero, then set it to be zero
+    #[must_use]
+    fn normalize(mut self) -> Self {
+        let l = self.length();
+        if l < F::epsilon() {
+            self.set_zero()
+        } else {
+            self /= l
+        }
+        self
+    }
+
     /// Create a unit quaternion for a rotation of an angle about an axis
     #[must_use]
     fn of_axis_angle(axis: &[F; 3], angle: F) -> Self {
         quat::of_axis_angle(axis, angle).into()
     }
 
-    //cp rotate_x
     /// Apply a rotation about the X-axis to this quaternion
     #[inline]
     #[must_use]
@@ -647,7 +724,6 @@ pub trait Quaternion<F: Float>:
         quat::rotate_x(self.as_ref(), angle).into()
     }
 
-    //cp rotate_y
     /// Apply a rotation about the Y-axis to this quaternion
     #[inline]
     #[must_use]
@@ -655,7 +731,6 @@ pub trait Quaternion<F: Float>:
         quat::rotate_y(self.as_ref(), angle).into()
     }
 
-    //cp rotate_z
     /// Apply a rotation about the Z-axis to this quaternion
     #[inline]
     #[must_use]
@@ -663,8 +738,8 @@ pub trait Quaternion<F: Float>:
         quat::rotate_z(self.as_ref(), angle).into()
     }
 
-    //cp look_at
-    /// Create a quaternion that maps a unit V3 of dirn to (0,0,-1) and a unit V3 of up (if perpendicular to dirn) to (0,1,0)
+    /// Create a quaternion that maps a unit V3 of dirn to (0,0,-1) and a unit
+    /// V3 of up (if perpendicular to dirn) to (0,1,0)
     #[must_use]
     fn look_at(dirn: &[F; 3], up: &[F; 3]) -> Self {
         quat::look_at(dirn, up).into()
@@ -735,73 +810,6 @@ pub trait Quaternion<F: Float>:
     fn weighted_average_many<A: Into<[F; 4]>, I: Iterator<Item = (F, A)>>(value_iter: I) -> Self {
         let value_iter = value_iter.map(|(w, v)| (w, v.into()));
         quat::weighted_average_many(value_iter).into()
-    }
-
-    //fp as_rijk
-    /// Break out into r, i, j, k
-    fn as_rijk(&self) -> (F, F, F, F);
-
-    //fp as_axis_angle
-    /// Find the axis and angle of rotation for a (non-unit) quaternion
-    fn as_axis_angle<V: From<[F; 3]>>(&self) -> (V, F) {
-        let (axis, angle) = quat::as_axis_angle(self.as_ref());
-        (axis.into(), angle)
-    }
-
-    //mp set_zero
-    /// Set the quaternion to be all zeros
-    fn set_zero(&mut self) {
-        *self = [F::zero(); 4].into();
-    }
-
-    //mp mix
-    /// Create a linear combination of this [Quaternion] and another using parameter `t` from zero to one
-    #[must_use]
-    fn mix(self, other: &[F; 4], t: F) -> Self {
-        vector::mix(self.deref(), other, t).into()
-    }
-
-    //mp dot
-    /// Return the dot product of two quaternions; basically used for length
-    fn dot(self, other: &Self) -> F {
-        vector::dot(self.deref(), other.deref())
-    }
-
-    //mp length_sq
-    /// Return the square of the length of the quaternion
-    fn length_sq(&self) -> F {
-        self.dot(self)
-    }
-
-    //mp length
-    /// Return the length of the quaternion
-    fn length(&self) -> F {
-        self.length_sq().sqrt()
-    }
-
-    //mp distance_sq
-    /// Return the square of the distance between this quaternion and another
-    fn distance_sq(&self, other: &Self) -> F {
-        quat::distance_sq(self, other)
-    }
-
-    //mp distance
-    /// Return the distance between this quaternion and another
-    fn distance(&self, other: &Self) -> F {
-        self.distance_sq(other).sqrt()
-    }
-
-    //mp normalize
-    /// Normalize the quaternion; if its length is close to zero, then set it to be zero
-    #[must_use]
-    fn normalize(mut self) -> Self {
-        let l = self.length();
-        if l < F::epsilon() {
-            self.set_zero()
-        } else {
-            self /= l
-        }
-        self
     }
 
     //cp of_rotation3
@@ -918,19 +926,55 @@ where
     Q: Quaternion<F>,
 {
     /// Create a transformation that is a translation, rotation and scaling
-    fn of_trs(t: V3, r: Q, s: F) -> Self;
-    /// Get the scale of the transform
-    fn scale(&self) -> F;
+    fn of_trs<A: AsRef<[F; 3]>>(t: A, r: Q, s: A) -> Self;
+    /// Create a transformation that is a translation, rotation and uniform scaling
+    fn of_trsu<A: AsRef<[F; 3]>>(t: A, r: Q, s: F) -> Self;
+    /// Get the scale of the transform in each of the axes
+    fn scale(&self) -> V3;
+    /// Get the scale of the transform in each of the axes
+    fn uniform_scale(&self) -> Option<F>;
     /// Get a translation by a vector
     fn translation(&self) -> V3;
-    /// Get the rotation of the transfirnatuib
+    /// Set to an identity transformation
+    fn set_identity(&mut self) {
+        self.set_uniform_scale(F::ONE);
+        self.set_translation(V3::default());
+        self.set_rotation(Q::default());
+    }
+    /// Get the rotation of the transformation
     fn rotation(&self) -> Q;
+    /// Set the scale of the transformation
+    fn set_scale<A: AsRef<[F; 3]>>(&mut self, scale: A);
+    /// Set the scale of the transformation
+    fn set_uniform_scale(&mut self, scale: F);
+    /// Set the translation of the transformation
+    fn set_translation<A: AsRef<[F; 3]>>(&mut self, translation: A);
+    /// Set the rotation of a transformation
+    fn set_rotation(&mut self, rotation: Q);
+    /// Pre-apply a uniform scaling
+    fn scale_by(&mut self, scale: F);
+    /// Pre-apply a scaled translation to the transformation
+    fn translate_by<A: AsRef<[F; 3]>>(&mut self, translation: A, scale: F);
+    /// Rotate the transformation by a quaternion
+    fn rotate_by(&mut self, quaternion: Q);
+    /// Transform this transformation by another *UNIFORM* scale transformation;
+    /// if is not uniform scaling then return false
+    fn transform_by(&mut self, transformer: &Self) -> bool;
     /// Get the inverse transformation
+    ///
+    /// This is only possible if the scaling is uniform
     #[must_use]
-    fn inverse(&self) -> Self;
+    fn inverse(&self) -> Option<Self>;
     /// Invert the transformation
-    fn invert(&mut self);
+    ///
+    /// This will return false if the scaling is not uniform
+    fn invert(&mut self) -> bool;
+    /// Convert it to a 4-by-4 matrix and set it
+    fn set_mat<M: SqMatrix4<F>>(&self, mat4: &mut M) {
+        *mat4 = self.as_mat();
+    }
     /// Convert it to a 4-by-4 matrix
+    #[must_use]
     fn as_mat<M: SqMatrix4<F>>(&self) -> M;
 }
 
