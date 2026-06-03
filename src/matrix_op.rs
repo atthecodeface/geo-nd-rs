@@ -540,13 +540,9 @@ pub fn lup_decompose<V: Num + std::cmp::PartialOrd>(
         //
         if r_max != d {
             det = -det;
-            let p = pivot[r_max];
-            pivot[r_max] = pivot[d];
-            pivot[d] = p;
+            pivot.swap(r_max, d);
             for c in 0..order {
-                let v = lu[r_max * order + c];
-                lu[r_max * order + c] = lu[d * order + c];
-                lu[d * order + c] = v;
+                lu.swap(r_max * order + c, d * order + c);
             }
         }
         det = det * max_lu_rc;

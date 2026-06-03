@@ -132,12 +132,12 @@ where
     }
 
     fn scale_by(&mut self, scale: F) {
-        self.translation = self.translation * scale;
-        self.scale = self.scale * scale;
+        self.translation *= scale;
+        self.scale *= scale;
     }
     fn translate_by<A: AsRef<[F; 3]>>(&mut self, translation: A, scale: F) {
         let translation: V3 = translation.as_ref().into();
-        self.translation = self.translation + translation * scale;
+        self.translation += translation * scale;
     }
 
     fn rotate_by(&mut self, quaternion: Q) {
@@ -148,8 +148,8 @@ where
         if !transformer.is_uniform_scale() {
             return false;
         }
-        self.scale = self.scale * transformer.scale[0];
-        self.translation = self.translation * transformer.scale[0];
+        self.scale *= transformer.scale[0];
+        self.translation *= transformer.scale[0];
         self.rotation = transformer.rotation * self.rotation;
         self.translation = transformer.rotation.apply3(&self.translation) + transformer.translation;
         true

@@ -82,7 +82,7 @@ pub fn uniform_dist_sphere3<V: Float>(x: [V; 2], map: bool) -> [V; 3] {
 
     let v = v - v.floor();
     // Precision on theta is not critical, so using 6.283... is fine for 2*PI
-    let theta = V::from_f32(6.2831853_f32).unwrap() * u;
+    let theta = V::from_f32(std::f32::consts::TAU).unwrap() * u;
     let phi = (two * v - one).acos();
     let sin_theta = theta.sin();
     let cos_theta = theta.cos();

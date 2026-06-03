@@ -317,7 +317,7 @@ pub fn to_euler<V: Float>(q: &[V; 4]) -> (V, V, V) {
     let one = V::ONE;
     let two = one + one;
     let almost_half = f_const!(V, 499_999, 1_000_000);
-    let halfpi = V::from_f32(1.570796326_f32).unwrap();
+    let halfpi = V::from_f32(std::f32::consts::FRAC_PI_2).unwrap();
     let i = q[0];
     let j = q[1];
     let k = q[2];
@@ -474,7 +474,7 @@ pub fn rotation_of_vec_to_vec<V: Float>(a: &[V; 3], b: &[V; 3]) -> [V; 4] {
     let sa = vector::length(&cp);
     let angle = sa.asin();
     let angle = if obtuse {
-        V::from_f32(3.141592653_f32).unwrap() - angle
+        V::from_f32(std::f32::consts::PI).unwrap() - angle
     } else {
         angle
     };
