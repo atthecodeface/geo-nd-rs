@@ -351,12 +351,12 @@ fn test_look_at() {
 
 #[test]
 fn test_array3() {
-    let x = [1.0_f32, 0., 0.];
-    let y = [0., 1.0_f32, 0.];
-    let z = [0., 0., 1.0_f32];
+    let _x = [1.0_f32, 0., 0.];
+    let _y = [0., 1.0_f32, 0.];
+    let _z = [0., 0., 1.0_f32];
 
-    let rsqrt2 = (0.5_f32).sqrt();
-    let q = Quat::default();
+    let _rsqrt2 = (0.5_f32).sqrt();
+    let _q = Quat::default();
     // Would love to be able to do this but cannot
     // assert_eq!(q.apply3(&x), [1.0, 0., 0.]);
 }

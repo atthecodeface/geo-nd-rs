@@ -1,6 +1,5 @@
 //a Imports
 use geo_nd::matrix;
-use geo_nd::{FArray, Geometry3D, QArray, Quaternion, SqMatrix, Vector};
 
 fn assert_identity(n: usize, m: &[f32]) {
     for i in 0..n * n {

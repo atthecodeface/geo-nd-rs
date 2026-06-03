@@ -1,6 +1,6 @@
 //a Imports
 use geo_nd::{Quaternion, Vector};
-use serde_test::{assert_tokens, Token};
+use serde_test::{Token, assert_tokens};
 
 //a Utility tests for vector3
 type Vector2 = geo_nd::FArray<f32, 2>;
@@ -207,11 +207,9 @@ fn utility_vec3() -> Result<(), String> {
 fn utility_quat_vec3() -> Result<(), String> {
     // From [f32; D]
     let pt_a: Vector3;
-    let pt_b: Vector3;
 
     // From &[f32; 3]
     pt_a = TFT_3.into();
-    pt_b = ONE_3.into();
 
     assert_eq!(pt_a[0], 3.0);
     assert_eq!(pt_a[1], 4.0);
