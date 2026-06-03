@@ -498,8 +498,8 @@ pub fn lup_decompose<V: Num + std::cmp::PartialOrd>(
         order * order,
         "Resulting LU decomposition provided must be square and of the correct order"
     );
-    for i in 0..order {
-        pivot[i] = i;
+    for (i, p) in pivot.iter_mut().enumerate().take(order) {
+        *p = i;
     }
     let mut det = V::one();
 
@@ -622,10 +622,11 @@ pub fn lup_invert<V: Num>(
         // We want to find vector x such that LU.x = Ic
         // First find a such that L.a = Ic
         // Note that as L is a lower, we can find the elements top down
-        for r in 0..n {
-            temp_row[r] = V::zero();
+        for r in temp_row.iter_mut() {
+            *r = V::zero();
         }
         temp_row[c] = V::one();
+
         for r in 0..n {
             // Would divide a[r] by Lrr, but that is 1 for L
             // a[r] = a[r]/1
