@@ -1,3 +1,7 @@
+# Release 0.7.1 (2025-06-04)
+
+- Restructued Transform trait again (it is still unstable...)
+
 # Release 0.7.0 (2025-06-03)
 
 - Restructured Transform trait
