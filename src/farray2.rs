@@ -77,6 +77,10 @@ macro_rules! farray2_sqmatrix_trait {
             {
                 matrix::multiply::<$f, $d2, $d, $d, $d, $d, 1>(&self.data, v).into()
             }
+            fn transform_arr(&self, v: &[$f; $d]) -> [$f; $d]
+            {
+                matrix::multiply::<$f, $d2, $d, $d, $d, $d, 1>(&self.data, v).into()
+            }
             fn determinant(&self) -> $f {
                 $det_fn (&self.data)
             }

@@ -280,7 +280,13 @@ pub trait Vector<F: Float, const D: usize>:
 
     /// Return the dot product of two vectors
     #[inline]
-    fn dot(&self, other: &[F; D]) -> F {
+    fn dot<A: AsRef<[F;D]>>(&self, other: A) -> F {
+        vector::dot(self.deref(), other.as_ref())
+    }
+
+    /// Return the dot product of two vectors
+    #[inline]
+    fn dot_arr(&self, other: &[F; D]) -> F {
         vector::dot(self.deref(), other)
     }
 
@@ -320,14 +326,23 @@ pub trait Vector<F: Float, const D: usize>:
 
     /// Return the square of the distance between this vector and another
     #[inline]
-    fn distance_sq(&self, other: &[F; D]) -> F {
+    fn distance_sq<A: AsRef<[F;D]>>(&self, other: A) -> F {
+        (*self - other.as_ref()).length_sq()
+    }
+
+    /// Return the square of the distance between this vector and another array
+    fn distance_sq_arr(&self, other: &[F; D]) -> F {
         (*self - other).length_sq()
     }
 
     /// Return the distance between this vector and another
     #[inline]
-    fn distance(&self, other: &[F; D]) -> F {
+    fn distance<A: AsRef<[F;D]>>(&self, other: A) -> F {
         self.distance_sq(other).sqrt()
+    }
+    /// Return the distance between this vector and another array
+    fn distance_arr(&self, other: &[F; D]) -> F {
+        self.distance_sq_arr(other).sqrt()
     }
 
     /// Create a linear combination of this [Vector] and another using parameter `t` from zero to one
@@ -379,10 +394,19 @@ pub trait Vector<F: Float, const D: usize>:
         self
     }
 
-    //cp cross_product - where D = 3
     /// Cross product of two 3-element vectors
     #[must_use]
-    fn cross_product(&self, other: &[F; 3]) -> Self
+    fn cross_product<A: AsRef<[F;3]>>(&self, other: A) -> Self
+    where
+        Self: From<[F; 3]>,
+        Self: AsRef<[F; 3]>, // so that it knows as_ref() returns &[F;3], i.e. D is 3
+    {
+        vector::cross_product3(self.as_ref(), other.as_ref()).into()
+    }
+
+    /// Cross product of two 3-element vectors, one as an array reference
+    #[must_use]
+    fn cross_product_arr(&self, other: &[F; 3]) -> Self
     where
         Self: From<[F; 3]>,
         Self: AsRef<[F; 3]>, // so that it knows as_ref() returns &[F;3], i.e. D is 3
@@ -541,12 +565,13 @@ pub trait SqMatrix<F: Float, const D: usize, const D2: usize>:
     /// Create an inverse matrix
     fn inverse(&self) -> Self;
 
-    //mp transform
     /// Apply the matrix to a vector to transform it
     fn transform<T>(&self, v: &T) -> T
     where
         T: std::ops::Deref<Target = [F; D]>,
         T: From<[F; D]>;
+    /// Apply the matrix to a vector to transform it
+    fn transform_arr(&self, v: &[F; D]) -> [F; D];
 }
 
 //tt SqMatrix2
@@ -712,6 +737,8 @@ pub trait Quaternion<F: Float>:
     }
 
     /// Create a unit quaternion for a rotation of an angle about an axis
+    ///
+    /// The axis need not be a unit vector
     #[must_use]
     fn of_axis_angle(axis: &[F; 3], angle: F) -> Self {
         quat::of_axis_angle(axis, angle).into()
@@ -892,7 +919,7 @@ pub trait Quaternion<F: Float>:
 /// A transformation that is a translation . scaling . rotation
 /// (i.e. it applies the rotation to an object, then scales it, then
 /// translates it)
-pub trait Transform<F, V3, Q>:
+pub trait Transform<F>:
     Clone + Copy + std::fmt::Debug + std::fmt::Display + std::default::Default
 // + std::ops::Neg<Output = Self>
 // apply to self - this is possible
@@ -922,44 +949,53 @@ pub trait Transform<F, V3, Q>:
 // and probably where Q:std::ops::Mul<Self, Output=Self> etc
 where
     F: Float,
-    V3: Vector<F, 3>,
-    Q: Quaternion<F>,
 {
+    /// Type of vector comprehended as the translation/scaling for this transform
+    type Vector: Vector3<F>;
+    /// Type of quaternion comprehended as the rotation for this transform
+    type Quat: Quaternion<F>;
     /// Create a transformation that is a translation, rotation and scaling
-    fn of_trs<A: AsRef<[F; 3]>>(t: A, r: Q, s: A) -> Self;
+    fn of_trs<A: AsRef<[F; 3]>>(t: A, r: Self::Quat, s: A) -> Option<Self>;
     /// Create a transformation that is a translation, rotation and uniform scaling
-    fn of_trsu<A: AsRef<[F; 3]>>(t: A, r: Q, s: F) -> Self;
+    fn of_trsu<A: AsRef<[F; 3]>>(t: A, r: Self::Quat, s: F) -> Self;
     /// Get the scale of the transform in each of the axes
-    fn scale(&self) -> V3;
-    /// Get the scale of the transform in each of the axes
+    fn scale(&self) -> Option<Self::Vector>;
+    /// Returns true if the scaling is uniform in each axis
+    fn is_uniform_scale(&self) -> bool;
+    /// Get the scale of the transform in each of the axes, if possible
     fn uniform_scale(&self) -> Option<F>;
     /// Get a translation by a vector
-    fn translation(&self) -> V3;
+    fn translation(&self) -> Self::Vector;
     /// Set to an identity transformation
-    fn set_identity(&mut self) {
-        self.set_uniform_scale(F::ONE);
-        self.set_translation(V3::default());
-        self.set_rotation(Q::default());
-    }
-    /// Get the rotation of the transformation
-    fn rotation(&self) -> Q;
+    fn set_identity(&mut self);
+    /// Get the rotation of the transformation, if possible
+    fn rotation(&self) -> Option<Self::Quat>;
     /// Set the scale of the transformation
-    fn set_scale<A: AsRef<[F; 3]>>(&mut self, scale: A);
+    ///
+    /// Returns false if the scale cannot be set (as it is nonuniform, and the
+    /// transform only supports uniform scaling)
+    fn set_scale<A: AsRef<[F; 3]>>(&mut self, scale: A) -> bool;
     /// Set the scale of the transformation
     fn set_uniform_scale(&mut self, scale: F);
     /// Set the translation of the transformation
     fn set_translation<A: AsRef<[F; 3]>>(&mut self, translation: A);
     /// Set the rotation of a transformation
-    fn set_rotation(&mut self, rotation: Q);
+    fn set_rotation(&mut self, rotation: Self::Quat);
+    /// Pre-apply a nonuniform scaling
+    ///
+    /// Returns false if this cannot be properly achieved (for example for a
+    /// transformation that has a rotation that stores the rotation as a
+    /// quaternion)
+    fn scale_by<A: AsRef<[F; 3]>>(&mut self, scale: A) -> bool;
     /// Pre-apply a uniform scaling
-    fn scale_by(&mut self, scale: F);
+    fn scale_uniform_by(&mut self, scale: F);
     /// Pre-apply a scaled translation to the transformation
     fn translate_by<A: AsRef<[F; 3]>>(&mut self, translation: A, scale: F);
     /// Rotate the transformation by a quaternion
-    fn rotate_by(&mut self, quaternion: Q);
+    fn rotate_by(&mut self, quaternion: &Self::Quat);
     /// Transform this transformation by another *UNIFORM* scale transformation;
     /// if is not uniform scaling then return false
-    fn transform_by(&mut self, transformer: &Self) -> bool;
+    fn transform_by<T: Transform<F, Quat = Self::Quat>>(&mut self, transformer: &T) -> bool;
     /// Get the inverse transformation
     ///
     /// This is only possible if the scaling is uniform
@@ -970,12 +1006,31 @@ where
     /// This will return false if the scaling is not uniform
     fn invert(&mut self) -> bool;
     /// Convert it to a 4-by-4 matrix and set it
-    fn set_mat<M: SqMatrix4<F>>(&self, mat4: &mut M) {
-        *mat4 = self.as_mat();
+    fn set_mat4<M: SqMatrix4<F>>(&self, mat4: &mut M) {
+        *mat4 = self.as_mat4();
     }
+    /// Convert it to a 4-by-4 matrix and set it
+    fn set_mat3<M: SqMatrix3<F>>(&self, mat3: &mut M) {
+        *mat3 = self.as_mat3();
+    }
+    /// Convert the non-translation to a 3-by-3 matrix
+    #[must_use]
+    fn as_mat3<M: SqMatrix3<F>>(&self) -> M;
     /// Convert it to a 4-by-4 matrix
     #[must_use]
-    fn as_mat<M: SqMatrix4<F>>(&self) -> M;
+    fn as_mat4<M: SqMatrix4<F>>(&self) -> M;
+    /// Apply the quaternion to a vector or similar
+    #[must_use]
+    fn apply3<T>(&self, other: T) -> T
+    where
+        T: std::ops::Deref<Target = [F; 3]>,
+        T: From<[F; 3]>,
+    {
+        self.apply3_arr(other.deref()).into()
+    }
+    /// Apply the transformation to a [F; 4]
+    #[must_use]
+    fn apply3_arr(&self, other: &[F; 3]) -> [F; 3];
 }
 
 //a Vector3D, Geometry3D
@@ -1011,7 +1066,7 @@ pub trait Geometry3D<Scalar: Float> {
     /// The quaternion type that provides for rotations in 3D
     type Quat: Quaternion<Scalar>;
     /// The transform type
-    type Trans: Transform<Scalar, Self::Vec3, Self::Quat>;
+    type Trans: Transform<Scalar, Quat = Self::Quat>;
     // fn of_transform3/4?
     // cross_product3
     // axis_of_rotation3/4

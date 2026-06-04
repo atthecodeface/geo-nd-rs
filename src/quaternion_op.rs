@@ -47,6 +47,8 @@ pub fn identity<V: Num>() -> [V; 4] {
 
 //fp of_axis_angle
 /// Find the quaternion for a rotation of an angle around an axis
+///
+/// The axis need not be a unit vector
 #[must_use]
 #[inline]
 pub fn of_axis_angle<V: Float>(axis: &[V; 3], angle: V) -> [V; 4] {
