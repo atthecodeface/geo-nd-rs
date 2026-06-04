@@ -76,6 +76,7 @@ where
     V3: Vector3<F>,
     Q: Quaternion<F>,
 {
+    const UNIFORM_SCALING: bool = false;
     type Vector = V3;
     type Quat = Q;
     fn of_trs<A: AsRef<[F; 3]>>(t: A, r: Q, s: A) -> Option<Self> {
@@ -305,6 +306,7 @@ where
     V3: Vector3<F>,
     Q: Quaternion<F>,
 {
+    const UNIFORM_SCALING: bool = true;
     type Vector = V3;
     type Quat = Q;
     fn of_trs<A: AsRef<[F; 3]>>(t: A, r: Q, s: A) -> Option<Self> {
@@ -468,6 +470,7 @@ where
     FArray2<F, 4, 16>: SqMatrix4<F>,
     FArray<F, 3>: Vector3<F>,
 {
+    const UNIFORM_SCALING: bool = false;
     type Vector = FArray<F, 3>;
     type Quat = QArray<F>;
     fn of_trs<A: AsRef<[F; 3]>>(t: A, r: Self::Quat, s: A) -> Option<Self> {

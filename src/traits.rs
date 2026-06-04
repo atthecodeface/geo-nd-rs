@@ -954,6 +954,7 @@ where
     type Vector: Vector3<F>;
     /// Type of quaternion comprehended as the rotation for this transform
     type Quat: Quaternion<F>;
+    const UNIFORM_SCALING: bool;
     /// Create a transformation that is a translation, rotation and scaling
     fn of_trs<A: AsRef<[F; 3]>>(t: A, r: Self::Quat, s: A) -> Option<Self>;
     /// Create a transformation that is a translation, rotation and uniform scaling

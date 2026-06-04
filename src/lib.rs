@@ -105,6 +105,11 @@ The downside to this policy is that one cannot apply a matrix to transform an ar
     let t = m.transform(&[1.0,3.0,5.0]);
 ```
 
+For those methods that *do not* return a `T`, but which requires a vector as an argument, the
+policy is to take an `A` which is `AsRef<[F;D]>`. This permits most types that might be vectors to
+be passed in; however, it does not support use of an `[F; D]` (as that is only `AsRef<[F]>`). So,
+frequently where it is very useful to take an `[F;D]` there are method variants with an `_arr` suffix that
+take arrays and produce arrays.
 
 # Function operation
 
@@ -151,7 +156,7 @@ Vector3 types are 3-element vectors, which are expected to usefullt provide a
 [Vector::cross_product] method, which may not exist (in a simply
 well defined manner) for other vector sizes.
 
-## SqMatrix
+## [SqMatrix]
 
 Types that provide [SqMatrix] are square matrices that can be
 manipulated with negation, addition, subtraction, and multiplicaton, and can be
@@ -169,8 +174,15 @@ They also support [Copy], [std::default::Default], [std::fmt::Debug], and [std::
 
 They provide AsRef for float arrays of length 4 and slices for fast import and export from memory structures.
 
+### [SqMatrix3]
 
-### SqMatrix4
+Types that provide [SqMatrix3] are 3-by-3 matrices. Additional methods
+are provided for graphics operations, and so the matrices are treated
+as 3-by-3 transformation matrices.
+
+They provide [SqMatrix].
+
+### [SqMatrix4]
 
 Types that provide [SqMatrix4] are 4-by-4 matrices. Additional methods
 are provided for graphics operations, and so the matrices are treated
@@ -181,7 +193,7 @@ They provide [SqMatrix] and additionally support graphically-useful
 constructors 'perspective' and 'look_at', and support translation by
 vectors.
 
-## Quaternion
+## [Quaternion]
 
 Quaternions are a mathematical means for describing a 3 dimensional rotation around
 the origin.
@@ -195,6 +207,26 @@ They also support [Copy], [std::default::Default], [std::fmt::Debug], and [std::
 
 They Deref to their float arrays of length 4. The mapping of the
 arrays is (i, j, k, r).
+
+## [Transform]
+
+The Transform trait can be implemented by types to provide a scaling, rotation and translation for 3D vectors.
+
+It has associated types for a `Vector` and a `Quat` (rotation quaternion).
+
+The transfomration applies a translation to the rotation of the scaling of something; methods are
+required that set and get the components of the transformation.
+
+The scaling can be uniform or non-uniform; non-uniform applies a different scaling to each of the three axes.
+This clearly is problematic if a non-uniform scaling is applied to a rotated transformation, and non-uniform
+rotations require more complex operations, so some types can implement only uniform scalings for their
+Transform implementations.
+
+A transformation can be encoded as a 4-by-4 square matrix supporting any scaling, but not supporting
+retrieval of the rotation or scaling. Hence the [Transform] trait has a number of methods that return
+`Option` values in the case that the underlying type cannot support a valid response. Theae Option values should
+always be `Some` if that is reasonable - i.e. use of `unwrap` should be applicable (i.e. whether it a method
+returns None or Some should be known usually at compile time by the programmer)
 
 ### Constructors
 
@@ -251,6 +283,23 @@ and it supports the [SqMatrix] trait.
 
 The [QArray] type is a wrapper around an 4-element array of floats,
 and it supports the [Quaternion] trait.
+
+## Transform types
+
+The [Transformation] type holds a transformation as a three-element [FArray] for scaling,
+a [QArray] for its rotation, and a three-element [FArray] for the translation. This supports
+non-uniform scaling, and reliable rotation (after many orientation change operations).
+
+The [TransformationUnion] type holds a transformation as a scalat 'scale' factor,
+a [QArray] for its rotation, and a three-element [FArray] for the translation. This supports
+only uniform scaling, and reliable rotation (after many orientation change operations).
+
+The [FArray2] type (of size 4-by-4) holds a transformation as a 4-by-4 matrix; this provides
+support for arbitrary scalings, but it lacks the ability to retrieve the rotation and scaling,
+as these are not simply encoded in the array. Furthermore, repeated operations on the matrix will
+lead to floating point error accumulations that lead to a transformation that does have perpendicular
+axes; this type should be used transiently, generally for the final stages of display, and generated from
+a type that keeps the orientation as a Quaternion.
 
 # Examples
 
@@ -438,7 +487,7 @@ pub use traits::{
     Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix2, SqMatrix3, SqMatrix4,
     Transform, Vector, Vector2, Vector3, Vector3D, Vector4,
 };
-pub use transformation::Transformation;
+pub use transformation::{Transformation, TransformationUniform};
 
 /// Vector functions module
 ///
