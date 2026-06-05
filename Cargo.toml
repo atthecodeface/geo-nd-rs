@@ -13,8 +13,14 @@ categories = ["graphics", "rendering"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/atthecodeface/geo-nd-rs"
 
-[dependencies]
-serde_test = "1.0.177"
+[features]
+# default = ["serde"]
+default = []
+serde = ["dep:serde_test", "dep:serde"]
+
+[dependencies.serde_test]
+version = "1.0.177"
+optional = true
 
 [dependencies.num-traits]
 version = ">0.2.1"
@@ -22,6 +28,7 @@ version = ">0.2.1"
 [dependencies.serde]
 version = "1.0"
 features = ["derive"]
+optional = true
 
 # [dependencies.core_simd]
 # git = "https://github.com/rust-lang/stdsimd"
