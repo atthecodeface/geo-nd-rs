@@ -316,8 +316,8 @@ where
 #[cfg(feature = "serde")]
 impl<F, Q> serde::Serialize for Transformation<F, Q>
 where
-    F: Float + for <'de> serde::de::Deserialize<'de> + serde::Serialize,
-    Q: Quaternion<F> + for <'de> serde::de::Deserialize<'de> + serde::Serialize,
+    F: Float + for<'de> serde::de::Deserialize<'de> + serde::Serialize,
+    Q: Quaternion<F> + for<'de> serde::de::Deserialize<'de> + serde::Serialize,
     FArray<F, 3>: Vector3<F> + serde::de::DeserializeOwned + serde::Serialize,
     FArray<F, 4>: Vector4<F> + serde::Serialize,
 {

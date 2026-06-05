@@ -919,29 +919,21 @@ pub trait Quaternion<F: Float>:
 /// A transformation that is a translation . scaling . rotation
 /// (i.e. it applies the rotation to an object, then scales it, then
 /// translates it)
+///
+/// The transformation can be simply scaled using mul/div
+///
+/// The transformation can be applied to its Vec4 through multiplication
 pub trait Transform<F>:
-    Clone + Copy + std::fmt::Debug + std::fmt::Display + std::default::Default
-// apply to self - this is possible
-+ std::ops::Mul<Self::Vec4, Output = Self::Vec4>
-+ std::ops::Mul<F, Output = Self>
-+ std::ops::MulAssign<F>
-+ std::ops::Div<F, Output = Self>
-+ std::ops::DivAssign<F>
-// rotation
-// + std::ops::Mul<Q, Output = Self>
-// + std::ops::MulAssign<Q>
-// + std::ops::Div<Q, Output = Self>
-// + std::ops::DivAssign<Q>
-// translation of self - this is dangerous to implement for a transformation that is a square array, so
-// don't do that...
-// + std::ops::Add<V3, Output = Self>
-// + std::ops::AddAssign<V3>
-// + std::ops::Sub<V3, Output = Self>
-// + std::ops::SubAssign<V3>
-// + std::ops::Add<V4, Output = Self>
-// + std::ops::AddAssign<V4>
-// + std::ops::Sub<V4, Output = Self>
-// + std::ops::SubAssign<V4>
+    Clone
+    + Copy
+    + std::fmt::Debug
+    + std::fmt::Display
+    + std::default::Default
+    + std::ops::Mul<Self::Vec4, Output = Self::Vec4>
+    + std::ops::Mul<F, Output = Self>
+    + std::ops::MulAssign<F>
+    + std::ops::Div<F, Output = Self>
+    + std::ops::DivAssign<F>
 where
     F: Float,
 {
