@@ -744,25 +744,58 @@ pub trait Quaternion<F: Float>:
         quat::of_axis_angle(axis, angle).into()
     }
 
-    /// Apply a rotation about the X-axis to this quaternion
+    /// Multiply a rotation about the X-axis by this quaternion
     #[inline]
     #[must_use]
     fn rotate_x(self, angle: F) -> Self {
         quat::rotate_x(self.as_ref(), angle).into()
     }
 
-    /// Apply a rotation about the Y-axis to this quaternion
+    /// Multiply a rotation about the Y-axis by this quaternion
     #[inline]
     #[must_use]
     fn rotate_y(self, angle: F) -> Self {
         quat::rotate_y(self.as_ref(), angle).into()
     }
 
-    /// Apply a rotation about the Z-axis to this quaternion
+    /// Multiply a rotation about the Z-axis by this quaternion
     #[inline]
     #[must_use]
     fn rotate_z(self, angle: F) -> Self {
         quat::rotate_z(self.as_ref(), angle).into()
+    }
+
+    /// Multiply a rotation about the X-axis by this quaternion
+    #[inline]
+    #[must_use]
+    fn premul_rotate_x(self, angle: F) -> Self {
+        quat::multiply(
+            &self,
+            &quat::rotate_x(&[F::ZERO, F::ZERO, F::ZERO, F::ONE], angle),
+        )
+        .into()
+    }
+
+    /// Multiply a rotation about the Y-axis by this quaternion
+    #[inline]
+    #[must_use]
+    fn premul_rotate_y(self, angle: F) -> Self {
+        quat::multiply(
+            &self,
+            &quat::rotate_y(&[F::ZERO, F::ZERO, F::ZERO, F::ONE], angle),
+        )
+        .into()
+    }
+
+    /// Multiply a rotation about the Z-axis by this quaternion
+    #[inline]
+    #[must_use]
+    fn premul_rotate_z(self, angle: F) -> Self {
+        quat::multiply(
+            &self,
+            &quat::rotate_z(&[F::ZERO, F::ZERO, F::ZERO, F::ONE], angle),
+        )
+        .into()
     }
 
     /// Create a quaternion that maps a unit V3 of dirn to (0,0,-1) and a unit

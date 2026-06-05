@@ -360,3 +360,46 @@ fn test_array3() {
     // Would love to be able to do this but cannot
     // assert_eq!(q.apply3(&x), [1.0, 0., 0.]);
 }
+
+#[test]
+fn test_rotations() {
+    let unit = Quat::default();
+    const XR: f32 = 0.15;
+    const YR: f32 = 0.23;
+    const ZR: f32 = 0.32;
+    let r_x = unit.rotate_x(XR);
+    let r_y = unit.rotate_y(YR);
+    let r_z = unit.rotate_z(ZR);
+
+    let r_z_y_x = unit.rotate_z(ZR).rotate_y(YR).rotate_x(XR);
+    assert!(
+        r_z_y_x.distance_sq(&(r_z * r_y * r_x)) < 1E-4,
+        "tr1: {:?} cf {:?}",
+        r_z_y_x.as_rijk(),
+        (r_z * r_y * r_x).as_rijk()
+    );
+
+    let r_x_y_z_2 = unit.rotate_x(XR).rotate_y(YR).rotate_z(ZR);
+    assert!(
+        r_x_y_z_2.distance_sq(&(r_x * r_y * r_z)) < 1E-4,
+        "tr2: {:?} cf {:?}",
+        r_x_y_z_2.as_rijk(),
+        (r_x * r_y * r_z).as_rijk()
+    );
+
+    let r_x_y_z_3 = r_x.premul_rotate_y(YR).premul_rotate_z(ZR);
+    assert!(
+        r_x_y_z_3.distance_sq(&(r_x * r_y * r_z)) < 1E-4,
+        "tr3: {:?} cf {:?}",
+        r_x_y_z_3.as_rijk(),
+        (r_x * r_y * r_z).as_rijk()
+    );
+
+    let r_z_y_x_4 = r_z.premul_rotate_y(YR).premul_rotate_x(XR);
+    assert!(
+        r_z_y_x_4.distance_sq(&(r_z * r_y * r_x)) < 1E-4,
+        "tr4: {:?} cf {:?}",
+        r_z_y_x_4.as_rijk(),
+        (r_z * r_y * r_x).as_rijk()
+    );
+}
