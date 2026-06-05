@@ -2,6 +2,7 @@
 use serde_test::{Token, assert_tokens};
 
 mod utility;
+#[cfg(feature = "serde")]
 use utility::{Quat, TFT_3, Vector3};
 
 #[test]
@@ -28,6 +29,43 @@ fn utility_serde() -> Result<(), String> {
             Token::F32(0.5),
             Token::F32(0.7),
             Token::TupleEnd,
+        ],
+    );
+    Ok(())
+}
+
+#[test]
+#[cfg(feature = "serde")]
+fn transformation() -> Result<(), String> {
+    use geo_nd::{QArray, Transformation};
+    let t: Transformation<f32, QArray<f32>> = Transformation::default();
+    assert_tokens(
+        &t,
+        &[
+            Token::Struct {
+                name: "Transformation",
+                len: 3,
+            },
+            Token::Str("rotation"),
+            Token::Tuple { len: 4 },
+            Token::F32(0.0),
+            Token::F32(0.0),
+            Token::F32(0.0),
+            Token::F32(1.0),
+            Token::TupleEnd,
+            Token::Str("translation"),
+            Token::Tuple { len: 3 },
+            Token::F32(0.0),
+            Token::F32(0.0),
+            Token::F32(0.0),
+            Token::TupleEnd,
+            Token::Str("scale"),
+            Token::Tuple { len: 3 },
+            Token::F32(1.0),
+            Token::F32(1.0),
+            Token::F32(1.0),
+            Token::TupleEnd,
+            Token::StructEnd,
         ],
     );
     Ok(())

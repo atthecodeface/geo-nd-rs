@@ -1,4 +1,5 @@
-//a Imports
+#![allow(dead_code)]
+
 use geo_nd::{Quaternion, Vector};
 
 //a Utility tests for vector3
