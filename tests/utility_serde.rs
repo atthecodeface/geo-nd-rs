@@ -70,3 +70,36 @@ fn transformation() -> Result<(), String> {
     );
     Ok(())
 }
+
+#[test]
+#[cfg(feature = "serde")]
+fn transformation_uniform() -> Result<(), String> {
+    use geo_nd::{QArray, TransformationUniform};
+    let t: TransformationUniform<f32, QArray<f32>> = TransformationUniform::default();
+    assert_tokens(
+        &t,
+        &[
+            Token::Struct {
+                name: "TransformationUniform",
+                len: 3,
+            },
+            Token::Str("rotation"),
+            Token::Tuple { len: 4 },
+            Token::F32(0.0),
+            Token::F32(0.0),
+            Token::F32(0.0),
+            Token::F32(1.0),
+            Token::TupleEnd,
+            Token::Str("translation"),
+            Token::Tuple { len: 3 },
+            Token::F32(0.0),
+            Token::F32(0.0),
+            Token::F32(0.0),
+            Token::TupleEnd,
+            Token::Str("scale"),
+            Token::F32(1.0),
+            Token::StructEnd,
+        ],
+    );
+    Ok(())
+}

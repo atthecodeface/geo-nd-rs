@@ -14,8 +14,8 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/atthecodeface/geo-nd-rs"
 
 [features]
-# default = ["serde"]
-default = []
+default = ["serde"]
+# default = []
 serde = ["dep:serde_test", "dep:serde"]
 
 [dependencies.serde_test]

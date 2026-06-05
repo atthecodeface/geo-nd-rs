@@ -5,7 +5,7 @@ use crate::{FArray, Float, Quaternion, SqMatrix3, SqMatrix4, Transform, Vector3,
 /// translates it)
 ///
 /// This supports only a uniform scaling
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TransformationUniform<F, Q>
 where
     F: Float,
@@ -289,5 +289,63 @@ where
             }
         }
         m
+    }
+}
+
+#[cfg(feature = "serde")]
+#[derive(serde::Deserialize, serde::Serialize)]
+#[serde(rename = "TransformationUniform")]
+struct X<F, Q>
+where
+    F: Float,
+    Q: Quaternion<F>,
+    FArray<F, 3>: Vector3<F> + serde::de::DeserializeOwned + serde::Serialize,
+{
+    rotation: Q,
+    /// Translation
+    translation: FArray<F, 3>,
+    /// Scaling, for  all three axes
+    scale: F,
+}
+
+#[cfg(feature = "serde")]
+impl<F, Q> serde::Serialize for TransformationUniform<F, Q>
+where
+    F: Float + for<'de> serde::de::Deserialize<'de> + serde::Serialize,
+    Q: Quaternion<F> + for<'de> serde::de::Deserialize<'de> + serde::Serialize,
+    FArray<F, 3>: Vector3<F> + serde::de::DeserializeOwned + serde::Serialize,
+    FArray<F, 4>: Vector4<F> + serde::Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        (X {
+            rotation: self.rotation,
+            translation: self.translation,
+            scale: self.scale,
+        })
+        .serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, F, Q> serde::Deserialize<'de> for TransformationUniform<F, Q>
+where
+    F: Float + serde::de::Deserialize<'de> + serde::Serialize,
+    Q: Quaternion<F> + serde::de::Deserialize<'de> + serde::Serialize,
+    FArray<F, 3>: Vector3<F> + serde::de::DeserializeOwned + serde::Serialize,
+    FArray<F, 4>: Vector4<F>,
+{
+    fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
+    where
+        DE: serde::Deserializer<'de>,
+    {
+        let x = X::<F, Q>::deserialize(deserializer)?;
+        Ok(Self {
+            rotation: x.rotation,
+            translation: x.translation,
+            scale: x.scale,
+        })
     }
 }
