@@ -1,7 +1,4 @@
-use crate::{
-    FArray, FArray2, Float, QArray, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform, Vector3,
-    Vector4, vector,
-};
+use crate::{FArray, Float, Quaternion, SqMatrix3, SqMatrix4, Transform, Vector3, Vector4};
 
 /// A transformation that is a translation . rotation . scaling
 /// (i.e. it applies a scaling to an object, then the rotation then

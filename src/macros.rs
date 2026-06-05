@@ -272,9 +272,6 @@ macro_rules! serialize_traits {
             where
                 S: serde::Serializer,
             {
-                use serde::ser::SerializeTuple;
-                use serde::{Deserialize, Serialize};
-
                 self.data.serialize(serializer)
             }
         }

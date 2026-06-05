@@ -3,7 +3,7 @@ use crate::{FArray, Float, Quaternion, SqMatrix3, SqMatrix4, Transform, Vector3,
 /// A transformation that is a translation . rotation . scaling
 /// (i.e. it applies a scaling to an object, then the rotation then
 /// translates it)
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Transformation<F, Q>
 where
     F: Float,
@@ -298,17 +298,59 @@ where
 }
 
 #[cfg(feature = "serde")]
-impl<F, Q> serde::Serialize for Transformation<F, Q>
+#[derive(serde::Deserialize, serde::Serialize)]
+#[serde(rename = "Transformation")]
+struct X<F, Q>
 where
     F: Float,
     Q: Quaternion<F>,
-    FArray<F, 3>: Vector3<F>,
-    FArray<F, 4>: Vector4<F>,
+    FArray<F, 3>: Vector3<F> + serde::de::DeserializeOwned + serde::Serialize,
+{
+    rotation: Q,
+    /// Translation
+    translation: FArray<F, 3>,
+    /// Scaling, for  all three axes
+    scale: FArray<F, 3>,
+}
+
+#[cfg(feature = "serde")]
+impl<F, Q> serde::Serialize for Transformation<F, Q>
+where
+    F: Float + for <'de> serde::de::Deserialize<'de> + serde::Serialize,
+    Q: Quaternion<F> + for <'de> serde::de::Deserialize<'de> + serde::Serialize,
+    FArray<F, 3>: Vector3<F> + serde::de::DeserializeOwned + serde::Serialize,
+    FArray<F, 4>: Vector4<F> + serde::Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
-        self.data.serialize(serializer)
+        (X {
+            rotation: self.rotation,
+            translation: self.translation,
+            scale: self.scale,
+        })
+        .serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, F, Q> serde::Deserialize<'de> for Transformation<F, Q>
+where
+    F: Float + serde::de::Deserialize<'de> + serde::Serialize,
+    Q: Quaternion<F> + serde::de::Deserialize<'de> + serde::Serialize,
+    FArray<F, 3>: Vector3<F> + serde::de::DeserializeOwned + serde::Serialize,
+    FArray<F, 4>: Vector4<F>,
+{
+    fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
+    where
+        DE: serde::Deserializer<'de>,
+    {
+        let x = X::<F, Q>::deserialize(deserializer)?;
+        Ok(Self {
+            rotation: x.rotation,
+            translation: x.translation,
+            scale: x.scale,
+        })
     }
 }
