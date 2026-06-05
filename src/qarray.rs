@@ -1,11 +1,9 @@
-//a Imports
 use std::ops::Deref;
 
 use num_traits::{ConstOne, ConstZero};
-use serde::{Deserialize, Serialize};
 
-use super::{quat, vector};
 use super::{Float, Quaternion, SqMatrix3, SqMatrix4, Vector};
+use super::{quat, vector};
 
 //a QArray
 //tp QArray

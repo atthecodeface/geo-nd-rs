@@ -1,6 +1,3 @@
-//a Imports
-use serde::{Deserialize, Serialize};
-
 use crate::{FArray, matrix, vector};
 use crate::{Float, SqMatrix, Vector};
 
@@ -111,6 +108,17 @@ macro_rules! farray2_traits {
     }
 }
 
+macro_rules! farray2_4_mul_vecs {
+    { $f:ty,  $ty:ty } => {
+        impl std::ops::Mul<FArray<$f, 4>> for $ty {
+            type Output = FArray<$f, 4>;
+            fn mul(self, v: FArray<$f, 4>) -> Self::Output {
+                self.transform_arr(&v).into()
+            }
+        }
+    }
+}
+
 //a Use macros
 farray2_traits! {f32,2,4,FArray2<f32,2,4>, matrix::determinant2, matrix::inverse2}
 farray2_traits! {f32,3,9,FArray2<f32,3,9>, matrix::determinant3, matrix::inverse3}
@@ -119,3 +127,6 @@ farray2_traits! {f32,4,16,FArray2<f32,4,16>, matrix::determinant4, matrix::inver
 farray2_traits! {f64,2,4,FArray2<f64,2,4>, matrix::determinant2, matrix::inverse2}
 farray2_traits! {f64,3,9,FArray2<f64,3,9>, matrix::determinant3, matrix::inverse3}
 farray2_traits! {f64,4,16,FArray2<f64,4,16>, matrix::determinant4, matrix::inverse4}
+
+farray2_4_mul_vecs! {f32, FArray2<f32,4,16> }
+farray2_4_mul_vecs! {f64, FArray2<f64,4,16> }

@@ -921,13 +921,19 @@ pub trait Quaternion<F: Float>:
 /// translates it)
 pub trait Transform<F>:
     Clone + Copy + std::fmt::Debug + std::fmt::Display + std::default::Default
-// + std::ops::Neg<Output = Self>
 // apply to self - this is possible
-// + std::ops::Mul<Self, Output = Self>
-// + std::ops::MulAssign<Self>
-// + std::ops::Div<Self, Output = Self>
-// + std::ops::DivAssign<Self>
-// translation of self - can only choose one of V3 or V4
++ std::ops::Mul<Self::Vec4, Output = Self::Vec4>
++ std::ops::Mul<F, Output = Self>
++ std::ops::MulAssign<F>
++ std::ops::Div<F, Output = Self>
++ std::ops::DivAssign<F>
+// rotation
+// + std::ops::Mul<Q, Output = Self>
+// + std::ops::MulAssign<Q>
+// + std::ops::Div<Q, Output = Self>
+// + std::ops::DivAssign<Q>
+// translation of self - this is dangerous to implement for a transformation that is a square array, so
+// don't do that...
 // + std::ops::Add<V3, Output = Self>
 // + std::ops::AddAssign<V3>
 // + std::ops::Sub<V3, Output = Self>
@@ -936,37 +942,29 @@ pub trait Transform<F>:
 // + std::ops::AddAssign<V4>
 // + std::ops::Sub<V4, Output = Self>
 // + std::ops::SubAssign<V4>
-// scaling
-// + std::ops::Mul<F, Output = Self>
-// + std::ops::MulAssign<F>
-// + std::ops::Div<F, Output = Self>
-// + std::ops::DivAssign<F>
-// rotation
-// + std::ops::Mul<Q, Output = Self>
-// + std::ops::MulAssign<Q>
-// + std::ops::Div<Q, Output = Self>
-// + std::ops::DivAssign<Q>
-// and probably where Q:std::ops::Mul<Self, Output=Self> etc
 where
     F: Float,
 {
     /// Type of vector comprehended as the translation/scaling for this transform
-    type Vector: Vector3<F>;
+    type Vec3: Vector3<F>;
+    /// Type of vector comprehended as the translation/scaling for this transform
+    type Vec4: Vector4<F>;
     /// Type of quaternion comprehended as the rotation for this transform
     type Quat: Quaternion<F>;
+    /// Set to true if the transformation can only perform uniform scaling
     const UNIFORM_SCALING: bool;
     /// Create a transformation that is a translation, rotation and scaling
     fn of_trs<A: AsRef<[F; 3]>>(t: A, r: Self::Quat, s: A) -> Option<Self>;
     /// Create a transformation that is a translation, rotation and uniform scaling
     fn of_trsu<A: AsRef<[F; 3]>>(t: A, r: Self::Quat, s: F) -> Self;
     /// Get the scale of the transform in each of the axes
-    fn scale(&self) -> Option<Self::Vector>;
+    fn scale(&self) -> Option<Self::Vec3>;
     /// Returns true if the scaling is uniform in each axis
     fn is_uniform_scale(&self) -> bool;
     /// Get the scale of the transform in each of the axes, if possible
     fn uniform_scale(&self) -> Option<F>;
     /// Get a translation by a vector
-    fn translation(&self) -> Self::Vector;
+    fn translation(&self) -> Self::Vec3;
     /// Set to an identity transformation
     fn set_identity(&mut self);
     /// Get the rotation of the transformation, if possible
@@ -1032,6 +1030,18 @@ where
     /// Apply the transformation to a [F; 4]
     #[must_use]
     fn apply3_arr(&self, other: &[F; 3]) -> [F; 3];
+    /// Apply the quaternion to a vector or similar
+    #[must_use]
+    fn apply4<T>(&self, other: T) -> T
+    where
+        T: std::ops::Deref<Target = [F; 4]>,
+        T: From<[F; 4]>,
+    {
+        self.apply4_arr(other.deref()).into()
+    }
+    /// Apply the transformation to a [F; 4]
+    #[must_use]
+    fn apply4_arr(&self, other: &[F; 4]) -> [F; 4];
 }
 
 //a Vector3D, Geometry3D

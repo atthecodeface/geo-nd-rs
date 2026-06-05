@@ -477,6 +477,8 @@ mod farray;
 mod farray2;
 mod qarray;
 mod transformation;
+mod transformation_farray2;
+mod transformation_uniform;
 
 //a Exports
 pub use farray::FArray;
@@ -487,7 +489,8 @@ pub use traits::{
     Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix2, SqMatrix3, SqMatrix4,
     Transform, Vector, Vector2, Vector3, Vector3D, Vector4,
 };
-pub use transformation::{Transformation, TransformationUniform};
+pub use transformation::Transformation;
+pub use transformation_uniform::TransformationUniform;
 
 /// Vector functions module
 ///
@@ -522,7 +525,7 @@ impl Geometry3D<f32> for f32 {
     type Mat3 = FArray2<f32, 3, 9>;
     type Mat4 = FArray2<f32, 4, 16>;
     type Quat = QArray<f32>;
-    type Trans = Transformation<f32, FArray<f32, 3>, QArray<f32>>;
+    type Trans = Transformation<f32, QArray<f32>>;
 }
 
 //ip Geometry2D for f32
@@ -545,7 +548,7 @@ impl Geometry3D<f64> for f64 {
     type Mat3 = FArray2<f64, 3, 9>;
     type Mat4 = FArray2<f64, 4, 16>;
     type Quat = QArray<f64>;
-    type Trans = Transformation<f64, FArray<f64, 3>, QArray<f64>>;
+    type Trans = Transformation<f64, QArray<f64>>;
 }
 
 //ip Geometry2D for f64

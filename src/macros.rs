@@ -266,16 +266,21 @@ macro_rules! scale_by_f_traits {
 macro_rules! serialize_traits {
     { $f:ty,  $e:expr, $ty:ty } => {
 
-        impl Serialize for $ty {
+        #[cfg(feature="serde")]
+        impl serde::Serialize for $ty {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
             {
+                use serde::ser::SerializeTuple;
+                use serde::{Deserialize, Serialize};
+
                 self.data.serialize(serializer)
             }
         }
 
-        impl<'de> Deserialize<'de> for $ty {
+        #[cfg(feature="serde")]
+        impl<'de> serde::Deserialize<'de> for $ty {
             fn deserialize<DE>(deserializer: DE) -> Result<Self, DE::Error>
             where
                 DE: serde::Deserializer<'de>,

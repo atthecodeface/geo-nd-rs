@@ -1,6 +1,3 @@
-//a Imports
-use serde::{Deserialize, Serialize};
-
 use super::vector;
 use super::{Float, Vector};
 
