@@ -4,14 +4,15 @@ use geo_nd::{
 };
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
-type Trans<F> = Transformation<F, FArray<F, 3>, QArray<F>>;
+type Trans<F> = Transformation<F, QArray<F>>;
 type Vec3<F> = FArray<F, 3>;
 
 fn test_transform<F>(t: &Trans<F>, v: &[F; 3]) -> TestResult
 where
     F: Float,
-    FArray<F, 3>: Vector3<F>,
+    Trans<F>: Transform<F, Vec3 = FArray<F, 3>, Quat = QArray<F>>,
     QArray<F>: Quaternion<F>,
+    Vec3<F>: Vector3<F>,
 {
     let vt: Vec3<F> = t.apply3_arr(v).into();
     let Some(scale) = t.scale() else {
@@ -21,7 +22,7 @@ where
         return Ok(());
     };
     let vt_by_hand: Vec3<F> = [scale[0] * v[0], scale[1] * v[1], scale[2] * v[2]].into();
-    let translation: Vec3<F> = t.translation();
+    let translation = t.translation();
     let vt_by_hand = vt_by_hand.apply_q3(&rotation) + translation;
     let dsq = vt.distance_sq_arr(&vt_by_hand);
     if dsq >= F::from_f32(1.0E-6_f32).unwrap() {
@@ -37,8 +38,9 @@ where
 fn test_transforms_pair<F>(t0: &Trans<F>, t1: &Trans<F>, v: &[F; 3]) -> TestResult
 where
     F: Float,
-    FArray<F, 3>: Vector3<F>,
+    Trans<F>: Transform<F, Vec3 = FArray<F, 3>, Quat = QArray<F>>,
     QArray<F>: Quaternion<F>,
+    Vec3<F>: Vector3<F>,
     FArray2<F, 3, 9>: SqMatrix3<F>,
     FArray2<F, 4, 16>: SqMatrix4<F>,
 {
@@ -96,8 +98,9 @@ where
 fn transform_vectors<F>() -> TestResult
 where
     F: Float,
-    FArray<F, 3>: Vector3<F>,
+    Trans<F>: Transform<F, Vec3 = FArray<F, 3>, Quat = QArray<F>>,
     QArray<F>: Quaternion<F>,
+    Vec3<F>: Vector3<F>,
     FArray2<F, 3, 9>: SqMatrix3<F>,
     FArray2<F, 4, 16>: SqMatrix4<F>,
 {

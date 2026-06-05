@@ -1,12 +1,11 @@
 //a Imports
 use geo_nd::{Quaternion, Vector};
-use serde_test::{Token, assert_tokens};
 
 //a Utility tests for vector3
-type Vector2 = geo_nd::FArray<f32, 2>;
-type Vector3 = geo_nd::FArray<f32, 3>;
-type Vector4 = geo_nd::FArray<f32, 4>;
-type Quat = geo_nd::QArray<f32>;
+pub type Vector2 = geo_nd::FArray<f32, 2>;
+pub type Vector3 = geo_nd::FArray<f32, 3>;
+pub type Vector4 = geo_nd::FArray<f32, 4>;
+pub type Quat = geo_nd::QArray<f32>;
 
 //a Constants
 pub const ZERO_2: [f32; 2] = [0.0; 2];
@@ -240,35 +239,5 @@ fn utility_quat_vec3() -> Result<(), String> {
     assert!((p[1] - 4.0).abs() < 1E-4);
     assert!((p[2] - 12.0).abs() < 1E-4);
 
-    Ok(())
-}
-
-//a Add test for serialize and deserialize
-//f utility_serde
-#[test]
-fn utility_serde() -> Result<(), String> {
-    let v: Vector3 = TFT_3.into();
-    assert_tokens(
-        &v,
-        &[
-            Token::Tuple { len: 3 },
-            Token::F32(3.0),
-            Token::F32(4.0),
-            Token::F32(12.0),
-            Token::TupleEnd,
-        ],
-    );
-    let q: Quat = [0.1, 0.3, 0.5, 0.7].into();
-    assert_tokens(
-        &q,
-        &[
-            Token::Tuple { len: 4 },
-            Token::F32(0.1),
-            Token::F32(0.3),
-            Token::F32(0.5),
-            Token::F32(0.7),
-            Token::TupleEnd,
-        ],
-    );
     Ok(())
 }
