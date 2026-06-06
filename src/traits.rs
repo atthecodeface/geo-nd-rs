@@ -510,6 +510,10 @@ where
 ///
 /// Such [Matrix] support basic arithmetic using addition and
 /// subtraction, scaling, indexing (linearly, row major).
+///
+/// The 'transform vector' methods are tricky to put in here as type inference
+/// fails more frequently then it does for square matrices (whwre R*C is always
+/// D^2)
 pub trait Matrix<F: Float, const R: usize, const C: usize, const RC: usize>:
     ArrayBasic
     + ArrayRef<F, RC>
@@ -532,20 +536,6 @@ pub trait Matrix<F: Float, const R: usize, const C: usize, const RC: usize>:
     /// Return a transpose matrix
     fn transpose<M: Matrix<F, C, R, RC>>(&self) -> M {
         matrix::transpose::<F, RC, R, C>(self).into()
-    }
-
-    /// Apply the matrix to a vector to transform it
-    fn mul_vec<S, T>(&self, v: &S) -> T
-    where
-        S: std::ops::Deref<Target = [F; C]>,
-        T: From<[F; R]>,
-    {
-        matrix::transform_vec::<F, RC, R, C>(self, v).into()
-    }
-
-    /// Apply the matrix to a vector to transform it
-    fn mul_vec_arr(&self, v: &[F; C]) -> [F; R] {
-        matrix::transform_vec::<F, RC, R, C>(self, v)
     }
 }
 impl<F: Float, const R: usize, const C: usize, const RC: usize, M> Matrix<F, R, C, RC> for M where
@@ -573,6 +563,28 @@ impl<F: Float, const R: usize, const C: usize, const RC: usize, M> Matrix<F, R, 
 pub trait SqMatrix<F: Float, const D: usize, const D2: usize>:
     Matrix<F, D, D, D2> + std::ops::Mul<Output = Self> + std::ops::MulAssign
 {
+    /// Apply the matrix to a vector to transform it
+    ///
+    /// This is in SqMatrix rather than Matrix as type inference works for the
+    /// output of transfomrations as the type matches the input (which is not
+    /// the case for rectangular transformations)
+    fn mul_vec<T>(&self, v: &T) -> T
+    where
+        T: std::ops::Deref<Target = [F; D]>,
+        T: From<[F; D]>,
+    {
+        matrix::transform_vec::<F, D2, D, D>(self, v).into()
+    }
+
+    /// Apply the matrix to a vector to transform it
+    ///
+    /// This is in SqMatrix rather than Matrix as type inference works for the
+    /// output of transfomrations as the type matches the input (which is not
+    /// the case for rectangular transformations)
+    fn mul_vec_arr(&self, v: &[F; D]) -> [F; D] {
+        matrix::transform_vec::<F, D2, D, D>(self, v)
+    }
+
     /// Create an identity matrix
     fn identity() -> Self {
         matrix::identity::<F, D2, D>().into()

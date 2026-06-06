@@ -84,9 +84,9 @@ For example, a matrix `M` can transform a vector `T` by using
 
 ```
     use geo_nd::{FArray, FArray2, SqMatrix, Vector};
-    let t : FArray::<f32, 3> = [0.0, 1.0, 2.0].into();
+    let mut t : FArray::<f32, 3> = [0.0, 1.0, 2.0].into();
     let m = FArray2::<f32, 3, 9>::identity();
-    let mut t = m.transform(&t);
+    t = m.mul_vec(&t);
     // or
     t.transformed_by_m(&m);
 
@@ -318,7 +318,7 @@ let rot30 : Mat2x2 = [c, -s, s, c].into();
 let rot60 = rot30 * rot30;
 
 // Rotating x anticlockwise by 30 and 60 should turn it into y
-let is_it_y = rot60.transform(&rot30.transform(&x));
+let is_it_y : Point2D = rot60.mul_vec(&rot30.mul_vec(&x));
 
 // Check that the distance between them is tiny
 assert!((y-is_it_y).length_sq() < 1.0E-8);
@@ -329,7 +329,7 @@ let rot90 = rot60 * rot30;
 let rot180 = rot90 * rot90;
 
 let xy = x + y;
-let is_it_zero = xy + rot180.transform(&xy);
+let is_it_zero = xy + rot180.mul_vec(&xy);
 assert!(is_it_zero.length() < 1.0E-8);
 ```
 
@@ -337,7 +337,7 @@ assert!(is_it_zero.length() < 1.0E-8);
 
 ```
 // Import the traits
-use geo_nd::{Quaternion, SqMatrix, Vector};
+use geo_nd::{Quaternion, SqMatrix, Vector, Vector3};
 
 // Aliases for the types
 pub type Point3D = geo_nd::FArray<f64, 3>;
@@ -354,18 +354,18 @@ let z : Point3D = [0., 0., 1.].into();
 // [0,1,0] maps to [0,0,1]
 // [0,0,1] maps to [0,-1,0]
 let qx = Quat::default().rotate_x(90.0_f64.to_radians());
-assert!(z.distance(&y.apply_q3(&qx)) < 1.0E-8);
-assert!(y.distance(&(-z).apply_q3(&qx)) < 1.0E-8);
-assert!(x.distance(&(x).apply_q3(&qx)) < 1.0E-8);
+assert!(z.distance(&y.apply_q(&qx)) < 1.0E-8);
+assert!(y.distance(&(-z).apply_q(&qx)) < 1.0E-8);
+assert!(x.distance(&(x).apply_q(&qx)) < 1.0E-8);
 
 // qy rotates around the Y axis by 90 degrees
 // [1,0,0] maps to [0,0,-1]
 // [0,Y,0] is unchanged
 // [0,0,1] maps to [1,0,0]
 let qy = Quat::default().rotate_y(90.0_f64.to_radians());
-assert!(x.distance(&(z).apply_q3(&qy)) < 1.0E-8);
-assert!(z.distance(&(-x).apply_q3(&qy)) < 1.0E-8);
-assert!(y.distance(&(y).apply_q3(&qy)) < 1.0E-8);
+assert!(x.distance(&(z).apply_q(&qy)) < 1.0E-8);
+assert!(z.distance(&(-x).apply_q(&qy)) < 1.0E-8);
+assert!(y.distance(&(y).apply_q(&qy)) < 1.0E-8);
 
 // qx * qy applies qx to (qy applied to a vector)
 // Hence this chains the qx mapping onto the qy mapping
@@ -376,17 +376,17 @@ assert!(y.distance(&(y).apply_q3(&qy)) < 1.0E-8);
 // This is actually a 120 degree rotation around (1,1,1)
 // (qy * qx is a 120 degree rotation around (1,-1,1))
 let qxy = qx * qy;
-assert!(y.distance(&(x).apply_q3(&qxy)) < 1.0E-8);
-assert!(z.distance(&(y).apply_q3(&qxy)) < 1.0E-8);
-assert!(x.distance(&(z).apply_q3(&qxy)) < 1.0E-8);
+assert!(y.distance(&(x).apply_q(&qxy)) < 1.0E-8);
+assert!(z.distance(&(y).apply_q(&qxy)) < 1.0E-8);
+assert!(x.distance(&(z).apply_q(&qxy)) < 1.0E-8);
 
 let mut m = Mat3x3::default();
 qxy.set_rotation3(&mut m);
 // qxy will be [0,0,1,  1,0,0, 0,1,0]
 // give or take floating point errors
-assert!((m.transform(&x) - y).length() < 1.0E-8);
-assert!((m.transform(&y) - z).length() < 1.0E-8);
-assert!((m.transform(&z) - x).length() < 1.0E-8);
+assert!((m.mul_vec(&x) - y).length() < 1.0E-8);
+assert!((m.mul_vec(&y) - z).length() < 1.0E-8);
+assert!((m.mul_vec(&z) - x).length() < 1.0E-8);
 ```
 
 # Trait discussion

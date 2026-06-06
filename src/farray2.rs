@@ -1,5 +1,5 @@
 use crate::{FArray, matrix, vector};
-use crate::{Float, Matrix, SqMatrix, Vector};
+use crate::{Float, SqMatrix, Vector};
 
 //a FArray2
 //tp FArray2

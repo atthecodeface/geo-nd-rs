@@ -58,6 +58,9 @@ pub fn inverse2<V: Num>(m: &[V; 4]) -> [V; 4] {
     checked_inverse2(m).0
 }
 
+/// Calculate the inverse, and indicate if it is a valid matrix
+///
+/// If the validity is false then any result can be returned
 pub fn checked_inverse2<V: Num>(m: &[V; 4]) -> ([V; 4], bool) {
     let d = determinant2(m);
     let okay = !d.is_zero();
@@ -95,6 +98,10 @@ pub fn determinant3<V: Num>(m: &[V; 9]) -> V {
 pub fn inverse3<V: Num>(m: &[V; 9]) -> [V; 9] {
     checked_inverse3(m).0
 }
+
+/// Calculate the inverse, and indicate if it is a valid matrix
+///
+/// If the validity is false then any result can be returned
 pub fn checked_inverse3<V: Num>(m: &[V; 9]) -> ([V; 9], bool) {
     let d = determinant3(m);
     let okay = !d.is_zero();
@@ -195,6 +202,10 @@ pub fn determinant4<V: Num>(m: &[V; 16]) -> V {
 pub fn inverse4<V: Num>(m: &[V; 16]) -> [V; 16] {
     checked_inverse4(m).0
 }
+
+/// Calculate the inverse, and indicate if it is a valid matrix
+///
+/// If the validity is false then any result can be returned
 pub fn checked_inverse4<V: Num>(m: &[V; 16]) -> ([V; 16], bool) {
     let d = determinant4(m);
     let okay = !d.is_zero();
