@@ -1,5 +1,5 @@
 //a Imports
-use geo_nd::{FArray, Geometry3D, Matrix, QArray, Quaternion, Vector};
+use geo_nd::{FArray, Geometry3D, QArray, Quaternion, SqMatrix, Vector};
 use geo_nd::{quat, vector};
 
 //a Test type

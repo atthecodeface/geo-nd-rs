@@ -1,5 +1,5 @@
 use geo_nd::{
-    FArray, FArray2, Float, Matrix, QArray, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform,
+    FArray, FArray2, Float, QArray, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform,
     Transformation, Vector, Vector3,
 };
 
