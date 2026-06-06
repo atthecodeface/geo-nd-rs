@@ -1,15 +1,10 @@
 /*a To do
 
+Change transform to remove overlapping methods with SqMatrix/3/4
+
 remove indexing from quaternions
 
 Add matrix trait which takes out most of the sqmatrix traits
-
-Document and get transform to work
-
-Fix rotate_x, rotate_y, rotate_z
-
-quaternion distance functions?
-
 */
 //a Documentation
 #![warn(missing_docs)]
@@ -468,8 +463,8 @@ pub(crate) use macros::{
 };
 
 mod matrix_op;
-mod matrixr_op;
 mod quaternion_op;
+mod sqmatrix_op;
 mod traits;
 mod vector_op;
 
@@ -486,8 +481,8 @@ pub use farray2::FArray2;
 pub use num_traits::cast;
 pub use qarray::QArray;
 pub use traits::{
-    Float, Geometry2D, Geometry3D, Num, Quaternion, SqMatrix, SqMatrix2, SqMatrix3, SqMatrix4,
-    Transform, Vector, Vector2, Vector3, Vector3D, Vector4,
+    Float, Geometry2D, Geometry3D, Matrix, Num, Quaternion, SqMatrix, SqMatrix2, SqMatrix3,
+    SqMatrix4, Transform, Vector, Vector2, Vector3, Vector3D, Vector4,
 };
 pub use transformation::Transformation;
 pub use transformation_uniform::TransformationUniform;
@@ -507,7 +502,7 @@ pub mod quat {
 /// Matrix library
 pub mod matrix {
     pub use super::matrix_op::*;
-    pub use super::matrixr_op::*;
+    pub use super::sqmatrix_op::*;
 }
 
 //a Vector3D and Geometry3D for f32/f64 using FArray/FArray2

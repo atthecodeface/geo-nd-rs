@@ -1,5 +1,5 @@
 use geo_nd::{
-    FArray, FArray2, Float, QArray, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform,
+    FArray, FArray2, Float, Matrix, QArray, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform,
     Transformation, Vector, Vector3,
 };
 
@@ -23,7 +23,7 @@ where
     };
     let vt_by_hand: Vec3<F> = [scale[0] * v[0], scale[1] * v[1], scale[2] * v[2]].into();
     let translation = t.translation();
-    let vt_by_hand = vt_by_hand.apply_q3(&rotation) + translation;
+    let vt_by_hand = vt_by_hand.apply_q(&rotation) + translation;
     let dsq = vt.distance_sq_arr(&vt_by_hand);
     if dsq >= F::from_f32(1.0E-6_f32).unwrap() {
         eprintln!(
@@ -67,7 +67,7 @@ where
 
         let mut arr3: FArray2<F, 3, 9> = FArray2::identity();
         t1_of_t0.set_mat3(&mut arr3);
-        let vt1_of_0_c: Vec3<F> = arr3.transform_arr(v).into();
+        let vt1_of_0_c: Vec3<F> = arr3.mul_vec_arr(v).into();
         let vt1_of_0_c = vt1_of_0_c + t1_of_t0.translation();
         let dsq = vt1_of_0_a.distance_sq_arr(&vt1_of_0_c);
         if dsq >= F::from_f32(1.0E-6_f32).unwrap() {
@@ -80,7 +80,7 @@ where
 
         let mut arr4: FArray2<F, 4, 16> = FArray2::identity();
         t1_of_t0.set_mat4(&mut arr4);
-        let v = arr4.transform_arr(&[v[0], v[1], v[2], F::ONE]);
+        let v = arr4.mul_vec_arr(&[v[0], v[1], v[2], F::ONE]);
         assert_eq!(v[3], F::ONE, "Translated vector must have [3] of 1.0");
         let vt1_of_0_d: Vec3<F> = [v[0], v[1], v[2]].into();
         let dsq = vt1_of_0_a.distance_sq_arr(&vt1_of_0_d);

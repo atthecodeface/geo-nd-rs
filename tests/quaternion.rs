@@ -1,5 +1,5 @@
 //a Imports
-use geo_nd::{FArray, Geometry3D, QArray, Quaternion, SqMatrix, Vector};
+use geo_nd::{FArray, Geometry3D, Matrix, QArray, Quaternion, Vector};
 use geo_nd::{quat, vector};
 
 //a Test type
@@ -298,11 +298,11 @@ fn test_matrix() {
     assert!(quat_eq(&q, &q2));
 
     let tx1 = q2.apply3(&x);
-    let tx2 = m.transform(&x);
+    let tx2 = m.mul_vec_arr(&x);
     assert!(vec3_eq(&tx1, &tx2));
 
     let tx1 = q2.apply3(&xyz);
-    let tx2 = m.transform(&xyz);
+    let tx2 = m.mul_vec_arr(&xyz);
     assert!(vec3_eq(&tx1, &tx2));
 }
 #[test]

@@ -1,6 +1,6 @@
 use crate::{
-    FArray, FArray2, Float, QArray, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform, Vector3,
-    Vector4,
+    FArray, FArray2, Float, Matrix, QArray, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Transform,
+    Vector3, Vector4,
 };
 
 impl<F> Transform<F> for FArray2<F, 4, 16>
@@ -123,23 +123,18 @@ where
         true
     }
 
-    fn inverse(&self) -> Option<Self> {
-        Some(<Self as SqMatrix<_, _, _>>::inverse(self))
-    }
-
-    fn invert(&mut self) -> bool {
-        *self = <Self as SqMatrix<_, _, _>>::inverse(self);
-        true
+    fn inverse_transform(&self) -> Option<Self> {
+        self.opt_inverse()
     }
 
     fn apply3_arr(&self, other: &[F; 3]) -> [F; 3] {
         let v = [other[0], other[1], other[2], F::ONE];
-        let v = self.transform_arr(&v);
+        let v = self.mul_vec_arr(&v);
         [v[0], v[1], v[2]]
     }
 
     fn apply4_arr(&self, other: &[F; 4]) -> [F; 4] {
-        self.transform_arr(other)
+        self.mul_vec_arr(other)
     }
 
     fn as_mat3<M: SqMatrix3<F>>(&self) -> M {

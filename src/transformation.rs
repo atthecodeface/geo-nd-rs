@@ -239,7 +239,7 @@ where
         true
     }
 
-    fn inverse(&self) -> Option<Self> {
+    fn inverse_transform(&self) -> Option<Self> {
         if !self.is_uniform_scale() {
             return None;
         }
@@ -253,14 +253,6 @@ where
             let trans = trans * -scale;
             Self::of_trs(trans, iquat, [scale; 3].into())
         }
-    }
-
-    fn invert(&mut self) -> bool {
-        if !self.is_uniform_scale() {
-            return false;
-        }
-        *self = self.inverse().unwrap();
-        true
     }
 
     fn apply3_arr(&self, other: &[F; 3]) -> [F; 3] {

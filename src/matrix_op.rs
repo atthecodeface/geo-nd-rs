@@ -1,697 +1,245 @@
-//a Imports
-use super::{matrixr_op, vector_op};
+use crate::vector_op as vector;
 use crate::{Float, Num};
 
-//fp identity
-/// Create an identity square matrix of a given dimension
-pub fn identity<V: Num, const D2: usize, const D: usize>() -> [V; D2] {
-    let mut r = [V::zero(); D2];
-    for i in 0..D {
-        r[i * (D + 1)] = V::one();
-    }
-    r
+/// Crate a new matrix which is all zeros
+pub fn zero<V: Num, const RC: usize>() -> [V; RC] {
+    [V::zero(); RC]
 }
 
-//fp identity2
-/// Create a 2-by-2 identity matrix
-pub fn identity2<V: Num>() -> [V; 4] {
-    identity::<V, 4, 2>()
+/// Set the matrix to have all elements of zero
+pub fn set_zero<V: Num>(m: &mut [V]) {
+    vector::set_zero(m)
 }
 
-//fp identity3
-/// Create a 3-by-3 identity matrix
-pub fn identity3<V: Num>() -> [V; 9] {
-    identity::<V, 9, 3>()
+/// Return true if the matrix is all zeros
+pub fn is_zero<V: Num>(m: &[V]) -> bool {
+    vector::is_zero(m)
 }
 
-//fp identity4
-/// Create a 4-by-4 identity matrix
-pub fn identity4<V: Num>() -> [V; 16] {
-    identity::<V, 16, 4>()
+/// Consume the vector and return a new vector that is the original
+/// scaled in each coordinate a single scaling factor
+pub fn scale<V: Num, const RC: usize>(m: [V; RC], s: V) -> [V; RC] {
+    vector::scale(m, s)
 }
 
-//fp determinant2
-/// Find the determinant of a 2-by-2 matrix
-pub fn determinant2<V: Num>(m: &[V; 4]) -> V {
-    m[0] * m[3] - m[1] * m[2]
+/// Consume the vector and return a new vector that is the original
+/// reduces in scale in each coordinate by a single scaling factor
+pub fn reduce<V: Num, const RC: usize>(m: [V; RC], s: V) -> [V; RC] {
+    vector::reduce(m, s)
 }
 
-//fp inverse2
-/// Find the inverse of a 2-by-2 matrix
-///
-/// # Example
-///
-/// ```
-/// use geo_nd::vector::{length, sub};
-/// use geo_nd::matrix::{identity2, inverse2, multiply2, MatrixType};
-/// let i = identity2();
-/// assert!( length(&sub(inverse2(&i), &i, 1.)) < 1E-8 );
-/// for a in &[ [1.,0., 0.,1.],
-///             [1.,0., 1.,1.],
-///             [1.,2., 7.,2.] ] {
-///     let a_inv = inverse2(&a);
-///     assert!( length(&sub(multiply2(&a_inv,&a), &i, 1.)) < 1E-6 );
-/// }
-/// ```
-///
-pub fn inverse2<V: Num>(m: &[V; 4]) -> [V; 4] {
-    let d = determinant2(m);
-    let r_d = {
-        if d != V::ZERO {
-            V::one() / d
-        } else {
-            V::zero()
-        }
-    };
-
-    [m[3] * r_d, -m[1] * r_d, -m[2] * r_d, m[0] * r_d]
+/// Consume the vector, and return a new vector that is the sum of
+/// this and a borrowed other vector scaled
+pub fn add<V: Num, const RC: usize>(m: [V; RC], other: &[V; RC], scale: V) -> [V; RC] {
+    vector::add(m, other, scale)
 }
 
-//fp determinant3
-/// Find the determinant of a 3-by-3 matrix
-pub fn determinant3<V: Num>(m: &[V; 9]) -> V {
-    m[0] * (m[4] * m[8] - m[5] * m[7])
-        + m[1] * (m[5] * m[6] - m[3] * m[8])
-        + m[2] * (m[3] * m[7] - m[4] * m[6])
+/// Consume the vector, and return a new vector that is the difference of
+/// this and a borrowed other vector scaled
+pub fn sub<V: Num, const RC: usize>(m: [V; RC], other: &[V; RC], scale: V) -> [V; RC] {
+    vector::sub(m, other, scale)
 }
 
-//fp inverse3
-/// Find the inverse of a 3-by-3 matrix
-///
-/// # Example
-///
-/// ```
-/// use geo_nd::vector::{length, sub};
-/// use geo_nd::matrix::{identity3, inverse3, multiply3, MatrixType};
-/// let i = identity3();
-/// assert!( length(&sub(inverse3(&i), &i, 1.)) < 1E-8 );
-/// for a in &[ [1.0,0.,0., 0.,1.,0.,  0.,0.,1.],
-///             [1.,0.,0., 0.,1.,1.,  0.,0.,1.],
-///             [1.,3.,2., 0.,2.,3., -1.,2.,3.] ] {
-///     let a_inv = inverse3(&a);
-///     assert!( length(&sub(multiply3(&a_inv,&a), &i, 1.)) < 1E-6 );
-/// }
-/// ```
-///
-pub fn inverse3<V: Num>(m: &[V; 9]) -> [V; 9] {
-    let mut r = [V::zero(); 9];
-    let d = determinant3(m);
-    let r_d = {
-        if d != V::ZERO {
-            V::one() / d
-        } else {
-            V::zero()
-        }
-    };
-
-    // Allow clippy identity lint for <n>+0 to keep matrix clarity
-    #[allow(clippy::identity_op)]
-    {
-        r[0] = (m[3 + 1] * m[6 + 2] - m[3 + 2] * m[6 + 1]) * r_d;
-        r[3] = (m[3 + 2] * m[6 + 0] - m[3 + 0] * m[6 + 2]) * r_d;
-        r[6] = (m[3 + 0] * m[6 + 1] - m[3 + 1] * m[6 + 0]) * r_d;
-
-        r[1] = (m[6 + 1] * m[0 + 2] - m[6 + 2] * m[0 + 1]) * r_d;
-        r[4] = (m[6 + 2] * m[0 + 0] - m[6 + 0] * m[0 + 2]) * r_d;
-        r[7] = (m[6 + 0] * m[0 + 1] - m[6 + 1] * m[0 + 0]) * r_d;
-
-        r[2] = (m[0 + 1] * m[3 + 2] - m[0 + 2] * m[3 + 1]) * r_d;
-        r[5] = (m[0 + 2] * m[3 + 0] - m[0 + 0] * m[3 + 2]) * r_d;
-        r[8] = (m[0 + 0] * m[3 + 1] - m[0 + 1] * m[3 + 0]) * r_d;
-    }
-    r
+/// Consume the vector, and return a new vector that is the sum of
+/// this and a borrowed other vector scaled
+pub fn absmax<V: Float>(m: &[V]) -> V {
+    m.iter().fold(V::zero(), |acc, c| V::max(acc, V::abs(*c)))
 }
 
-//fp from_quat3
-/// Create a rotation 3-by-3 matrix from a quaternion
-pub fn from_quat3<V: Num>(q: [V; 4]) -> [V; 9] {
-    let zero = V::zero();
-    let one = V::one();
-    let two = one + one;
-    let mut r = [zero; 9];
-    let x = q[0];
-    let y = q[1];
-    let z = q[2];
-    let w = q[3];
-
-    // Allow clippy identity lint for <n>+0 to keep vector clarity
-    #[allow(clippy::identity_op)]
-    {
-        r[0 + 0] = one - two * y * y - two * z * z;
-        r[0 + 1] = two * x * y + two * z * w;
-        r[0 + 2] = two * x * z - two * y * w;
-        r[3 + 1] = one - two * z * z - two * x * x;
-        r[3 + 2] = two * y * z + two * x * w;
-        r[3 + 0] = two * x * y - two * z * w;
-        r[6 + 2] = one - two * x * x - two * y * y;
-        r[6 + 0] = two * z * x + two * y * w;
-        r[6 + 1] = two * y * z - two * x * w;
-    }
-    r
-}
-
-//fp determinant4
-/// Find the determinant of a 4-by-4 matrix
-pub fn determinant4<V: Num>(m: &[V; 16]) -> V {
-    // Allow clippy identity lint for <n>+0 to keep matrix clarity
-    #[allow(clippy::identity_op)]
-    {
-        let det0 = m[0]
-            * (m[4 + 1] * (m[8 + 2] * m[12 + 3] - m[8 + 3] * m[12 + 2])
-                + (m[4 + 2] * (m[8 + 3] * m[12 + 1] - m[8 + 1] * m[12 + 3]))
-                + (m[4 + 3] * (m[8 + 1] * m[12 + 2] - m[8 + 2] * m[12 + 1])));
-        let det1 = m[1]
-            * (m[4 + 2] * (m[8 + 3] * m[12 + 0] - m[8 + 0] * m[12 + 3])
-                + (m[4 + 3] * (m[8 + 0] * m[12 + 2] - m[8 + 2] * m[12 + 0]))
-                + (m[4 + 0] * (m[8 + 2] * m[12 + 3] - m[8 + 3] * m[12 + 2])));
-        let det2 = m[2]
-            * (m[4 + 3] * (m[8 + 0] * m[12 + 1] - m[8 + 1] * m[12 + 0])
-                + (m[4 + 0] * (m[8 + 1] * m[12 + 3] - m[8 + 3] * m[12 + 1]))
-                + (m[4 + 1] * (m[8 + 3] * m[12 + 0] - m[8 + 0] * m[12 + 3])));
-        let det3 = m[3]
-            * (m[4 + 0] * (m[8 + 1] * m[12 + 2] - m[8 + 2] * m[12 + 1])
-                + (m[4 + 1] * (m[8 + 2] * m[12 + 0] - m[8 + 0] * m[12 + 2]))
-                + (m[4 + 2] * (m[8 + 0] * m[12 + 1] - m[8 + 1] * m[12 + 0])));
-        det0 - det1 + det2 - det3
-    }
-}
-
-//fp inverse4
-/// Find the inverse of a 4-by-4 matrix
-///
-/// # Example
-///
-/// ```
-/// use geo_nd::vector::{length, sub};
-/// use geo_nd::matrix::{identity4, inverse4, multiply4, MatrixType};
-/// let i = identity4();
-/// assert!( length(&sub(inverse4(&i), &i, 1.)) < 1E-8 );
-/// for a in &[ [1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,0.,1., 0.,0.,1.,0.],
-///             [1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,1., 0.,0.,1.,0.],
-///             [1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,0., 0.,0.,1.,1.],
-///             [1.,3.,2.,1., 0.,2.,3.,3., -1.,2.,3.,2., 0.,0.,2.,1.] ] {
-///     let a_inv = inverse4(&a);
-///     assert!( length(&sub(multiply4(&a_inv,&a), &i, 1.)) < 1E-6 );
-/// }
-/// ```
-///
-pub fn inverse4<V: Num>(m: &[V; 16]) -> [V; 16] {
-    let d = determinant4(m);
-    let mut r = [V::ZERO; 16];
-    if d != V::ZERO {
-        let r_d = V::one() / d;
-
-        for j in 0..4 {
-            let a = ((j + 1) & 3) * 4;
-            let b = ((j + 2) & 3) * 4;
-            let c = ((j + 3) & 3) * 4;
-            for i in 0..4 {
-                let x = (i + 1) & 3;
-                let y = (i + 2) & 3;
-                let z = (i + 3) & 3;
-                let sc = if (i + j) & 1 == 0 {
-                    V::one()
-                } else {
-                    -V::one()
-                };
-                r[i * 4 + j] = ((m[a + x] * m[b + y] - m[b + x] * m[a + y]) * m[c + z]
-                    + (m[a + y] * m[b + z] - m[b + y] * m[a + z]) * m[c + x]
-                    + (m[a + z] * m[b + x] - m[b + z] * m[a + x]) * m[c + y])
-                    * sc
-                    * r_d;
-            }
-        }
-    }
-    r
-}
-
-//fp multiply2
-/// Multiply two square 2x2 matrices and produce a result
-pub fn multiply2<V: Num>(a: &[V; 2 * 2], b: &[V; 2 * 2]) -> [V; 2 * 2] {
-    matrixr_op::multiply::<V, 4, 4, 4, 2, 2, 2>(a, b)
-}
-
-//fp transform_vec2
-/// Multiply a vec2 by a 2x2 matrix
-pub fn transform_vec2<V: Num>(m: &[V; 4], v: &[V; 2]) -> [V; 2] {
-    matrixr_op::transform_vec::<V, 4, 2, 2>(m, v)
-}
-
-//fp multiply3
-/// Multiply two square 3x3 matrices and produce a result
-pub fn multiply3<V: Num>(a: &[V; 9], b: &[V; 9]) -> [V; 9] {
-    matrixr_op::multiply::<V, 9, 9, 9, 3, 3, 3>(a, b)
-}
-
-//fp transform_vec3
-/// Multiply a vec3 by a 3x3 matrix
-pub fn transform_vec3<V: Num>(m: &[V; 9], v: &[V; 3]) -> [V; 3] {
-    matrixr_op::transform_vec::<V, 9, 3, 3>(m, v)
-}
-
-//fp look_at3
-/// Create a matrix that maps unit dirn to \[0,0,-1\] and unit up (perp to dirn) to \[0,1,0\]
-pub fn look_at3<V: Float>(dirn: &[V; 3], up: &[V; 3]) -> [V; 9] {
-    let d = vector_op::normalize(*dirn);
-    let du = vector_op::dot(&d, up);
-    let u = [up[0] - d[0] * du, up[1] - d[1] * du, up[2] - d[2] * du];
-    let u = vector_op::normalize(u);
-    [
-        u[2] * d[1] - u[1] * d[2],
-        u[0] * d[2] - u[2] * d[0],
-        u[1] * d[0] - u[0] * d[1],
-        u[0],
-        u[1],
-        u[2],
-        -d[0],
-        -d[1],
-        -d[2],
-    ]
-}
-
-//fp multiply4
-/// Multiply two square 4x4 matrices and produce a result
-pub fn multiply4<V: Num>(a: &[V; 16], b: &[V; 16]) -> [V; 16] {
-    matrixr_op::multiply::<V, 16, 16, 16, 4, 4, 4>(a, b)
-}
-
-//fp transform_vec4
-/// Multiply a vec4 by a 4x4 matrix
-pub fn transform_vec4<V: Num>(m: &[V; 16], v: &[V; 4]) -> [V; 4] {
-    matrixr_op::transform_vec::<V, 16, 4, 4>(m, v)
-}
-
-//fp translate4
-/// Translate a 4-by-4 matrix by a vector - standard graphics approach
-///
-/// Same as postmultiply by [1 0 0 v0], [0 1 0 v1], [0 0 1 v2], [0 0 0 1]
-pub fn translate4<V: Num>(m: &[V; 16], v: &[V; 4]) -> [V; 16] {
-    let mut r = *m;
-
-    // Allow clippy identity lint for <n>+0 to keep matrix clarity
-    #[allow(clippy::identity_op)]
-    {
-        r[12] = m[0] * v[0] + m[4 + 0] * v[1] + m[8 + 0] * v[2] + m[12 + 0];
-        r[13] = m[1] * v[0] + m[4 + 1] * v[1] + m[8 + 1] * v[2] + m[12 + 1];
-        r[14] = m[2] * v[0] + m[4 + 2] * v[1] + m[8 + 2] * v[2] + m[12 + 2];
-        r[15] = m[3] * v[0] + m[4 + 3] * v[1] + m[8 + 3] * v[2] + m[12 + 3];
-    }
-    r
-}
-
-//fp look_at4
-/// Create a matrix that maps eye to \[0,0,0\], unit (centre-eye) to \[0,0,-1\]
-/// and unit up (perp to centre-eye) to \[0,1,0\]
-pub fn look_at4<V: Float>(eye: &[V; 3], centre: &[V; 3], up: &[V; 3]) -> [V; 16] {
-    let dirn = vector_op::sub(*centre, eye, V::one());
-    let d = vector_op::normalize(dirn);
-    let du = vector_op::dot(&d, up);
-    let u = [up[0] - d[0] * du, up[1] - d[1] * du, up[2] - d[2] * du];
-    let u = vector_op::normalize(u);
-    [
-        u[2] * d[1] - u[1] * d[2],
-        u[0] * d[2] - u[2] * d[0],
-        u[1] * d[0] - u[0] * d[1],
-        V::zero(),
-        u[0],
-        u[1],
-        u[2],
-        V::zero(),
-        -d[0],
-        -d[1],
-        -d[2],
-        V::zero(),
-        V::zero(),
-        V::zero(),
-        V::zero(),
-        V::one(),
-    ]
-}
-
-//fp perspective4
-/// Create a perspective graphics matrix
-pub fn perspective4<V: Float>(fov: V, aspect: V, near: V, far: V) -> [V; 16] {
-    let zero = V::zero();
-    let one = V::one();
-    let two = one + one;
-    let mut r = [zero; 16];
-    let f = one / V::tan(fov / two);
-    r[0] = f / aspect;
-    r[5] = f;
-    r[11] = -one;
-    let nf = one / (near - far);
-    r[10] = (far + near) * nf;
-    r[14] = two * far * near * nf;
-    r
-}
-
-//fp from_quat4
-/// Create a rotation 4-by-4 matrix from a quaternion
-pub fn from_quat4<V: Num>(q: [V; 4]) -> [V; 16] {
-    let zero = V::zero();
-    let one = V::one();
-    let two = one + one;
-    let mut r = [zero; 16];
-    let x = q[0];
-    let y = q[1];
-    let z = q[2];
-    let w = q[3];
-
-    // Allow clippy identity lint for <n>+0 to keep matrix clarity
-    #[allow(clippy::identity_op)]
-    {
-        r[0 + 0] = one - two * y * y - two * z * z;
-        r[0 + 1] = two * x * y + two * z * w;
-        r[0 + 2] = two * x * z - two * y * w;
-        // r[0+3]= 0;
-        r[4 + 1] = one - two * z * z - two * x * x;
-        r[4 + 2] = two * y * z + two * x * w;
-        r[4 + 0] = two * x * y - two * z * w;
-        // r[4+3]= 0;
-        r[8 + 2] = one - two * x * x - two * y * y;
-        r[8 + 0] = two * z * x + two * y * w;
-        r[8 + 1] = two * y * z - two * x * w;
-        // r[8+3]= 0;
-        // r[12]=0; r[13]=0; a[14]=0;
-        r[15] = V::one();
-    }
-    r
-}
-
-/*
-   #f invert
-   @staticmethod
-   def invert(a:Mat3,x:Mat3) -> Mat3:
-       x00 = x[ 0]; x01 = x[ 1]; x02 = x[ 2]; x03 = x[ 3];
-       x10 = x[ 4]; x11 = x[ 5]; x12 = x[ 6]; x13 = x[ 7];
-       x20 = x[ 8]; x21 = x[ 9]; x22 = x[10]; x23 = x[11];
-       x30 = x[12]; x31 = x[13]; x32 = x[14]; x33 = x[15];
-       b00 = x00 * x11 - x01 * x10;
-       b01 = x00 * x12 - x02 * x10;
-       b02 = x00 * x13 - x03 * x10;
-       b03 = x01 * x12 - x02 * x11;
-       b04 = x01 * x13 - x03 * x11;
-       b05 = x02 * x13 - x03 * x12;
-       b06 = x20 * x31 - x21 * x30;
-       b07 = x20 * x32 - x22 * x30;
-       b08 = x20 * x33 - x23 * x30;
-       b09 = x21 * x32 - x22 * x31;
-       b10 = x21 * x33 - x23 * x31;
-       b11 = x22 * x33 - x23 * x32;
-       d = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-       if (abs(d)>1E-8): d=1/d;
-       a[0]  = (x11 * b11 - x12 * b10 + x13 * b09) * d;
-       a[1]  = (x02 * b10 - x01 * b11 - x03 * b09) * d;
-       a[2]  = (x31 * b05 - x32 * b04 + x33 * b03) * d;
-       a[3]  = (x22 * b04 - x21 * b05 - x23 * b03) * d;
-       a[4]  = (x12 * b08 - x10 * b11 - x13 * b07) * d;
-       a[5]  = (x00 * b11 - x02 * b08 + x03 * b07) * d;
-       a[6]  = (x32 * b02 - x30 * b05 - x33 * b01) * d;
-       a[7]  = (x20 * b05 - x22 * b02 + x23 * b01) * d;
-       a[8]  = (x10 * b10 - x11 * b08 + x13 * b06) * d;
-       a[9]  = (x01 * b08 - x00 * b10 - x03 * b06) * d;
-       a[10] = (x30 * b04 - x31 * b02 + x33 * b00) * d;
-       a[11] = (x21 * b02 - x20 * b04 - x23 * b00) * d;
-       a[12] = (x11 * b07 - x10 * b09 - x12 * b06) * d;
-       a[13] = (x00 * b09 - x01 * b07 + x02 * b06) * d;
-       a[14] = (x31 * b01 - x30 * b03 - x32 * b00) * d;
-       a[15] = (x20 * b03 - x21 * b01 + x22 * b00) * d;
-       return a;
-   #f getRotation
-   # from www.euclideanspace
-   @staticmethod
-   def getRotation(q:Quat, m:Mat4) -> quat:
-       lr0 = 1.0/math.hypot(m[0+0], m[4+0], m[8+0]);
-       lr1 = 1.0/math.hypot(m[0+1], m[4+1], m[8+1]);
-       lr2 = 1.0/math.hypot(m[0+2], m[4+2], m[8+2]);
-       m00 = m[0]*lr0; m10=m[1]*lr1; m20=m[ 2]*lr2;
-       m01 = m[4]*lr0; m11=m[5]*lr1; m21=m[ 6]*lr2;
-       m02 = m[8]*lr0; m12=m[9]*lr1; m22=m[10]*lr2;
-       tr = m00 + m11 + m22;
-       if (tr > 0) :
-           S = math.sqrt(tr+1.0) * 2; # S=4*qw
-           w = 0.25 * S;
-           x = (m21 - m12) / S;
-           y = (m02 - m20) / S;
-           z = (m10 - m01) / S;
-           pass
-       elif ((m00 > m11) and (m00 > m22)):
-           S = math.sqrt(1.0 + m00 - m11 - m22) * 2; # S=4*qx
-           w = (m21 - m12) / S;
-           x = 0.25 * S;
-           y = (m01 + m10) / S;
-           z = (m02 + m20) / S;
-           pass
-       elif (m11 > m22):
-           S = math.sqrt(1.0 + m11 - m00 - m22) * 2; # S=4*qy
-           w = (m02 - m20) / S;
-           x = (m01 + m10) / S;
-           y = 0.25 * S;
-           z = (m12 + m21) / S;
-           pass
-       else:
-           S = math.sqrt(1.0 + m22 - m00 - m11) * 2; # S=4*qz
-           w = (m10 - m01) / S;
-           x = (m02 + m20) / S;
-           y = (m12 + m21) / S;
-           z = 0.25 * S;
-           pass
-       q[0]=x; q[1]=y; q[2]=z; q[3]=w;
-       return q;
-   #f scale
-   def scale(a:Mat4, x:Mat4, s:Sequence[float]) -> Mat4:
-       for i in range(4):
-           cs=1.
-           if i<len(s): cs=s[i]
-           for j in range(4):
-               a[4*i+j] = x[4*i+j]*cs;
-               pass
-           pass
-       return a;
-   #f All done
-   pass
-
-*/
-
-/// Decompose a square matrix into L and U matrices with a pivot P, and return the determinant
-///
-/// LU is both the lower and upper matrices; the lower matrix has a diagonal of 1.0,
-/// and the upper matrix has its diagonal in LU.
-#[track_caller]
-pub fn lup_decompose<V: Num + std::cmp::PartialOrd>(
-    order: usize,
-    matrix: &[V],
-    lu: &mut [V],
-    pivot: &mut [usize],
-) -> V {
-    assert!(
-        pivot.len() >= order,
-        "Pivot must be at least the order of the matrix"
-    );
-    assert_eq!(
-        matrix.len(),
-        order * order,
-        "Matrix provided must be square and of the correct order"
-    );
-    assert_eq!(
-        lu.len(),
-        order * order,
-        "Resulting LU decomposition provided must be square and of the correct order"
-    );
-    for (i, p) in pivot.iter_mut().enumerate().take(order) {
-        *p = i;
-    }
-    let mut det = V::one();
-
-    // Start by copying the matrix
-    lu.copy_from_slice(matrix);
-
-    // For each row in LU except the last
-    for d in 0..(order - 1) {
-        // Find row with maximum (abs) value in column d (below or at row d)
-        let mut max_lu_rc = V::zero();
-        let mut r_max = 0;
-        for r in d..order {
-            let t = lu[r * order + d];
-            if t < V::zero() {
-                if (max_lu_rc < V::zero() && t < max_lu_rc)
-                    || (max_lu_rc >= V::zero() && t < -max_lu_rc)
-                {
-                    max_lu_rc = t;
-                    r_max = r;
-                }
-            } else {
-                if (max_lu_rc > V::zero() && t > max_lu_rc)
-                    || (max_lu_rc <= V::zero() && t > -max_lu_rc)
-                {
-                    max_lu_rc = t;
-                    r_max = r;
-                }
-            }
-        }
-
-        // If there is no row with anything other than zero then it is not invertible
-        if max_lu_rc == V::zero() {
-            return max_lu_rc;
-        }
-
-        // Swap row i with r_max and update the pivot list
-        //
-        //
-        if r_max != d {
-            det = -det;
-            pivot.swap(r_max, d);
-            for c in 0..order {
-                lu.swap(r_max * order + c, d * order + c);
-            }
-        }
-        det = det * max_lu_rc;
-
-        // Subtract out from rows below scaling down by LU[d][d] (in p) and up by LU[r][r]
-        for r in (d + 1)..order {
-            let scale = lu[r * order + d] / max_lu_rc;
-            lu[r * order + d] = scale;
-            for c in (d + 1)..order {
-                lu[r * order + c] = lu[r * order + c] - scale * lu[d * order + c];
-            }
-        }
-    }
-    det * lu[order * order - 1]
-}
-
-///    Split an LU where L has diagonal of 1s and is stored in lower half, U is upper half
-///
-/// Store U in LU, L in the provided lower
-pub fn lu_split<V: Num>(order: usize, lu: &mut [V], lower: &mut [V]) {
-    assert_eq!(
-        lu.len(),
-        order * order,
-        "LU decomposition provided must be square and of the correct order"
-    );
-    assert_eq!(
-        lower.len(),
-        order * order,
-        "Lower matrix provided must be square and of the correct order"
-    );
-    lower.copy_from_slice(lu);
-    for r in 0..order {
-        for c in 0..order {
-            if r == c {
-                lower[r * order + c] = V::one();
-            } else if r < c {
-                lower[r * order + c] = V::zero();
-            } else {
-                lu[r * order + c] = V::zero();
-            }
-        }
-    }
-}
-
-/// self should be an LU matrix
-/// Note that LUP matrix is actually a matrix P.L.U
-/// If we find vectors 'x' such that L.U.x = P-1.Ic for the c'th column of the identity matrix
-/// we will find (with all 'n' x) the inverse
-#[track_caller]
-pub fn lup_invert<V: Num>(
-    n: usize,
-    lu: &[V],
-    pivot: &[usize],
-    result: &mut [V],
-    temp_row: &mut [V],
-    temp_row2: &mut [V],
-) -> bool {
-    assert_eq!(
-        lu.len(),
-        n * n,
-        "Inverting a square {n} by {n} matrix expected LU len to match",
-    );
-    assert_eq!(
-        pivot.len(),
-        n,
-        "Inverting a square {n} by {n} matrix expected pivot len to be n",
-    );
-    assert_eq!(
-        result.len(),
-        n * n,
-        "Inverting a square {n} by {n} matrix expected result len to match",
-    );
-    assert_eq!(temp_row.len(), n, "Temp row 1 must be length `n`");
-    assert_eq!(temp_row2.len(), n, "Temp row 2 must be length `n`");
-    // For each column in the identity matrix...
-    for c in 0..n {
-        // We want to find vector x such that LU.x = Ic
-        // First find a such that L.a = Ic
-        // Note that as L is a lower, we can find the elements top down
-        for r in temp_row.iter_mut() {
-            *r = V::zero();
-        }
-        temp_row[c] = V::one();
-
-        for r in 0..n {
-            // Would divide a[r] by Lrr, but that is 1 for L
-            // a[r] = a[r]/1
-            // For the rest of the column remove multiples of a[r] (Lir, n>i>r)
-            for i in (r + 1)..n {
-                temp_row[i] = temp_row[i] - lu[i * n + r] * temp_row[r];
-            }
-        }
-
-        // Now we have L.a = Ic
-        // Hence a = U.x
-        // Here we can work up from the bottom of x - we have to start with a...
-        temp_row2.copy_from_slice(temp_row);
-        let mut r = n - 1;
-        loop {
-            // Now divide a[r] by Urr, which is not 1
-            let urr = lu[r * n + r];
-            if urr == V::zero() {
-                return false;
-            }
-            temp_row2[r] = temp_row2[r] / urr;
-            // For the rest of the column remove multiples of x[r] (Uir, r>i>=0)
-            for i in 0..r {
-                temp_row2[i] = temp_row2[i] - lu[i * n + r] * temp_row2[r]
-            }
-            if r == 0 {
-                break;
-            }
-            r -= 1;
-        }
-
-        // So we know that LU.x = Ic
-        // Insert into R at the permuted column
-        for r in 0..n {
-            // result[pivot[c] * n + r] = temp_row2[r];
-            result[r * n + pivot[c]] = temp_row2[r];
-        }
-        // R.transpose()
-    }
-    true
-}
-
-/// 'Unapply' the pivot P
-pub fn unpivot<V: Num>(order: usize, matrix: &[V], pivot: &[usize], result: &mut [V]) {
-    for r in 0..order {
-        for c in 0..order {
-            let p = pivot[r];
-            result[r * order + c] = matrix[p * order + c];
-        }
-    }
-}
-
-/// Invert a matrix (in-place)
-///
-/// Return false (and untouched matrix) if the determinant is zero
-pub fn invert<V: Num + std::cmp::PartialOrd, const D2: usize, const D: usize>(
-    matrix: &mut [V; D2],
-) -> bool {
-    let mut lu = [V::zero(); D2];
-    let mut pivot = [0; D];
-    let mut tr0 = [V::zero(); D];
-    let mut tr1 = [V::zero(); D];
-    if lup_decompose(D, matrix, &mut lu, &mut pivot) == V::zero() {
-        false
+/// Update the new matrix with every element e scaled so that max(abs(e)) is 1.
+pub fn normalize<V: Float, const RC: usize, const C: usize>(mut m: [V; RC]) -> [V; RC] {
+    let l = absmax::<V>(&m);
+    if l < V::epsilon() {
+        set_zero::<V>(&mut m);
+        m
     } else {
-        lup_invert(D, &lu, &pivot, matrix, &mut tr0, &mut tr1)
+        reduce::<V, RC>(m, l)
+    }
+}
+
+/// Transpose the matrix
+///
+/// The matrices are row-major, so successive entries of m are adjacent columns
+///
+/// The output matrix has adjacent entries that are therefore adjacent rows in m
+pub fn transpose<V: Num, const RC: usize, const R: usize, const C: usize>(m: &[V; RC]) -> [V; RC] {
+    assert_eq!(RC, R * C);
+    let mut v = zero::<V, RC>();
+    for r in 0..R {
+        for c in 0..C {
+            v[r + c * R] = m[c + r * C];
+        }
+    }
+    v
+}
+
+//mp multiply
+/// Multiply two matrices
+///
+/// The first matrix is R by X, the second ix X by C, so the result is
+/// R by C
+#[track_caller]
+pub fn multiply<
+    V: Num,
+    const RX: usize, // Total elements in first matrix
+    const XC: usize, // Total elements in second matrix
+    const RC: usize, // Total elements in result
+    const R: usize,  // Number of rows in first matrix
+    const X: usize,  // Number of cols in first matrix, rows in second matrix
+    const C: usize,  // Number of cols in second matrix
+>(
+    a: &[V; RX],
+    b: &[V; XC],
+) -> [V; RC] {
+    assert_eq!(RX, R * X, "RX must equal R*X");
+    assert_eq!(RC, R * C, "RC must equal R*C");
+    assert_eq!(XC, X * C, "XC must equal X*C");
+    let mut m = [V::zero(); RC];
+    for r in 0..R {
+        for c in 0..C {
+            let mut v = V::zero();
+            for x in 0..X {
+                v = v + a[r * X + x] * b[x * C + c];
+            }
+            m[r * C + c] = v;
+        }
+    }
+    m
+}
+
+//mp tranpose_dyn
+/// Transpose a matrix
+pub fn transpose_dyn<V: Copy>(
+    r: usize,
+    c: usize,
+    m: &[V],       // r by c
+    m_t: &mut [V], // c by r
+) {
+    assert!(m.len() == r * c);
+    assert!(m_t.len() == r * c);
+    for ri in 0..r {
+        for ci in 0..c {
+            m_t[ci * r + ri] = m[ri * c + ci];
+        }
+    }
+}
+
+//mp multiply_dyn
+/// Multiply two matrices, dynamically sized
+///
+/// Until generic const expressions work cleanly this is a workaround
+pub fn multiply_dyn<V: Num>(
+    r: usize,
+    x: usize,
+    c: usize,
+    a: &[V],     // r by x
+    b: &[V],     // x by c
+    m: &mut [V], // r by c
+) {
+    assert!(
+        a.len() >= r * x,
+        "Expected a (length {}) to be r*x = {} * {}",
+        a.len(),
+        r,
+        x
+    );
+    assert!(
+        b.len() >= x * c,
+        "Expected a (length {}) to be r*x = {} * {}",
+        a.len(),
+        r,
+        x
+    );
+    assert!(
+        m.len() >= r * c,
+        "Expected a (length {}) to be r*x = {} * {}",
+        a.len(),
+        r,
+        x
+    );
+    for ri in 0..r {
+        for ci in 0..c {
+            let mut v = V::zero();
+            for xi in 0..x {
+                v = v + a[ri * x + xi] * b[xi * c + ci];
+            }
+            m[ri * c + ci] = v;
+        }
+    }
+}
+
+/// Transform a vector
+pub fn transform_vec<V: Num, const RD: usize, const R: usize, const D: usize>(
+    m: &[V; RD],
+    v: &[V; D],
+) -> [V; R] {
+    multiply::<V, RD, D, R, R, D, 1>(m, v)
+}
+
+/// Format the matrix for display
+///
+/// This can be used by the Display or Debug traits of a type which
+/// contains an array. It is not possible to use this method directly
+/// without a `Formatter` instance.
+///
+/// To display an array `m` as a matrix use `&MatrixType::new(&m)` (see [MatrixType])
+///
+/// # Examples
+///
+/// ```
+/// use geo_nd::matrix;
+/// struct Mat { c : [f32;6] };
+/// impl std::fmt::Display for Mat {
+///   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result { matrix::fmt::<f32,2>(f, &self.c) }
+/// }
+/// assert_eq!( format!("{}", &Mat{c:[0., 1., 2., 3., 4., 5.]} ), "[0,1 2,3 4,5]" );
+/// ```
+pub fn fmt<V: Num, const C: usize>(f: &mut std::fmt::Formatter, v: &[V]) -> std::fmt::Result {
+    let mut c = 0;
+    for (i, value) in v.iter().enumerate() {
+        if i == 0 {
+            write!(f, "[{value}")?;
+        } else if c == 0 {
+            write!(f, " {value}")?;
+        } else {
+            write!(f, ",{value}")?;
+        }
+        c += 1;
+        if c == C {
+            c = 0;
+        }
+    }
+    write!(f, "]")
+}
+
+/// A structure that supports the Debug and Display traits, borrowing
+/// a matrix; this permits a relatively simple format of a matrix
+/// through using the `[new]` constructor of the type
+///
+/// # Example
+///
+/// ```
+/// use geo_nd::matrix::{identity2, MatrixType};
+/// assert_eq!( format!("{}", MatrixType::<f32,4,2>::new(&identity2())), "[1,0 0,1]" );
+/// ```
+///
+#[derive(Debug)]
+pub struct MatrixType<'a, V: Num, const RC: usize, const C: usize> {
+    /// Contents of the matrix
+    m: &'a [V; RC],
+}
+
+impl<'a, V: Num, const RC: usize, const C: usize> MatrixType<'a, V, RC, C> {
+    //fp new
+    /// Create a new MatrixType by borrowing an array of Num; this may then be formatted using its Display trait
+    pub fn new(m: &'a [V; RC]) -> Self {
+        Self { m }
+    }
+}
+
+impl<'a, V: Num, const RC: usize, const C: usize> std::fmt::Display for MatrixType<'a, V, RC, C> {
+    //
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fmt::<V, C>(f, self.m)
     }
 }

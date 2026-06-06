@@ -1,6 +1,5 @@
-use crate::matrix_op as matrix;
 use crate::vector_op as vector;
-use crate::{Float, Num, f_const};
+use crate::{Float, Num, f_const, matrix};
 
 //a Notes on matrices of quaternions
 // 1 - 2*j2 - 2*k2           2*i*j - 2*k*r        2*i*k + 2*j*r
@@ -298,7 +297,17 @@ pub fn nlerp<V: Float>(t: V, in0: &[V; 4], in1: &[V; 4]) -> [V; 4] {
 
 //a Operational functions
 //fp distance_sq
-/// Get a measure of the 'distance' between two unit quaternions
+/// Get a measure of the 'distance' between two unit quaternions.
+///
+/// This is a postive value less than or equal to 1.0
+///
+/// This uses the real component of A'. B; A'.B is the quaternion describing the
+/// rotation by B followed by reversing the rotation by A. If they were equal
+/// then the net rotation is zero - but as this is a quaternion, a zero rotation
+/// can have a real value of +-1.
+///
+/// i.e. if A==B then the real component is 1, and if A==-B then the real component
+/// is -1
 #[inline]
 pub fn distance_sq<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
     V::ONE - (a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]).abs()
@@ -306,6 +315,10 @@ pub fn distance_sq<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
 
 //fp distance
 /// Get a measure of the 'distance' between two quaternions
+///
+/// See [distance_sq] for more details
+///
+/// This is a postive value less than or equal to 1.0
 #[inline]
 pub fn distance<V: Float>(a: &[V; 4], b: &[V; 4]) -> V {
     distance_sq(a, b).sqrt()

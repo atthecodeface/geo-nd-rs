@@ -414,50 +414,6 @@ pub trait Vector<F: Float, const D: usize>:
         vector::cross_product3(self.as_ref(), other).into()
     }
 
-    //fp apply_q3
-    /// Apply a quaternion to a V3
-    ///
-    /// This can either take other as &\[F;3\] and produce \[F; 3\], or
-    ///  &D where D:Deref<Target = \[F; 3\]> and D:From<\[F; 3\]
-    ///
-    /// If it takes the former then it can operate on \[F;3\] and
-    /// anything that is Deref<Target = \[F;3\]>, but it needs its result
-    /// cast into the correct vector
-    ///
-    /// If it tkes the latter then it cannot operate on \[F;3\], but its
-    /// result need not be cast
-    #[must_use]
-    fn apply_q3<Q>(&self, q: &Q) -> Self
-    where
-        Q: Quaternion<F>,
-        Self: From<[F; 3]>,  // Enforce D = 3
-        Self: AsRef<[F; 3]>, // so that it knows as_ref() returns &[F;3], i.e. D is 3
-    {
-        quat::apply3(q.deref(), self.as_ref()).into()
-    }
-
-    //fp apply_q4
-    /// Apply a quaternion to a V4
-    ///
-    /// This can either take other as &\[F;3\] and produce \[F; 3\], or
-    ///  &D where D:Deref<Target =\[F; 3\]> and D:From<\[F; 3\]
-    ///
-    /// If it takes the former then it can operate on \[F;3\] and
-    /// anything that is Deref<Target = \[F;3\]>, but it needs its result
-    /// cast into the correct vector
-    ///
-    /// If it tkes the latter then it cannot operate on \[F;3\], but its
-    /// result need not be cast
-    #[must_use]
-    fn apply_q4<Q>(&self, q: &Q) -> Self
-    where
-        Q: Quaternion<F>,
-        Self: From<[F; 4]>,
-        Self: AsRef<[F; 4]>, // so that it knows as_ref() returns &[F;3], i.e. D is 3
-    {
-        quat::apply4(q.deref(), self.as_ref()).into()
-    }
-
     //mp transformed_by_m
     /// Multiply the vector by the matrix to transform it
     fn transformed_by_m<const D2: usize>(&mut self, m: &[F; D2]) -> &mut Self
@@ -480,7 +436,6 @@ pub trait Vector<F: Float, const D: usize>:
     }
 }
 
-//tt Vector2
 /// The [Vector2] trait describes a 3-dimensional vector of [Float]
 ///
 pub trait Vector2<F: Float>: Vector<F, 2> {}
@@ -491,10 +446,29 @@ where
 {
 }
 
-//tt Vector3
 /// The [Vector3] trait describes a 3-dimensional vector of [Float]
 ///
-pub trait Vector3<F: Float>: Vector<F, 3> {}
+pub trait Vector3<F: Float>: Vector<F, 3> {
+    //fp apply_q3
+    /// Apply a quaternion to a V3
+    ///
+    /// This can either take other as &\[F;3\] and produce \[F; 3\], or
+    ///  &D where D:Deref<Target = \[F; 3\]> and D:From<\[F; 3\]
+    ///
+    /// If it takes the former then it can operate on \[F;3\] and
+    /// anything that is Deref<Target = \[F;3\]>, but it needs its result
+    /// cast into the correct vector
+    ///
+    /// If it tkes the latter then it cannot operate on \[F;3\], but its
+    /// result need not be cast
+    #[must_use]
+    fn apply_q<Q>(&self, q: &Q) -> Self
+    where
+        Q: Quaternion<F>,
+    {
+        quat::apply3(q.deref(), self.as_ref()).into()
+    }
+}
 impl<F, V> Vector3<F> for V
 where
     F: Float,
@@ -502,10 +476,29 @@ where
 {
 }
 
-//tt Vector4
 /// The [Vector4] trait describes a 3-dimensional vector of [Float]
 ///
-pub trait Vector4<F: Float>: Vector<F, 4> {}
+pub trait Vector4<F: Float>: Vector<F, 4> {
+    //fp apply_q
+    /// Apply a quaternion to a V4
+    ///
+    /// This can either take other as &\[F;3\] and produce \[F; 3\], or
+    ///  &D where D:Deref<Target =\[F; 3\]> and D:From<\[F; 3\]
+    ///
+    /// If it takes the former then it can operate on \[F;3\] and
+    /// anything that is Deref<Target = \[F;3\]>, but it needs its result
+    /// cast into the correct vector
+    ///
+    /// If it tkes the latter then it cannot operate on \[F;3\], but its
+    /// result need not be cast
+    #[must_use]
+    fn apply_q<Q>(&self, q: &Q) -> Self
+    where
+        Q: Quaternion<F>,
+    {
+        quat::apply4(q.deref(), self.as_ref()).into()
+    }
+}
 impl<F, V> Vector4<F> for V
 where
     F: Float,
@@ -513,8 +506,58 @@ where
 {
 }
 
-//a SqMatrix
-//tt SqMatrix
+/// The [Matrix] trait describes an R-by-C matrix of [Float] type that operates on a [Vector].
+///
+/// Such [Matrix] support basic arithmetic using addition and
+/// subtraction, scaling, indexing (linearly, row major).
+pub trait Matrix<F: Float, const R: usize, const C: usize, const RC: usize>:
+    ArrayBasic
+    + ArrayRef<F, RC>
+    + ArrayIndex<F>
+    + ArrayConvert<F, RC>
+    + ArrayAddSubNeg<F, RC>
+    + ArrayScale<F>
+{
+    /// Return true if the matrix is zero
+    fn is_zero(&self) -> bool {
+        vector::is_zero(self.deref())
+    }
+
+    /// Set the matrix to zero
+    fn set_zero(&mut self) -> &mut Self {
+        vector::set_zero(self.deref_mut());
+        self
+    }
+
+    /// Return a transpose matrix
+    fn transpose<M: Matrix<F, C, R, RC>>(&self) -> M {
+        matrix::transpose::<F, RC, R, C>(self).into()
+    }
+
+    /// Apply the matrix to a vector to transform it
+    fn mul_vec<S, T>(&self, v: &S) -> T
+    where
+        S: std::ops::Deref<Target = [F; C]>,
+        T: From<[F; R]>,
+    {
+        matrix::transform_vec::<F, RC, R, C>(self, v).into()
+    }
+
+    /// Apply the matrix to a vector to transform it
+    fn mul_vec_arr(&self, v: &[F; C]) -> [F; R] {
+        matrix::transform_vec::<F, RC, R, C>(self, v)
+    }
+}
+impl<F: Float, const R: usize, const C: usize, const RC: usize, M> Matrix<F, R, C, RC> for M where
+    M: ArrayBasic
+        + ArrayRef<F, RC>
+        + ArrayIndex<F>
+        + ArrayConvert<F, RC>
+        + ArrayAddSubNeg<F, RC>
+        + ArrayScale<F>
+{
+}
+
 /// The [SqMatrix] trait describes an N-dimensional square matrix of [Float] type that operates on a [Vector].
 ///
 /// This trait is not stable.
@@ -528,50 +571,45 @@ where
 /// a scalar [Float] value type that they are comprised of. Hence a
 /// `m:SqMatrix<F>` may be scaled by a `s:F` using `m * s`.
 pub trait SqMatrix<F: Float, const D: usize, const D2: usize>:
-    ArrayBasic
-    + ArrayRef<F, D2>
-    + ArrayIndex<F>
-    + ArrayConvert<F, D2>
-    + ArrayAddSubNeg<F, D2>
-    + ArrayScale<F>
-    + std::ops::Mul<Output = Self>
-    + std::ops::MulAssign
+    Matrix<F, D, D, D2> + std::ops::Mul<Output = Self> + std::ops::MulAssign
 {
     /// Create an identity matrix
     fn identity() -> Self {
         matrix::identity::<F, D2, D>().into()
     }
 
-    /// Return true if the matrix is zero
-    fn is_zero(&self) -> bool {
-        vector::is_zero(self.deref())
-    }
-
-    /// Set the matrix to zero
-    fn set_zero(&mut self) -> &mut Self {
-        vector::set_zero(self.deref_mut());
-        self
-    }
-
-    //mp transpose
-    /// Return a transpose matrix
-    fn transpose(&self) -> Self;
-
-    //mp determinant
     /// Calculate the determinant of the matrix
     fn determinant(&self) -> F;
 
-    //mp inverse
-    /// Create an inverse matrix
-    fn inverse(&self) -> Self;
+    /// Create an inverse matrix, and in indication the inverse could not be created
+    ///
+    /// If the matrix is not invertible, return anything
+    fn checked_inverse(&self) -> (Self, bool);
 
-    /// Apply the matrix to a vector to transform it
-    fn transform<T>(&self, v: &T) -> T
+    /// Create an inverse matrix
+    ///
+    /// If the matrix is not invertible, return anything
+    fn inverse(&self) -> Self {
+        self.checked_inverse().0
+    }
+
+    /// Create an inverse matrix
+    ///
+    /// If the matrix is not invertible, return None
+    fn opt_inverse(&self) -> Option<Self> {
+        let (inverse, ok) = self.checked_inverse();
+        ok.then_some(inverse)
+    }
+
+    /// Create a 2D rotation matrix by an angle in radians, anticlockwise about the origin
+    fn rotation2d(angle: F) -> Self
     where
-        T: std::ops::Deref<Target = [F; D]>,
-        T: From<[F; D]>;
-    /// Apply the matrix to a vector to transform it
-    fn transform_arr(&self, v: &[F; D]) -> [F; D];
+        Self: From<[F; 4]>,
+    {
+        let c = angle.cos();
+        let s = angle.sin();
+        [c, s, -s, c].into()
+    }
 }
 
 //tt SqMatrix2
@@ -588,7 +626,16 @@ where
 //tt SqMatrix3
 /// The [SqMatrix3] trait describes a 2-dimensional vector of [Float]
 ///
-pub trait SqMatrix3<F: Float>: SqMatrix<F, 3, 9> {}
+pub trait SqMatrix3<F: Float>: SqMatrix<F, 3, 9> {
+    /// Create a 3-by-3 matrix of the rotation of a quaternion
+    // This is not in SqMatrix so that SqMatrix4 can have a different implementaion
+    fn of_quaternion<Q: Quaternion<F>>(q: Q) -> Self {
+        let mut s = Self::default();
+        q.set_rotation3(&mut s);
+        s
+    }
+}
+
 impl<F, M> SqMatrix3<F> for M
 where
     F: Float,
@@ -745,6 +792,8 @@ pub trait Quaternion<F: Float>:
     }
 
     /// Multiply a rotation about the X-axis by this quaternion
+    ///
+    /// ie. result = rotate(x, angle) * self
     #[inline]
     #[must_use]
     fn rotate_x(self, angle: F) -> Self {
@@ -752,6 +801,8 @@ pub trait Quaternion<F: Float>:
     }
 
     /// Multiply a rotation about the Y-axis by this quaternion
+    ///
+    /// ie. result = rotate(y, angle) * self
     #[inline]
     #[must_use]
     fn rotate_y(self, angle: F) -> Self {
@@ -759,6 +810,8 @@ pub trait Quaternion<F: Float>:
     }
 
     /// Multiply a rotation about the Z-axis by this quaternion
+    ///
+    /// ie. result = rotate(z, angle) * self
     #[inline]
     #[must_use]
     fn rotate_z(self, angle: F) -> Self {
@@ -766,6 +819,8 @@ pub trait Quaternion<F: Float>:
     }
 
     /// Multiply a rotation about the X-axis by this quaternion
+    ///
+    /// ie. result = self * rotate(x, angle)
     #[inline]
     #[must_use]
     fn premul_rotate_x(self, angle: F) -> Self {
@@ -777,6 +832,8 @@ pub trait Quaternion<F: Float>:
     }
 
     /// Multiply a rotation about the Y-axis by this quaternion
+    ///
+    /// ie. result = self * rotate(y, angle)
     #[inline]
     #[must_use]
     fn premul_rotate_y(self, angle: F) -> Self {
@@ -788,6 +845,8 @@ pub trait Quaternion<F: Float>:
     }
 
     /// Multiply a rotation about the Z-axis by this quaternion
+    ///
+    /// ie. result = self * rotate(z, angle)
     #[inline]
     #[must_use]
     fn premul_rotate_z(self, angle: F) -> Self {
@@ -1024,11 +1083,18 @@ where
     ///
     /// This is only possible if the scaling is uniform
     #[must_use]
-    fn inverse(&self) -> Option<Self>;
+    fn inverse_transform(&self) -> Option<Self>;
     /// Invert the transformation
     ///
     /// This will return false if the scaling is not uniform
-    fn invert(&mut self) -> bool;
+    fn set_inverse(&mut self) -> bool {
+        if let Some(s) = self.inverse_transform() {
+            *self = s;
+            true
+        } else {
+            false
+        }
+    }
     /// Convert it to a 4-by-4 matrix and set it
     fn set_mat4<M: SqMatrix4<F>>(&self, mat4: &mut M) {
         *mat4 = self.as_mat4();
@@ -1055,7 +1121,7 @@ where
     /// Apply the transformation to a [F; 4]
     #[must_use]
     fn apply3_arr(&self, other: &[F; 3]) -> [F; 3];
-    /// Apply the quaternion to a vector or similar
+    /// Apply the transformation to a vector or similar
     #[must_use]
     fn apply4<T>(&self, other: T) -> T
     where

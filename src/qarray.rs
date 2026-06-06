@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use num_traits::{ConstOne, ConstZero};
 
-use super::{Float, Quaternion, SqMatrix3, SqMatrix4, Vector};
+use super::{Float, Quaternion, SqMatrix, SqMatrix3, SqMatrix4, Vector};
 use super::{quat, vector};
 
 //a QArray
@@ -205,7 +205,7 @@ macro_rules! qarray_quaternion_trait {
             #[inline]
             fn set_rotation3<M> (&self, matrix3:&mut M)
             where
-                M: SqMatrix3<$f>
+                M: SqMatrix<$f, 3, 9>
             {
                 quat::to_rotation3(&self.data, matrix3.as_mut())
             }

@@ -1,6 +1,5 @@
 //a Imports
-use super::matrix_op as matrix;
-use crate::{Float, Num, f_const};
+use crate::{Float, Num, f_const, matrix};
 
 //a Vector constructors
 //fp zero

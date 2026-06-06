@@ -243,7 +243,7 @@ where
         true
     }
 
-    fn inverse(&self) -> Option<Self> {
+    fn inverse_transform(&self) -> Option<Self> {
         let scale = self.scale;
         if scale.abs() < F::epsilon() {
             Some(Self::default())
@@ -256,10 +256,6 @@ where
         }
     }
 
-    fn invert(&mut self) -> bool {
-        *self = self.inverse().unwrap();
-        true
-    }
     fn apply3_arr(&self, other: &[F; 3]) -> [F; 3] {
         let v: Self::Vec3 = other.into();
         *(self.rotation.apply3(&(v * self.scale)) + self.translation)
