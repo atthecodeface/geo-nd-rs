@@ -469,6 +469,7 @@ pub trait Vector3<F: Float>: Vector<F, 3> {
         quat::apply3(q.deref(), self.as_ref()).into()
     }
 }
+
 impl<F, V> Vector3<F> for V
 where
     F: Float,
@@ -511,10 +512,13 @@ where
 /// Such [Matrix] support basic arithmetic using addition and
 /// subtraction, scaling, indexing (linearly, row major).
 ///
+/// With the current state of generic constants this is a difficult trait; type
+/// inference cannot determine the values of R and C
+///
 /// The 'transform vector' methods are tricky to put in here as type inference
 /// fails more frequently then it does for square matrices (whwre R*C is always
 /// D^2)
-pub trait Matrix<F: Float, const R: usize, const C: usize, const RC: usize>:
+pub trait Matrix<F: Float, const RC: usize>:
     ArrayBasic
     + ArrayRef<F, RC>
     + ArrayIndex<F>
@@ -522,23 +526,12 @@ pub trait Matrix<F: Float, const R: usize, const C: usize, const RC: usize>:
     + ArrayAddSubNeg<F, RC>
     + ArrayScale<F>
 {
-    /// Return true if the matrix is zero
-    fn is_zero(&self) -> bool {
-        vector::is_zero(self.deref())
-    }
-
-    /// Set the matrix to zero
-    fn set_zero(&mut self) -> &mut Self {
-        vector::set_zero(self.deref_mut());
-        self
-    }
-
     /// Return a transpose matrix
-    fn transpose<M: Matrix<F, C, R, RC>>(&self) -> M {
+    fn transpose<const R: usize, const C: usize>(&self) -> Self {
         matrix::transpose::<F, RC, R, C>(self).into()
     }
 }
-impl<F: Float, const R: usize, const C: usize, const RC: usize, M> Matrix<F, R, C, RC> for M where
+impl<F: Float, const RC: usize, M> Matrix<F, RC> for M where
     M: ArrayBasic
         + ArrayRef<F, RC>
         + ArrayIndex<F>
@@ -548,7 +541,8 @@ impl<F: Float, const R: usize, const C: usize, const RC: usize, M> Matrix<F, R, 
 {
 }
 
-/// The [SqMatrix] trait describes an N-dimensional square matrix of [Float] type that operates on a [Vector].
+/// The [SqMatrix] trait describes an N-dimensional square matrix of [Float]
+/// type that operates on a [Vector].
 ///
 /// This trait is not stable.
 ///
@@ -561,8 +555,19 @@ impl<F: Float, const R: usize, const C: usize, const RC: usize, M> Matrix<F, R, 
 /// a scalar [Float] value type that they are comprised of. Hence a
 /// `m:SqMatrix<F>` may be scaled by a `s:F` using `m * s`.
 pub trait SqMatrix<F: Float, const D: usize, const D2: usize>:
-    Matrix<F, D, D, D2> + std::ops::Mul<Output = Self> + std::ops::MulAssign
+    Matrix<F, D2> + std::ops::Mul<Output = Self> + std::ops::MulAssign
 {
+    /// Return true if the matrix is zero
+    fn is_zero(&self) -> bool {
+        vector::is_zero(self.deref())
+    }
+
+    /// Set the matrix to zero
+    fn set_zero(&mut self) -> &mut Self {
+        vector::set_zero(self.deref_mut());
+        self
+    }
+
     /// Apply the matrix to a vector to transform it
     ///
     /// This is in SqMatrix rather than Matrix as type inference works for the
@@ -885,44 +890,37 @@ pub trait Quaternion<F: Float>:
         quat::rotation_of_vec_to_vec(a, b).into()
     }
 
-    //cp mapping_vector_pair_to_vector_pair
-    /// Create a quaternion that maps (v0, v1) to (w0, w1)
+    /// Create a quaternion for a rotation that maps di_m to di_c, and
+    /// dj_m to dj_c. All must be unit vectors.
     ///
-    /// This will map v0 to the Z axis, and the Z axis to w0. Applying
-    /// both of these quaternions in succession maps v0 to w0.
+    /// This is used to map between two views of the same 3D space, so the angle
+    /// between di_m and dj_m should be the same as that between di_c and dj_c.
     ///
-    /// It maps v1 to v1' and w1 *backwards* to w1', where the
+    /// The resultant quaternion will map dj_m to a unit vector in the same plane as
+    /// di_c and dj_c, with the angle between di_c and it equal to the angle between
+    /// di_m and dj_m. This will *equal* dj_c if the angle between di_m and dj_m
+    /// equals the angle between di_c and dj_c.
+    ///
+    /// This will generate two quaternions (Qm2z and Qz2c) that map di_m
+    /// to the Z axis, and the Z axis to di_c. Applying both of these
+    /// quaternions in succession maps di_m to di_c.
+    ///
+    /// It maps dj_m to dj_m' and dj_c *backwards* to dj_c', where the
     /// difference between v1' and w1' should be *just* a rotation
-    /// around the Z axis. Creating a rotation to do this is a third quaternion
+    /// around the Z axis. Creating a rotation that implements the
+    /// rotation around the Z axis provides a third quaternion (Qrotz).
     ///
-    /// Then the three quaternions can be applied appropriately to map
-    /// v0 to w0 (for sure), and v1 to w1 (if the intermediate
-    /// rotation were just a Z-rotation)
+    /// The three quaternions can be applied Qz2c * Qrotz * Qm2z to map di_m to di_c
+    /// (for sure); if the angle eqaulity above is met then dj_m will map to dj_c too.th
     fn mapping_vector_pair_to_vector_pair(
         (di_m, dj_m): (&[F; 3], &[F; 3]),
         (di_c, dj_c): (&[F; 3], &[F; 3]),
     ) -> Self {
-        let z_axis: [F; 3] = [F::zero(), F::zero(), F::one()];
-        let qi_c = Self::rotation_of_vec_to_vec(di_c, &z_axis);
-        let qi_m = Self::rotation_of_vec_to_vec(di_m, &z_axis);
-
-        let dj_c_rotated = quat::apply3(&qi_c, dj_c);
-        let dj_m_rotated = quat::apply3(&qi_m, dj_m);
-
-        let theta_dj_m = dj_m_rotated[0].atan2(dj_m_rotated[1]);
-        let theta_dj_c = dj_c_rotated[0].atan2(dj_c_rotated[1]);
-        let theta = theta_dj_m - theta_dj_c;
-        let theta_div_2 = theta / (F::one() + F::one());
-        let cos_2theta = theta_div_2.cos();
-        let sin_2theta = theta_div_2.sin();
-        let q_z = Self::of_rijk(cos_2theta, F::zero(), F::zero(), sin_2theta);
-        qi_c.conjugate() * q_z * qi_m
+        quat::mapping_vector_pair_to_vector_pair((di_m, dj_m), (di_c, dj_c)).into()
     }
 
     //cp weighted_average_pair
     /// Calculate the weighted average of two unit quaternions
-    ///
-    /// w_a + w_b must be 1.
     ///
     /// See <http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf>
     /// Averaging Quaternions by F. Landis Markley

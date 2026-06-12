@@ -218,6 +218,8 @@ pub fn normalize<V: Float>(a: [V; 4]) -> [V; 4] {
 //cp rotate_x
 /// Apply a rotation about the X-axis to this quaternion
 ///
+/// Actually a(as quaternion) * [cos, sin, 0, 0, 0] (rijk)
+///
 /// Rotation about the X axis is c+i*s
 ///
 /// `(c+i*s) * a[] = c*a - s*a[i] + i.s*a[r] - j.s*a[k] + k.s*a[j]`
@@ -398,8 +400,6 @@ pub fn apply4<V: Float>(q: &[V; 4], v: &[V; 4]) -> [V; 4] {
 //fp weighted_average_pair
 /// Calculate the weighted average of two unit quaternions
 ///
-/// w_a + w_b must be 1.
-///
 /// See <http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf>
 /// Averaging Quaternions by F. Landis Markley
 #[must_use]
@@ -484,14 +484,68 @@ pub fn weighted_average_many<I: Iterator<Item = (V, [V; 4])>, V: Float>(
 /// The vectors must be unit vectors
 #[must_use]
 pub fn rotation_of_vec_to_vec<V: Float>(a: &[V; 3], b: &[V; 3]) -> [V; 4] {
+    let pi = V::from_f32(std::f32::consts::PI).unwrap();
     let obtuse = vector::dot(a, b) < V::ZERO;
-    let cp = vector::cross_product3(a, b);
+    let mut cp = vector::cross_product3(a, b);
     let sa = vector::length(&cp);
+    // If this is a rotation by 0 or 180 degrees... we need a different axis...
+    if sa < V::epsilon() {
+        // If the X coordinate of 'a' is zero then (1,0,0) is perpendicular to it, so use that
+        //
+        // else a is (x,y,z) (x!=0) and (x,y,z) x (0,1,1) wil be a nonzero vector
+        if a[0].abs() < V::epsilon() {
+            cp = [V::ONE, V::ZERO, V::ZERO];
+        } else {
+            cp = vector::cross_product3(a, &[V::ZERO, V::ONE, V::ONE]);
+        }
+    }
     let angle = sa.asin();
-    let angle = if obtuse {
-        V::from_f32(std::f32::consts::PI).unwrap() - angle
-    } else {
-        angle
-    };
+    let angle = if obtuse { pi - angle } else { angle };
     of_axis_angle(&cp, angle)
+}
+
+/// Create a quaternion for a rotation that maps di_m to di_c, and
+/// dj_m to dj_c. All must be unit vectors.
+///
+/// This is used to map between two views of the same 3D space, so the angle
+/// between di_m and dj_m should be the same as that between di_c and dj_c.
+///
+/// The resultant quaternion will map dj_m to a unit vector in the same plane as
+/// di_c and dj_c, with the angle between di_c and it equal to the angle between
+/// di_m and dj_m. This will *equal* dj_c if the angle between di_m and dj_m
+/// equals the angle between di_c and dj_c.
+///
+/// This will generate two quaternions (Qm2z and Qz2c) that map di_m
+/// to the Z axis, and the Z axis to di_c. Applying both of these
+/// quaternions in succession maps di_m to di_c.
+///
+/// It maps dj_m to dj_m' and dj_c *backwards* to dj_c', where the
+/// difference between v1' and w1' should be *just* a rotation
+/// around the Z axis. Creating a rotation that implements the
+/// rotation around the Z axis provides a third quaternion (Qrotz).
+///
+/// The three quaternions can be applied Qz2c * Qrotz * Qm2z to map di_m to di_c
+/// (for sure); if the angle eqaulity above is met then dj_m will map to dj_c too.
+#[must_use]
+pub fn mapping_vector_pair_to_vector_pair<F: Float>(
+    (di_m, dj_m): (&[F; 3], &[F; 3]),
+    (di_c, dj_c): (&[F; 3], &[F; 3]),
+) -> [F; 4] {
+    let z_axis: [F; 3] = [F::zero(), F::zero(), F::one()];
+    let qi_c = rotation_of_vec_to_vec(di_c, &z_axis);
+    let qi_m = rotation_of_vec_to_vec(di_m, &z_axis);
+
+    let dj_c_rotated = apply3(&qi_c, dj_c);
+    let dj_m_rotated = apply3(&qi_m, dj_m);
+
+    let theta_dj_m = dj_m_rotated[0].atan2(dj_m_rotated[1]);
+    let theta_dj_c = dj_c_rotated[0].atan2(dj_c_rotated[1]);
+
+    let theta = theta_dj_m - theta_dj_c;
+    let theta_div_2 = theta / (F::one() + F::one());
+    let cos_2theta = theta_div_2.cos();
+    let sin_2theta = theta_div_2.sin();
+
+    let q_z = of_rijk(cos_2theta, F::zero(), F::zero(), sin_2theta);
+    multiply(&conjugate(&qi_c), &multiply(&q_z, &qi_m))
 }

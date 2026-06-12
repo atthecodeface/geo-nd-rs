@@ -61,7 +61,7 @@ macro_rules! qarray_mul_div_traits {
         impl <'a> std::ops::Mul<&'a $ty> for $ty {
             type Output = $ty;
             fn mul(self, other: &'a $ty) -> $ty {
-                (&self) * other
+                quat::multiply(self.deref(), other.deref()).into()
             }
         }
 
@@ -69,7 +69,7 @@ macro_rules! qarray_mul_div_traits {
         impl <'a> std::ops::Mul<&'a $ty> for &'a $ty {
             type Output = $ty;
             fn mul(self, other: &'a $ty) -> $ty {
-                *self * other
+                quat::multiply(self.deref(), other.deref()).into()
             }
         }
 
@@ -77,7 +77,7 @@ macro_rules! qarray_mul_div_traits {
         impl<'a> std::ops::Mul<$ty> for &'a $ty {
             type Output = $ty;
             fn mul(self, other: $ty) -> $ty {
-                *self * other
+                quat::multiply(self.deref(), other.deref()).into()
             }
         }
 
@@ -132,7 +132,7 @@ macro_rules! qarray_mul_div_traits {
         impl <'a> std::ops::Div<&'a $ty> for $ty {
             type Output = $ty;
             fn div(self, other: &'a $ty) -> $ty {
-                (&self) / other
+                quat::divide(self.deref(), other).into()
             }
         }
 
@@ -140,7 +140,7 @@ macro_rules! qarray_mul_div_traits {
         impl <'a> std::ops::Div<&'a $ty> for &'a $ty {
             type Output = $ty;
             fn div(self, other: &'a $ty) -> $ty {
-                *self / other
+                quat::divide(self.deref(), other).into()
             }
         }
 
@@ -148,7 +148,7 @@ macro_rules! qarray_mul_div_traits {
         impl<'a> std::ops::Div<$ty> for &'a $ty {
             type Output = $ty;
             fn div(self, other: $ty) -> $ty {
-                *self / other.deref()
+                quat::divide(self.deref(), &other).into()
             }
         }
 
