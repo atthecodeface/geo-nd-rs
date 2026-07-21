@@ -1,3 +1,7 @@
+# Release 0.8.2 (2025-06-06)
+
+- Tidying the traits again; the whole thing is still unstable until 0.9
+
 # Release 0.8.1 (2025-06-06)
 
 - Tidying the traits again; the whole thing is still unstable until 0.9
