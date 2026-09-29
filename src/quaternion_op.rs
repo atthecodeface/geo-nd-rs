@@ -149,6 +149,7 @@ pub fn to_rotation4<V: Float>(q: &[V; 4], m: &mut [V; 16]) {
 /// Find the quaternion of a Matrix3 assuming it is purely a rotation
 #[must_use]
 pub fn of_rotation<V: Float>(m: &[V; 9]) -> [V; 4] {
+    eprintln!("quat::of_rotation - WARNING - THIS IS NOT NUMERICALLT STABLE");
     fn safe_sqrt<V: Float>(x: V) -> V {
         if x < V::ZERO { V::ZERO } else { x.sqrt() }
     }
@@ -178,8 +179,14 @@ pub fn of_rotation<V: Float>(m: &[V; 9]) -> [V; 4] {
 /// Create quaternion for a rotation that maps unit dirn to (0,0,-1) and unit up to (0,1,0)
 #[must_use]
 pub fn look_at<V: Float>(dirn: &[V; 3], up: &[V; 3]) -> [V; 4] {
-    let m = matrix::look_at3(dirn, up);
-    of_rotation(&m)
+    let d = vector::normalize(*dirn);
+    let du = vector::dot(&d, up);
+    let u = [up[0] - d[0] * du, up[1] - d[1] * du, up[2] - d[2] * du];
+    let u = vector::normalize(u);
+    mapping_vector_pair_to_vector_pair(
+        (&d, &u),
+        (&[V::ZERO, V::ZERO, -V::ONE], &[V::ZERO, V::ONE, V::ZERO]),
+    )
 }
 
 //a Mapping functions

@@ -111,6 +111,7 @@ macro_rules! farray_traits {
 }
 
 //mi Invoke farray_traits!
+farray_traits! { f32, 1, FArray<f32,1> }
 farray_traits! { f32, 2, FArray<f32,2> }
 farray_traits! { f32, 3, FArray<f32,3> }
 farray_traits! { f32, 4, FArray<f32,4> }
@@ -127,6 +128,7 @@ farray_traits! { f32, 14, FArray<f32,14> }
 farray_traits! { f32, 15, FArray<f32,15> }
 farray_traits! { f32, 16, FArray<f32,16> }
 
+farray_traits! { f64, 1, FArray<f64,1> }
 farray_traits! { f64, 2, FArray<f64,2> }
 farray_traits! { f64, 3, FArray<f64,3> }
 farray_traits! { f64, 4, FArray<f64,4> }

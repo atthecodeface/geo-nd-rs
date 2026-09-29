@@ -109,10 +109,12 @@ macro_rules! farray2_4_mul_vecs {
 }
 
 //a Use macros
+farray2_traits! {f32,1,1,FArray2<f32,1,1>, matrix::determinant1, matrix::checked_inverse1}
 farray2_traits! {f32,2,4,FArray2<f32,2,4>, matrix::determinant2, matrix::checked_inverse2}
 farray2_traits! {f32,3,9,FArray2<f32,3,9>, matrix::determinant3, matrix::checked_inverse3}
 farray2_traits! {f32,4,16,FArray2<f32,4,16>, matrix::determinant4, matrix::checked_inverse4}
 
+farray2_traits! {f64,1,1,FArray2<f64,1,1>, matrix::determinant1, matrix::checked_inverse1}
 farray2_traits! {f64,2,4,FArray2<f64,2,4>, matrix::determinant2, matrix::checked_inverse2}
 farray2_traits! {f64,3,9,FArray2<f64,3,9>, matrix::determinant3, matrix::checked_inverse3}
 farray2_traits! {f64,4,16,FArray2<f64,4,16>, matrix::determinant4, matrix::checked_inverse4}

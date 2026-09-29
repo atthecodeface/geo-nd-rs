@@ -12,31 +12,43 @@ pub fn identity<V: Num, const D2: usize, const D: usize>() -> [V; D2] {
     r
 }
 
-//fp identity2
+/// Create a 1-by-1 identity matrix
+pub fn identity1<V: Num>() -> [V; 1] {
+    [V::ONE]
+}
+
 /// Create a 2-by-2 identity matrix
 pub fn identity2<V: Num>() -> [V; 4] {
     identity::<V, 4, 2>()
 }
 
-//fp identity3
 /// Create a 3-by-3 identity matrix
 pub fn identity3<V: Num>() -> [V; 9] {
     identity::<V, 9, 3>()
 }
 
-//fp identity4
 /// Create a 4-by-4 identity matrix
 pub fn identity4<V: Num>() -> [V; 16] {
     identity::<V, 16, 4>()
 }
 
-//fp determinant2
+/// Find the determinant of a 1-by-1 matrix
+pub fn determinant1<V: Num>(m: &[V; 1]) -> V {
+    m[0]
+}
+
 /// Find the determinant of a 2-by-2 matrix
 pub fn determinant2<V: Num>(m: &[V; 4]) -> V {
     m[0] * m[3] - m[1] * m[2]
 }
 
-//fp inverse2
+pub fn checked_inverse1<V: Num>(m: &[V; 1]) -> ([V; 1], bool) {
+    let okay = !m[0].is_zero();
+    let r_d = { if okay { V::one() / m[0] } else { V::zero() } };
+
+    ([r_d], okay)
+}
+
 /// Find the inverse of a 2-by-2 matrix
 ///
 /// # Example
